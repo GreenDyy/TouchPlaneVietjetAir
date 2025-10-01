@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Vietjet - Chơi là có quà</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ca161c">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Màn hình chào mừng - Splash Screen -->
+    <div id="welcome-screen" class="screen active splash-screen">
+        <!-- Animated clouds -->
+        <div class="splash-cloud cloud-1">
+            <img src="assets/cloud.png" alt="Cloud">
+        </div>
+        <div class="splash-cloud cloud-2">
+            <img src="assets/cloud_2.png" alt="Cloud">
+        </div>
+        <div class="splash-cloud cloud-3">
+            <img src="assets/cloud.png" alt="Cloud">
+        </div>
+        <div class="splash-cloud cloud-4">
+            <img src="assets/cloud_2.png" alt="Cloud">
+        </div>
+        <div class="splash-cloud cloud-5">
+            <img src="assets/cloud.png" alt="Cloud">
+        </div>
+        <div class="splash-cloud cloud-6">
+            <img src="assets/cloud_2.png" alt="Cloud">
+        </div>
+        
+        <!-- Animated planes -->
+        <div class="splash-plane plane-anim-1">
+            <img src="assets/player/vj1.png" alt="Plane">
+        </div>
+        <div class="splash-plane plane-anim-2">
+            <img src="assets/player/vj2.png" alt="Plane">
+        </div>
+        <div class="splash-plane plane-anim-3">
+            <img src="assets/player/vj3.png" alt="Plane">
+        </div>
+        
+        <div class="splash-container">
+            <div class="splash-logo">
+                <img src="assets/logo.png" alt="Vietjet Logo">
+            </div>
+            <h1 class="splash-title">BẮT MÁY BAY VIETJET</h1>
+            <p class="splash-subtitle">MASTER THE SKIES</p>
+            <button class="splash-button" onclick="showSurvey()">
+                <span>TAP TO START</span>
+            </button>
+        </div>
+        <!-- Decorative elements -->
+        <div class="splash-decorations">
+            <div class="circle-decoration circle-1"></div>
+            <div class="circle-decoration circle-2"></div>
+            <div class="circle-decoration circle-3"></div>
+            <div class="circle-decoration circle-4"></div>
+        </div>
+    </div>
+
+    <!-- Màn hình khảo sát -->
+    <div id="survey-screen" class="screen">
+        <div class="container">
+            <h2 class="screen-title">Khảo sát ngắn</h2>
+            <p class="intro-text">Trước khi bắt đầu chơi, xin phép bạn trả lời 1 số câu hỏi sau đây nhé</p>
+            
+            <div class="question-block">
+                <p class="question">1. Đây có phải là lần đầu bạn di chuyển bằng máy bay không?</p>
+                <div class="options">
+                    <label class="option">
+                        <input type="radio" name="q1" value="yes" required>
+                        <span>Đúng</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="q1" value="no">
+                        <span>Không</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p class="question">2. Bạn sẽ chọn dịch vụ bay của chúng tôi vì điều gì?</p>
+                <div class="options">
+                    <label class="option">
+                        <input type="radio" name="q2" value="service" required>
+                        <span>Dịch vụ tốt, giá cả phù hợp</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="q2" value="experience">
+                        <span>Tôi muốn trải nghiệm dịch vụ của hãng</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="q2" value="other">
+                        <span>Khác</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p class="question">3. Xin cảm ơn bạn đã tham gia khảo sát. Giờ thì chúng ta cùng bắt đầu chơi nhé!</p>
+                <button class="btn btn-primary" onclick="validateAndShowIntro()">Tiếp tục</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình giới thiệu game -->
+    <div id="intro-screen" class="screen">
+        <div class="container">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                <h2 class="screen-title" style="margin: 0;">Hướng dẫn chơi</h2>
+                <button class="help-button" onclick="showRulesModal()">?</button>
+            </div>
+            <div class="intro-box">
+                <p class="intro-text">Trò chơi cực kỳ đơn giản. Chỉ cần bạn chạm để bắt được máy bay Vietjet và nhận quà ngay nhé!</p>
+                <div class="game-info">
+                    <div class="info-item">
+                        <span class="info-icon">✈️</span>
+                        <span>Bắt được 6/10 máy bay để thắng</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">⏰</span>
+                        <span>Mỗi máy bay bắt được +2s thời gian</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">👆</span>
+                        <span>3 cơ hội chạm nhầm</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🚨</span>
+                        <span>Đừng để máy bay thứ 10 bay mất!</span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="startGame()">Bắt đầu chơi</button>
+        </div>
+    </div>
+
+    <!-- Màn hình game -->
+    <div id="game-screen" class="screen">
+        <div class="game-header">
+            <div class="score-board">
+                <div class="score-box">
+                    <div class="score-icon">🛫</div>
+                    <div class="score-info">
+                        <span class="score-label">VietJet đã xuất hiện:</span>
+                        <span class="score-value" id="vietjet-spawned">0/10</span>
+                    </div>
+                </div>
+                <div class="score-box">
+                    <div class="score-icon">✈️</div>
+                    <div class="score-info">
+                        <span class="score-label">Máy bay bắt được:</span>
+                        <span class="score-value" id="caught-count">0/10</span>
+                    </div>
+                </div>
+                <div class="score-box">
+                    <div class="score-icon">⏱️</div>
+                    <div class="score-info">
+                        <span class="score-label">Thời gian còn lại:</span>
+                        <span class="score-value timer" id="time-left">20s</span>
+                    </div>
+                </div>
+                <div class="score-box">
+                    <div class="score-icon">💖</div>
+                    <div class="score-info">
+                        <span class="score-label">Cơ hội còn lại:</span>
+                        <span class="score-value" id="chances-left">3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Màn hình thắng -->
+    <div id="win-screen" class="screen">
+        <div class="container">
+            <div class="result-icon win">
+                <img src="assets/win.png" alt="Win" style="max-width: 120px; height: auto;">
+            </div>
+            <h2 class="screen-title">Chúc mừng!</h2>
+            <p class="result-text">Bạn đã bắt được các máy bay Vietjet</p>
+            <p class="intro-text">Tuyệt vời! Đây là phần quà dành cho bạn. Hãy nhận voucher ngay nhé.</p>
+            <div class="qr-code">
+                <img src="assets/qr_vietjet.png" alt="QR Vietjet" width="180">
+                <p class="qr-label">Quét mã để nhận voucher</p>
+                <a href="https://evoucher.vietjetair.com/" target="_blank" class="link">evoucher.vietjetair.com</a>
+            </div>
+            <button class="btn btn-primary" onclick="showRating()">Tiếp tục</button>
+        </div>
+    </div>
+
+    <!-- Màn hình thua -->
+    <div id="lose-screen" class="screen">
+        <div class="container">
+            <div class="result-icon lose">
+                <img src="assets/loser.png" alt="Lose" style="max-width: 120px; height: auto;">
+            </div>
+            <h2 class="screen-title">Bạn suýt bắt được máy bay rồi</h2>
+            <p class="result-text">Hãy thử lại vào lần sau nhé!</p>
+            <p class="intro-text">Không sao, Vietjet vẫn luôn đồng hành cùng bạn trong mọi hành trình!</p>
+            <button class="btn btn-primary" onclick="showRating()">Tiếp tục</button>
+        </div>
+    </div>
+
+    <!-- Màn hình đánh giá -->
+    <div id="rating-screen" class="screen">
+        <div class="container">
+            <h2 class="screen-title">Đánh giá dịch vụ</h2>
+            <p class="intro-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
+            <div class="star-rating">
+                <span class="star" data-value="1" onclick="rateStar(1)">☆</span>
+                <span class="star" data-value="2" onclick="rateStar(2)">☆</span>
+                <span class="star" data-value="3" onclick="rateStar(3)">☆</span>
+                <span class="star" data-value="4" onclick="rateStar(4)">☆</span>
+                <span class="star" data-value="5" onclick="rateStar(5)">☆</span>
+            </div>
+            <p id="rating-value" class="rating-value"></p>
+        </div>
+    </div>
+
+    <!-- Màn hình cảm ơn -->
+    <div id="thank-screen" class="screen">
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo.png" alt="Vietjet Logo" width="200">
+            </div>
+            <h2 class="screen-title">Cảm ơn bạn!</h2>
+            <p class="intro-text">Xin cảm ơn bạn đã sử dụng dịch vụ của Vietjet ngày hôm nay. Chúc bạn có 1 chuyến đi vui vẻ và an toàn nhé.</p>
+            <button class="btn btn-secondary" onclick="restartGame()">Chơi lại</button>
+        </div>
+    </div>
+
+    <!-- Modal điều kiện thắng thua -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-overlay" onclick="closeRulesModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeRulesModal()">×</button>
+            <h3 class="modal-title">📋 Điều kiện thắng - thua</h3>
+            
+            <div class="rules-section">
+                <h4 class="rules-heading">🏆 ĐIỀU KIỆN THẮNG:</h4>
+                <ul class="rules-list">
+                    <li>✅ Bắt được <strong>6/10 máy bay VietJet</strong></li>
+                    <li>⏰ Hoàn thành trong <strong>thời gian cho phép</strong></li>
+                    <li>💖 Còn ít nhất <strong>1 mạng</strong></li>
+                </ul>
+            </div>
+            
+            <div class="rules-section">
+                <h4 class="rules-heading">💔 ĐIỀU KIỆN THUA:</h4>
+                <ul class="rules-list">
+                    <li>❌ Hết <strong>3 cơ hội</strong> (chạm nhầm 3 lần)</li>
+                    <li>⏱️ Hết <strong>thời gian</strong> (0 giây)</li>
+                    <li>🎯 Không đủ <strong>6 máy bay</strong> khi hết thời gian</li>
+                    <li>🚨 Để <strong>máy bay VietJet thứ 10</strong> bay mất</li>
+                </ul>
+            </div>
+            
+            <div class="rules-section tips">
+                <h4 class="rules-heading">💡 MẸO CHƠI:</h4>
+                <ul class="rules-list">
+                    <li>🎯 Chỉ chạm vào <strong>máy bay VietJet</strong> (có logo VietJet)</li>
+                    <li>⚠️ Tránh chạm vào máy bay khác (bị trừ mạng)</li>
+                    <li>⚡ Bắt máy bay nhanh để cộng thêm thời gian</li>
+                    <li>⭐ Máy bay <strong>viền vàng kim 2 lớp</strong> = VietJet thứ 10 (QUAN TRỌNG!)</li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-primary" onclick="closeRulesModal()">Đã hiểu</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

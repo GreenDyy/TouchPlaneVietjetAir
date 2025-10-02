@@ -172,33 +172,67 @@
 
     <!-- Màn hình giới thiệu game -->
     <div id="intro-screen" class="screen">
-        <div class="container">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
-                <h2 class="screen-title" style="margin: 0;">Hướng dẫn chơi</h2>
-                <button class="help-button" onclick="showRulesModal()">?</button>
+        <!-- Animated background elements -->
+        <div class="intro-bg-effects">
+            <div class="intro-circle intro-circle-1"></div>
+            <div class="intro-circle intro-circle-2"></div>
+            <div class="intro-circle intro-circle-3"></div>
+        </div>
+        
+        <div class="intro-container">
+            <!-- Header Banner -->
+            <div class="intro-header">
+                <div class="intro-header-banner">
+                    <h2 class="intro-title">🎮 HƯỚNG DẪN CHƠI</h2>
+                </div>
+                <button class="help-button-gaming" onclick="showRulesModal()">
+                    <span>?</span>
+                </button>
             </div>
-            <div class="intro-box">
-                <p class="intro-text">Chạm để bắt máy bay Vietjet và nhận quà nhé!</p>
-                <div class="game-info">
-                    <div class="info-item">
-                        <span class="info-icon">✈️</span>
-                        <span>Bắt được 6/10 máy bay để thắng</span>
+            
+            <!-- Mission Text -->
+            <div class="mission-box">
+                <div class="mission-icon">🎯</div>
+                <p class="mission-text">Chạm để bắt máy bay Vietjet và nhận quà nhé!</p>
+            </div>
+            
+            <!-- Game Rules Cards -->
+            <div class="game-rules-grid">
+                <div class="rule-card rule-card-1">
+                    <div class="rule-icon-wrapper">
+                        <div class="rule-icon">✈️</div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-icon">⏰</span>
-                        <span>Mỗi máy bay bắt được +2s thời gian</span>
+                    <div class="rule-content">
+                        <h3 class="rule-title">Mục tiêu</h3>
+                        <p class="rule-desc">Bắt được <strong>6/10</strong> máy bay</p>
                     </div>
-                    <div class="info-item">
-                        <span class="info-icon">👆</span>
-                        <span>Có 3 cơ hội chạm nhầm</span>
+                </div>
+                
+                <div class="rule-card rule-card-2">
+                    <div class="rule-icon-wrapper">
+                        <div class="rule-icon">⏰</div>
                     </div>
-                    <!-- <div class="info-item">
-                        <span class="info-icon">🚨</span>
-                        <span>Đừng để máy bay thứ 10 bay mất!</span>
-                    </div> -->
+                    <div class="rule-content">
+                        <h3 class="rule-title">Thời gian</h3>
+                        <p class="rule-desc">Mỗi lần bắt <strong>+2s</strong></p>
+                    </div>
+                </div>
+                
+                <div class="rule-card rule-card-3">
+                    <div class="rule-icon-wrapper">
+                        <div class="rule-icon">💖</div>
+                    </div>
+                    <div class="rule-content">
+                        <h3 class="rule-title">Mạng</h3>
+                        <p class="rule-desc">Có <strong>3</strong> cơ hội nhầm</p>
+                    </div>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="showMapSelection()">Bắt đầu chơi</button>
+            
+            <!-- Play Button -->
+            <button class="btn-play-game" onclick="showMapSelection()">
+                <span>BẮT ĐẦU CHƠI</span>
+            </button>
         </div>
     </div>
 
@@ -284,7 +318,9 @@
             <!-- Difficulty options -->
             <div class="difficulty-options">
                 <div class="difficulty-card easy" onclick="selectDifficulty('easy')">
-                    <div class="card-icon">✈️</div>
+                    <div class="card-icon">
+                        <img src="assets/easy_mode.png" alt="Easy Mode">
+                    </div>
                     <div class="card-content">
                         <h3>DỄ</h3>
                         <p>Ít chướng ngại vật, thời gian dài</p>
@@ -292,7 +328,9 @@
                 </div>
                 
                 <div class="difficulty-card normal" onclick="selectDifficulty('medium')">
-                    <div class="card-icon">🚀</div>
+                    <div class="card-icon">
+                        <img src="assets/medium_mode.png" alt="Medium Mode">
+                    </div>
                     <div class="card-content">
                         <h3>THƯỜNG</h3>
                         <p>Cân bằng, thử thách vừa phải</p>
@@ -300,7 +338,9 @@
                 </div>
                 
                 <div class="difficulty-card hard" onclick="selectDifficulty('hard')">
-                    <div class="card-icon">🔥</div>
+                    <div class="card-icon">
+                        <img src="assets/hard_mode.png" alt="Hard Mode">
+                    </div>
                     <div class="card-content">
                         <h3>KHÓ</h3>
                         <p>Nhanh & gay cấn, điểm cao!</p>
@@ -389,9 +429,16 @@
                     </div>
                 </div>
                 <div class="score-box">
+                    <div class="score-icon">🎯</div>
+                    <div class="score-info">
+                        <span class="score-label">Độ khó:</span>
+                        <span class="score-value" id="difficulty-level">Thường</span>
+                    </div>
+                </div>
+                <div class="score-box">
                     <div class="score-icon">💖</div>
                     <div class="score-info">
-                        <span class="score-label">Cơ hội còn lại:</span>
+                        <span class="score-label">Mạng còn lại:</span>
                         <span class="score-value" id="chances-left">3</span>
                     </div>
                 </div>
@@ -417,7 +464,7 @@
             <div class="qr-code">
                 <img id="qr-image" src="assets/qr_code_level_1.png" alt="QR Vietjet" width="180">
                 <p class="qr-label">Quét mã để nhận voucher</p>
-                <a href="https://evoucher.vietjetair.com/" target="_blank" class="link">evoucher.vietjetair.com</a>
+                <a id="voucher-link" href="https://evoucher.vietjetair.com/" target="_blank" class="link">evoucher.vietjetair.com</a>
             </div>
             <button class="btn btn-primary" onclick="showRating()">Tiếp tục</button>
         </div>

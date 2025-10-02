@@ -8,7 +8,8 @@ const sounds = {
     winner: new Audio('assets/sounds/sfx_winner.mp3'),
     cutIn: new Audio('assets/sounds/cut_in.mp3'),
     timerBeep: new Audio('assets/sounds/timer_beep.mp3'),
-    rating: new Audio('assets/sounds/rating.mp3')
+    rating: new Audio('assets/sounds/rating.mp3'),
+    tap: new Audio('assets/sounds/tap_1.mp3')
 };
 
 // Cấu hình âm thanh
@@ -25,6 +26,7 @@ sounds.winner.volume = 0.5;
 sounds.cutIn.volume = 0.7;
 sounds.timerBeep.volume = 0.6;
 sounds.rating.volume = 0.5;
+sounds.tap.volume = 0.6;
 
 // Preload audio cho Android WebView
 sounds.menuTheme.preload = 'auto';
@@ -36,6 +38,7 @@ sounds.winner.preload = 'auto';
 sounds.cutIn.preload = 'auto';
 sounds.timerBeep.preload = 'auto';
 sounds.rating.preload = 'auto';
+sounds.tap.preload = 'auto';
 
 // Helper function để play audio an toàn (tránh lỗi trên Android)
 function playSoundSafe(sound) {
@@ -95,21 +98,27 @@ const DIFFICULTY_CONFIG = {
         speedMultiplier: 1,
         timeBonus: 3,
         qrCode: 'assets/qr_code_level_1.png',
-        hasRain: false
+        voucherLink: 'https://evoucher.vietjetair.com',
+        hasRain: false,
+        hasFireEffect: false
     },
     medium: {
         gameTime: 20,
         speedMultiplier: 1.5,
         timeBonus: 2,
         qrCode: 'assets/qr_code_level_2.png',
-        hasRain: false
+        voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
+        hasRain: false,
+        hasFireEffect: false
     },
     hard: {
         gameTime: 15,
         speedMultiplier: 2,
         timeBonus: 1,
         qrCode: 'assets/qr_code_level_3.png',
-        hasRain: true
+        voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
+        hasRain: true,
+        hasFireEffect: true
     }
 };
 
@@ -216,8 +225,6 @@ let gameState = {
 
 // Chuyển màn hình
 function showScreen(screenId) {
-    console.log('showScreen called with:', screenId);
-    console.trace('Call stack:'); // In ra call stack để biết ai gọi
     const screens = document.querySelectorAll('.screen');
     screens.forEach(screen => screen.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
@@ -235,6 +242,26 @@ function closeRulesModal() {
 // Màn hình khảo sát
 function showSurvey() {
     showScreen('survey-screen');
+    createSurveyConfetti();
+}
+
+// Tạo hiệu ứng confetti cho survey
+function createSurveyConfetti() {
+    const confettiContainer = document.querySelector('.survey-confetti-container');
+    confettiContainer.innerHTML = '';
+    
+    // Tạo 40 particles
+    for (let i = 0; i < 40; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'confetti-particle';
+        
+        // Random vị trí và timing
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 3 + 's';
+        particle.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        
+        confettiContainer.appendChild(particle);
+    }
 }
 
 // Validate và hiển thị màn giới thiệu
@@ -426,6 +453,7 @@ function initGame() {
     // Update UI
     updateScore();
     updateTimer();
+    updateDifficultyDisplay();
 
     // Start countdown timer
     startTimer();
@@ -654,6 +682,17 @@ function updateScore() {
         gameState.vietjetSpawned + '/' + gameState.maxVietjet;
 }
 
+// Update difficulty display
+function updateDifficultyDisplay() {
+    const difficultyNames = {
+        'easy': 'Dễ',
+        'medium': 'Thường',
+        'hard': 'Khó'
+    };
+    document.getElementById('difficulty-level').textContent = 
+        difficultyNames[gameState.difficulty] || 'Thường';
+}
+
 // Timer functions
 function startTimer() {
     // Clear existing timer nếu có
@@ -749,7 +788,6 @@ function checkGameEnd() {
 }
 
 function endGame(isWin) {
-    console.log('endGame called with isWin:', isWin);
     gameState.isGameRunning = false;
 
     if (gameState.animationFrame) {
@@ -767,18 +805,19 @@ function endGame(isWin) {
     stopRain();
     
     setTimeout(function () {
-        console.log('endGame setTimeout executing, isWin:', isWin);
         if (isWin) {
-            // Cập nhật QR code theo level
+            // Cập nhật QR code và link theo level
             const qrImage = document.getElementById('qr-image');
+            const voucherLink = document.getElementById('voucher-link');
             const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
-            qrImage.src = difficultyConfig.qrCode;
             
-            console.log('About to show win-screen');
+            qrImage.src = difficultyConfig.qrCode;
+            voucherLink.href = difficultyConfig.voucherLink;
+            voucherLink.textContent = difficultyConfig.voucherLink;
+            
             showScreen('win-screen');
             playSoundSafe(sounds.winner);
         } else {
-            console.log('About to show lose-screen');
             showScreen('lose-screen');
             playSoundSafe(sounds.gameOver);
         }
@@ -1284,6 +1323,24 @@ function unlockAudio() {
     audioUnlock.removeEventListener('touchstart', unlockAudio);
 }
 
+// Setup tap sound cho tất cả buttons
+function setupButtonTapSound() {
+    // Lấy tất cả các button và element có class btn
+    const buttons = document.querySelectorAll('button, .btn, .map-item, .difficulty-card, .star');
+    
+    buttons.forEach(function(button) {
+        // Click event
+        button.addEventListener('click', function() {
+            playSoundSafe(sounds.tap);
+        }, { passive: true });
+        
+        // Touch event cho mobile
+        button.addEventListener('touchstart', function() {
+            playSoundSafe(sounds.tap);
+        }, { passive: true });
+    });
+}
+
 // Initialize game when page loads
 window.addEventListener('load', function () {
     preloadImages();
@@ -1293,5 +1350,8 @@ window.addEventListener('load', function () {
     const audioUnlock = document.getElementById('audio-unlock');
     audioUnlock.addEventListener('click', unlockAudio);
     audioUnlock.addEventListener('touchstart', unlockAudio);
+    
+    // Setup tap sound cho tất cả buttons
+    setupButtonTapSound();
 });
 

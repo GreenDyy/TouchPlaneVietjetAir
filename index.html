@@ -102,6 +102,9 @@
 
             <div class="question-block">
                 <p class="question">3. Xin cảm ơn bạn đã tham gia khảo sát. Giờ thì chúng ta cùng bắt đầu chơi nhé!</p>
+            </div>
+
+            <div class="question-block" style="margin-top: -30px;">
                 <button class="btn btn-primary" onclick="validateAndShowIntro()">Tiếp tục</button>
             </div>
         </div>
@@ -115,7 +118,7 @@
                 <button class="help-button" onclick="showRulesModal()">?</button>
             </div>
             <div class="intro-box">
-                <p class="intro-text">Trò chơi cực kỳ đơn giản. Chỉ cần bạn chạm để bắt được máy bay Vietjet và nhận quà ngay nhé!</p>
+                <p class="intro-text">Chạm để bắt máy bay Vietjet và nhận quà nhé!</p>
                 <div class="game-info">
                     <div class="info-item">
                         <span class="info-icon">✈️</span>
@@ -127,12 +130,12 @@
                     </div>
                     <div class="info-item">
                         <span class="info-icon">👆</span>
-                        <span>3 cơ hội chạm nhầm</span>
+                        <span>Có 3 cơ hội chạm nhầm</span>
                     </div>
-                    <div class="info-item">
+                    <!-- <div class="info-item">
                         <span class="info-icon">🚨</span>
                         <span>Đừng để máy bay thứ 10 bay mất!</span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <button class="btn btn-primary" onclick="startGame()">Bắt đầu chơi</button>
@@ -212,6 +215,7 @@
         <div class="container">
             <h2 class="screen-title">Đánh giá dịch vụ</h2>
             <p class="intro-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
+            <div id="rating-emoji" class="rating-emoji">🤔</div>
             <div class="star-rating">
                 <span class="star" data-value="1" onclick="rateStar(1)">☆</span>
                 <span class="star" data-value="2" onclick="rateStar(2)">☆</span>
@@ -229,9 +233,11 @@
             <div class="logo">
                 <img src="assets/logo.png" alt="Vietjet Logo" width="200">
             </div>
+
             <h2 class="screen-title">Cảm ơn bạn!</h2>
             <p class="intro-text">Xin cảm ơn bạn đã sử dụng dịch vụ của Vietjet ngày hôm nay. Chúc bạn có 1 chuyến đi vui vẻ và an toàn nhé.</p>
-            <button class="btn btn-secondary" onclick="restartGame()">Chơi lại</button>
+        
+            <button class="btn btn-primary" onclick="restartGame()">Chơi lại</button>
         </div>
     </div>
 
@@ -240,7 +246,7 @@
         <div class="modal-overlay" onclick="closeRulesModal()"></div>
         <div class="modal-content">
             <button class="modal-close" onclick="closeRulesModal()">×</button>
-            <h3 class="modal-title">📋 Điều kiện thắng - thua</h3>
+            <h3 class="modal-title"><span style="filter: none; -webkit-text-fill-color: initial;">📋</span> <span>Điều kiện thắng - thua</span></h3>
             
             <div class="rules-section">
                 <h4 class="rules-heading">🏆 ĐIỀU KIỆN THẮNG:</h4>
@@ -256,8 +262,7 @@
                 <ul class="rules-list">
                     <li>❌ Hết <strong>3 cơ hội</strong> (chạm nhầm 3 lần)</li>
                     <li>⏱️ Hết <strong>thời gian</strong> (0 giây)</li>
-                    <li>🎯 Không đủ <strong>6 máy bay</strong> khi hết thời gian</li>
-                    <li>🚨 Để <strong>máy bay VietJet thứ 10</strong> bay mất</li>
+                    <li>🎯 Bạn sẽ thua nếu chưa đủ <strong>6/10 máy bay</strong> lúc hết thời gian hoặc khi <strong>10 chiếc đã qua</strong></li>
                 </ul>
             </div>
             
@@ -267,11 +272,12 @@
                     <li>🎯 Chỉ chạm vào <strong>máy bay VietJet</strong> (có logo VietJet)</li>
                     <li>⚠️ Tránh chạm vào máy bay khác (bị trừ mạng)</li>
                     <li>⚡ Bắt máy bay nhanh để cộng thêm thời gian</li>
-                    <li>⭐ Máy bay <strong>viền vàng kim 2 lớp</strong> = VietJet thứ 10 (QUAN TRỌNG!)</li>
                 </ul>
             </div>
             
-            <button class="btn btn-primary" onclick="closeRulesModal()">Đã hiểu</button>
+            <div style="display: flex; justify-content: center;">
+                <button class="btn btn-primary" onclick="closeRulesModal()">Đã hiểu</button>
+            </div>
         </div>
     </div>
 

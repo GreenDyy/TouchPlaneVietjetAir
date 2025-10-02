@@ -83,7 +83,7 @@ body {
     margin-bottom: 35px;
     animation: logoGlow 2s ease-in-out infinite;
     filter: drop-shadow(0 5px 15px rgba(202, 22, 28, 0.3));
-    order: 1;
+    order: -1;
 }
 
 .logo img {
@@ -277,9 +277,6 @@ body {
     text-align: left;
 }
 
-.question-block:last-child {
-    text-align: center;
-}
 
 .question {
     color: #333;
@@ -338,7 +335,7 @@ body {
 .info-item {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     margin: 10px 0;
     font-size: 16px;
     color: #333;
@@ -650,9 +647,32 @@ body {
     font-size: 13px;
     margin-top: 3px;
     font-weight: 600;
+    cursor: pointer;
 }
 
 /* Star rating */
+.rating-emoji {
+    font-size: 80px;
+    text-align: center;
+    margin: 20px 0;
+    min-height: 80px;
+    animation: emojiPop 0.3s ease-out;
+}
+
+@keyframes emojiPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .star-rating {
     display: flex;
     justify-content: center;
@@ -678,6 +698,7 @@ body {
     color: #75767a;
     margin-top: 15px;
     min-height: 25px;
+    font-weight: 600;
 }
 
 /* Floating decorative planes */

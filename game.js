@@ -26,13 +26,13 @@ const GAME_CONFIG = {
     TIME_BONUS: 2,           // Thời gian thưởng khi bắt đúng máy bay (giây)
 
     // Tốc độ bay của máy bay
-    SPEED_DEFAULT: 6,        // Tốc độ mặc định
-    SPEED_RANGE: 2,          // Khoảng random tốc độ thường
+    SPEED_DEFAULT: 1,        // Tốc độ mặc định
+    SPEED_RANGE: 1,          // Khoảng random tốc độ thường
 
     // Máy bay siêu nhanh (Fast Planes)
     FAST_PLANE_CHANCE: 0.2,  // 20% cơ hội xuất hiện máy bay siêu nhanh
-    SPEED_FAST: 10,          // Tốc độ của máy bay siêu nhanh
-    SPEED_FAST_RANGE: 3,     // Khoảng random cho máy bay siêu nhanh (10-13)
+    SPEED_FAST: 4,          // Tốc độ của máy bay siêu nhanh
+    SPEED_FAST_RANGE: 2,     // Khoảng random cho máy bay siêu nhanh (10-13)
 
     // Hit detection - Vùng click
     HITBOX_MULTIPLIER: 1.5,  // Tăng vùng click lên 1.5 lần để dễ bấm hơn
@@ -457,6 +457,12 @@ function stopTimer() {
 }
 
 function checkGameEnd() {
+    // Thắng ngay khi bắt được 6 máy bay
+    if (gameState.caughtPlanes >= 6) {
+        endGame(true);
+        return;
+    }
+
     if (gameState.chances <= 0) {
         // Thua khi hết mạng
         endGame(false);
@@ -830,8 +836,26 @@ function rateStar(value) {
         }
     });
 
+    // Emoji tương ứng với từng mức đánh giá
+    const emojiMap = {
+        1: '😢',  // Rất tệ
+        2: '🙁',  // Không hài lòng
+        3: '😐',  // Bình thường
+        4: '😊',  // Tốt
+        5: '😍'   // Tuyệt vời
+    };
+
+    const ratingTextMap = {
+        1: 'Rất tệ',
+        2: 'Không hài lòng',
+        3: 'Bình thường',
+        4: 'Hài lòng',
+        5: 'Rất hài lòng'
+    };
+
+    document.getElementById('rating-emoji').textContent = emojiMap[value];
     document.getElementById('rating-value').textContent =
-        'Bạn đã đánh giá ' + value + ' sao';
+        ratingTextMap[value] + ' - ' + value + ' sao';
 
     setTimeout(function () {
         showThankYou();
@@ -841,6 +865,9 @@ function rateStar(value) {
 function showRating() {
     showScreen('rating-screen');
     selectedRating = 0;
+    // Reset emoji về mặc định
+    document.getElementById('rating-emoji').textContent = '🤔';
+    document.getElementById('rating-value').textContent = '';
     const stars = document.querySelectorAll('.star');
     stars.forEach(function (star) {
         star.classList.remove('active');

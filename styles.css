@@ -2077,6 +2077,104 @@ body {
     }
 }
 
+/* Main Menu Layers */
+.main-menu-layers {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Skyline - Behind building */
+.skyline-layer {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 900px;
+    height: auto;
+    z-index: 3;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.skyline-layer img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.8;
+}
+
+/* Cloud Left */
+.cloud-left {
+    position: absolute;
+    bottom: -2%;
+    left: -10%;
+    z-index: 4;
+    width: 50%;
+    z-index: 5;
+    animation: cloudFloatLeft 4s ease-in-out infinite;
+}
+
+.cloud-left img {
+    width: 100%;
+    height: auto;
+}
+
+/* Cloud Right */
+.cloud-right {
+    position: absolute;
+    bottom: -4%;
+    right: 0;
+    z-index: 5;
+    width: 35%;
+    animation: cloudFloatRight 4s ease-in-out infinite;
+}
+
+.cloud-right img {
+    width: 100%;
+    height: auto;
+}
+
+/* Building - Center bottom - FULL VW */
+.building-layer {
+    position: absolute;
+    bottom: -3%;
+    left: 0;
+    z-index: 5;
+    width: 100vw;
+    transform: scaleY(0.7);
+    transform-origin: bottom;
+}
+
+.building-layer img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+@keyframes cloudFloatLeft {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+    }
+    50% {
+        transform: translateY(-10px) translateX(-5px);
+    }
+}
+
+@keyframes cloudFloatRight {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+    }
+    50% {
+        transform: translateY(-10px) translateX(5px);
+    }
+}
+
 @keyframes planeFlyReverse {
     0% {
         right: -100px;
@@ -2662,6 +2760,22 @@ body {
         top: 0;
         right: 0;
         max-width: calc(100% - 20px);
+    }
+    
+    /* Main Menu Layers - Mobile */
+    .building-layer {
+        width: 100vw;
+    }
+    
+    .cloud-left,
+    .cloud-right {
+        width: 40%;
+        bottom: 10%;
+    }
+    
+    .skyline-layer {
+        width: 90%;
+        max-width: 600px;
     }
 }
 

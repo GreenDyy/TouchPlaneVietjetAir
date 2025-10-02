@@ -3390,6 +3390,218 @@ body {
     }
 }
 
+/* ========== PAUSE BUTTON ========== */
+.pause-button {
+    position: absolute;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 150;
+    padding: 5px;
+}
+
+.pause-button:hover {
+    transform: scale(1.15);
+}
+
+.pause-button:active {
+    transform: scale(1);
+}
+
+/* ========== PAUSE MENU - SIMPLE STYLE ========== */
+.pause-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 250;
+}
+
+.pause-menu.show {
+    display: flex;
+}
+
+.pause-content {
+    background: linear-gradient(135deg, #fff 0%, #ffe5e7 100%);
+    border-radius: 30px;
+    padding: 40px 50px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    border: 4px solid #ca161c;
+}
+
+.pause-title {
+    color: #ca161c;
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin: 0 0 30px 0;
+    text-shadow: 2px 2px 4px rgba(202, 22, 28, 0.2);
+}
+
+.pause-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.pause-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    border: 3px solid transparent;
+}
+
+.pause-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.pause-card:active {
+    transform: translateY(-1px);
+}
+
+.pause-card-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.pause-card-content {
+    flex: 1;
+    text-align: left;
+}
+
+.pause-card-content h3 {
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin: 0 0 5px 0;
+    letter-spacing: 1px;
+}
+
+.pause-card-content p {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    color: #666;
+}
+
+/* Card colors */
+.resume-card {
+    border-color: #4CAF50;
+}
+
+.resume-card .pause-card-icon {
+    background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+    color: white;
+}
+
+.resume-card .pause-card-content h3 {
+    color: #4CAF50;
+}
+
+.resume-card:hover {
+    border-color: #4CAF50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, #fff 100%);
+}
+
+.restart-card {
+    border-color: #FF9800;
+}
+
+.restart-card .pause-card-icon {
+    background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+    color: white;
+}
+
+.restart-card .pause-card-content h3 {
+    color: #FF9800;
+}
+
+.restart-card:hover {
+    border-color: #FF9800;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, #fff 100%);
+}
+
+.menu-card {
+    border-color: #ca161c;
+}
+
+.menu-card .pause-card-icon {
+    background: linear-gradient(135deg, #ca161c 0%, #e20074 100%);
+    color: white;
+}
+
+.menu-card .pause-card-content h3 {
+    color: #ca161c;
+}
+
+.menu-card:hover {
+    border-color: #ca161c;
+    background: linear-gradient(135deg, rgba(202, 22, 28, 0.05) 0%, #fff 100%);
+}
+
+/* Responsive pause menu */
+@media (max-width: 768px) {
+    .pause-button {
+        font-size: 2rem;
+        top: 12px;
+        left: 12px;
+    }
+    
+    .pause-content {
+        padding: 35px 40px;
+        width: 95%;
+    }
+    
+    .pause-title {
+        font-size: 2rem;
+        margin-bottom: 25px;
+    }
+    
+    .pause-card {
+        padding: 18px 25px;
+        gap: 15px;
+    }
+    
+    .pause-card-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .pause-card-content h3 {
+        font-size: 1.2rem;
+    }
+    
+    .pause-card-content p {
+        font-size: 0.85rem;
+    }
+}
+
 /* ========== GAME OVER POPUP ========== */
 .game-over-popup {
     position: absolute;

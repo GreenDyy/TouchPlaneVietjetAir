@@ -437,6 +437,7 @@ function initGame() {
     gameState.chances = 3;
     gameState.planes = [];
     gameState.isGameRunning = true;
+    isPaused = false; // Reset pause state
     
     // Áp dụng thời gian theo độ khó
     const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
@@ -505,7 +506,7 @@ function resizeCanvas() {
 }
 
 function handleCanvasClick(e) {
-    if (!gameState.isGameRunning) return;
+    if (!gameState.isGameRunning || isPaused) return;
     const rect = gameState.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -513,7 +514,7 @@ function handleCanvasClick(e) {
 }
 
 function handleCanvasTouch(e) {
-    if (!gameState.isGameRunning) return;
+    if (!gameState.isGameRunning || isPaused) return;
     e.preventDefault();
     e.stopPropagation(); // Ngăn event bubbling để tăng performance
     
@@ -705,7 +706,7 @@ function startTimer() {
     }
 
     gameState.timerInterval = setInterval(function () {
-        if (gameState.isGameRunning) {
+        if (gameState.isGameRunning && !isPaused) {
             gameState.timeLeft--;
             updateTimer();
 
@@ -793,6 +794,7 @@ function checkGameEnd() {
 
 function endGame(isWin) {
     gameState.isGameRunning = false;
+    isPaused = false; // Reset pause state
 
     if (gameState.animationFrame) {
         cancelAnimationFrame(gameState.animationFrame);
@@ -833,6 +835,12 @@ function endGame(isWin) {
 
 function spawnPlane() {
     if (!gameState.isGameRunning) {
+        return;
+    }
+    
+    // Nếu đang pause thì delay spawn
+    if (isPaused) {
+        setTimeout(spawnPlane, 100);
         return;
     }
 
@@ -982,6 +990,12 @@ function spawnPlane() {
 
 function gameLoop() {
     if (!gameState.isGameRunning) return;
+    
+    // Nếu đang pause thì vẫn vẽ nhưng không update
+    if (isPaused) {
+        gameState.animationFrame = requestAnimationFrame(gameLoop);
+        return;
+    }
 
     // Clear canvas
     gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
@@ -1253,6 +1267,15 @@ function showThankYou() {
 }
 
 function restartGame() {
+    // Reset pause state
+    isPaused = false;
+    
+    // Ẩn pause menu nếu đang hiển thị
+    const pauseMenu = document.getElementById('pause-menu');
+    if (pauseMenu) {
+        pauseMenu.classList.remove('show');
+    }
+    
     // Dừng timer
     stopTimer();
 
@@ -1324,6 +1347,13 @@ function startLightning() {
     function triggerLightning() {
         if (!gameState.isGameRunning) return;
         
+        // Nếu đang pause thì skip lần này và đợi lần sau
+        if (isPaused) {
+            const nextLightning = 1000; // Check lại sau 1 giây
+            lightningInterval = setTimeout(triggerLightning, nextLightning);
+            return;
+        }
+        
         // Phát âm thanh sấm
         playSoundSafe(sounds.thunder);
         
@@ -1335,7 +1365,7 @@ function startLightning() {
             lightningOverlay.classList.remove('flash');
         }, 500);
         
-        // Schedule next lightning (random 5-12 giây)
+        // Schedule next lightning (random 2-7 giây)
         const nextLightning = 2000 + Math.random() * 5000;
         lightningInterval = setTimeout(triggerLightning, nextLightning);
     }
@@ -1355,6 +1385,84 @@ function stopLightning() {
     if (lightningOverlay) {
         lightningOverlay.classList.remove('flash');
     }
+}
+
+// Pause Game Functions
+let isPaused = false;
+
+function pauseGame() {
+    if (!gameState.isGameRunning || isPaused) return;
+    
+    isPaused = true;
+    
+    // Hiển thị pause menu
+    const pauseMenu = document.getElementById('pause-menu');
+    pauseMenu.classList.add('show');
+    
+    // Tạm dừng tất cả âm thanh
+    sounds.bgMusic.pause();
+    sounds.menuTheme.pause();
+}
+
+function resumeGame() {
+    if (!isPaused) return;
+    
+    isPaused = false;
+    
+    // Ẩn pause menu
+    const pauseMenu = document.getElementById('pause-menu');
+    pauseMenu.classList.remove('show');
+    
+    // Resume âm thanh nền game
+    playSoundSafe(sounds.bgMusic);
+}
+
+function restartFromPause() {
+    isPaused = false;
+    
+    // Ẩn pause menu
+    const pauseMenu = document.getElementById('pause-menu');
+    pauseMenu.classList.remove('show');
+    
+    // Dừng game hiện tại
+    gameState.isGameRunning = false;
+    if (gameState.animationFrame) {
+        cancelAnimationFrame(gameState.animationFrame);
+    }
+    stopTimer();
+    stopRain();
+    stopLightning();
+    
+    // Dừng nhạc nền
+    sounds.bgMusic.pause();
+    sounds.bgMusic.currentTime = 0;
+    
+    // Chuyển về màn chọn map để chơi lại
+    showScreen('map-selection-screen');
+}
+
+function backToMenu() {
+    isPaused = false;
+    
+    // Ẩn pause menu
+    const pauseMenu = document.getElementById('pause-menu');
+    pauseMenu.classList.remove('show');
+    
+    // Dừng game
+    gameState.isGameRunning = false;
+    if (gameState.animationFrame) {
+        cancelAnimationFrame(gameState.animationFrame);
+    }
+    stopTimer();
+    stopRain();
+    stopLightning();
+    
+    // Dừng nhạc nền
+    sounds.bgMusic.pause();
+    sounds.bgMusic.currentTime = 0;
+    
+    // Reset và về welcome screen
+    restartGame();
 }
 
 // Game Over Popup

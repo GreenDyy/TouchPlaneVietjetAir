@@ -406,6 +406,9 @@
         </div>
         
         <div class="game-header">
+            <button class="pause-button" onclick="pauseGame()">
+                <span>⏸</span>
+            </button>
             <div class="score-board">
                 <div class="score-box">
                     <div class="score-icon">🛫</div>
@@ -461,6 +464,38 @@
                 <h2 class="game-over-text">BẠN ĐÃ THUA!</h2>
                 <p class="game-over-score">Số máy bay bắt được: <span id="popup-score">0</span>/10</p>
                 <p class="game-over-hint">(Chạm để tiếp tục)</p>
+            </div>
+        </div>
+        
+        <!-- Pause Menu -->
+        <div id="pause-menu" class="pause-menu">
+            <div class="pause-content">
+                <h2 class="pause-title">TẠM DỪNG</h2>
+                <div class="pause-options">
+                    <div class="pause-card resume-card" onclick="resumeGame()">
+                        <div class="pause-card-icon">▶</div>
+                        <div class="pause-card-content">
+                            <h3>TIẾP TỤC</h3>
+                            <p>Quay lại chơi tiếp</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pause-card restart-card" onclick="restartFromPause()">
+                        <div class="pause-card-icon">🔄</div>
+                        <div class="pause-card-content">
+                            <h3>CHƠI LẠI</h3>
+                            <p>Bắt đầu màn mới</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pause-card menu-card" onclick="backToMenu()">
+                        <div class="pause-card-icon">🏠</div>
+                        <div class="pause-card-content">
+                            <h3>VỀ MENU</h3>
+                            <p>Quay về màn hình chính</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

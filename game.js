@@ -19,11 +19,15 @@ sounds.winner.volume = 0.5;
 // Game Configuration - Cấu hình game
 const GAME_CONFIG = {
     // Debug
-    SHOW_HITBOX: false,       // Bật/tắt hiển thị vòng tròn hitbox (true = hiện, false = ẩn)
+    SHOW_HITBOX: true,       // Bật/tắt hiển thị vòng tròn hitbox (true = hiện, false = ẩn)
 
     // Thời gian chơi
     GAME_TIME: 20,           // Thời gian countdown ban đầu (giây)
     TIME_BONUS: 2,           // Thời gian thưởng khi bắt đúng máy bay (giây)
+
+    // Kích thước máy bay
+    PLANE_SIZE: 50,          // Kích thước cơ bản của máy bay (px)
+    PLANE_SIZE_MULTIPLIER: 1.5, // Hệ số nhân khi vẽ ảnh (1.5 = gấp 1.5 lần)
 
     // Tốc độ bay của máy bay
     SPEED_DEFAULT: 1,        // Tốc độ mặc định
@@ -35,7 +39,7 @@ const GAME_CONFIG = {
     SPEED_FAST_RANGE: 2,     // Khoảng random cho máy bay siêu nhanh (10-13)
 
     // Hit detection - Vùng click
-    HITBOX_MULTIPLIER: 1.5,  // Tăng vùng click lên 1.5 lần để dễ bấm hơn
+    HITBOX_MULTIPLIER: 1.8,  // Tăng vùng click lên 1.5 lần để dễ bấm hơn
 
     // Spawn timing
     SPAWN_DELAY_MIN: 400,       // Delay tối thiểu giữa các lần spawn (ms)
@@ -56,17 +60,43 @@ const imageCategories = {
         'assets/player/vj2.png',
         'assets/player/vj3.png',
         'assets/player/vj4.png',
-        'assets/player/vj5.png'
+        'assets/player/vj5.png',
+        'assets/player/vj6.png',
+        'assets/player/vj8.png',
+        'assets/player/vj9.png',
+        'assets/player/vj10.png',
+        'assets/player/vj11.png',
+        'assets/player/vj12.png',
+        'assets/player/vj13.png',
+        'assets/player/vj14.png'
     ],
     horizontal: [
         'assets/fly_horizontal/horizontal_1.png',
         'assets/fly_horizontal/horizontal_2.png',
         'assets/fly_horizontal/horizontal_3.png',
+        'assets/fly_horizontal/horizontal_4.png',
+        'assets/fly_horizontal/horizontal_5.png',
+        'assets/fly_horizontal/horizontal_6.png',
+        'assets/fly_horizontal/horizontal_7.png',
+        'assets/fly_horizontal/horizontal_8.png'
+
     ],
     vertical: [
         'assets/fly_vertical/vertical_1.png',
         'assets/fly_vertical/vertical_2.png',
-        'assets/fly_vertical/vertical_3.png'
+        'assets/fly_vertical/vertical_3.png',
+        'assets/fly_vertical/vertical_4.png',
+        'assets/fly_vertical/vertical_5.png',
+        'assets/fly_vertical/vertical_6.png',
+        'assets/fly_vertical/vertical_7.png',
+        'assets/fly_vertical/vertical_8.png',
+        'assets/fly_vertical/vertical_9.png',
+        'assets/fly_vertical/vertical_10.png',
+        'assets/fly_vertical/vertical_11.png',
+    ],
+    cloud: [
+        'assets/cloud.png',
+        'assets/cloud_2.png'
     ]
 };
 
@@ -74,7 +104,8 @@ const imageCategories = {
 let loadedImages = {
     player: [],
     horizontal: [],
-    vertical: []
+    vertical: [],
+    cloud: []
 };
 let imagesLoaded = false;
 
@@ -117,7 +148,9 @@ let gameState = {
     ctx: null,
     animationFrame: null,
     timeLeft: GAME_CONFIG.GAME_TIME,
-    timerInterval: null
+    timerInterval: null,
+    selectedMap: 1,       // Map mặc định
+    mapBackground: null   // Image object của map
 };
 
 // Chuyển màn hình
@@ -155,6 +188,31 @@ function validateAndShowIntro() {
 }
 
 // Bắt đầu game
+// Hiển thị màn hình chọn map
+function showMapSelection() {
+    showScreen('map-selection-screen');
+}
+
+// Chọn map và bắt đầu game
+function selectMap(mapId) {
+    gameState.selectedMap = mapId;
+    
+    // Load ảnh map
+    gameState.mapBackground = new Image();
+    gameState.mapBackground.src = `assets/map/map_${mapId}.jpg`;
+    
+    // Chờ ảnh load xong rồi mới bắt đầu game
+    gameState.mapBackground.onload = function() {
+        startGame();
+    };
+    
+    // Nếu load lỗi, vẫn bắt đầu game (không có background)
+    gameState.mapBackground.onerror = function() {
+        console.log('Lỗi load map:', mapId);
+        startGame();
+    };
+}
+
 function startGame() {
     showScreen('game-screen');
     initGame();
@@ -557,7 +615,8 @@ function spawnPlane() {
     } else if (type === 'horizontal') {
         // Horizontal = Bay theo chiều ngang (từ trái qua phải hoặc ngược lại)
         const fromLeft = Math.random() < 0.5;
-        y = Math.random() * gameState.canvas.height;
+        // Giới hạn vùng spawn: từ 15% đến 75% chiều cao màn hình (tránh quá thấp hoặc quá cao)
+        y = gameState.canvas.height * 0.15 + Math.random() * (gameState.canvas.height * 0.6);
 
         if (fromLeft) {
             x = -50;
@@ -581,7 +640,8 @@ function spawnPlane() {
                 break;
             case 1: // right
                 x = gameState.canvas.width + 50;
-                y = Math.random() * gameState.canvas.height;
+                // Giới hạn vùng spawn: từ 15% đến 75% chiều cao (tránh quá thấp)
+                y = gameState.canvas.height * 0.15 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = -speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
@@ -593,7 +653,8 @@ function spawnPlane() {
                 break;
             case 3: // left
                 x = -50;
-                y = Math.random() * gameState.canvas.height;
+                // Giới hạn vùng spawn: từ 15% đến 75% chiều cao (tránh quá thấp)
+                y = gameState.canvas.height * 0.15 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
@@ -625,7 +686,7 @@ function spawnPlane() {
         y: y,
         vx: vx,
         vy: vy,
-        size: 60,
+        size: GAME_CONFIG.PLANE_SIZE,
         rotation: rotation,
         type: type,
         imageIndex: imageIndex,
@@ -651,6 +712,16 @@ function gameLoop() {
 
     // Clear canvas
     gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+
+    // Draw map background
+    if (gameState.mapBackground && gameState.mapBackground.complete) {
+        gameState.ctx.drawImage(
+            gameState.mapBackground,
+            0, 0,
+            gameState.canvas.width,
+            gameState.canvas.height
+        );
+    }
 
     // Draw clouds
     drawClouds();
@@ -698,24 +769,33 @@ function drawClouds() {
             clouds.push({
                 x: Math.random() * gameState.canvas.width,
                 y: Math.random() * gameState.canvas.height,
-                size: 40 + Math.random() * 60,
-                speed: 0.2 + Math.random() * 0.3
+                size: 80 + Math.random() * 100,
+                speed: 0.2 + Math.random() * 0.3,
+                imageIndex: Math.floor(Math.random() * 2), // Random chọn cloud.png hoặc cloud_2.png
+                opacity: 0.5 + Math.random() * 0.3 // Random opacity từ 0.5 đến 0.8
             });
         }
     }
 
-    // Draw and update clouds
-    gameState.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    // Draw and update clouds với ảnh
     for (let cloud of clouds) {
-        gameState.ctx.beginPath();
-        gameState.ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-        gameState.ctx.arc(cloud.x + cloud.size * 0.6, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
-        gameState.ctx.arc(cloud.x - cloud.size * 0.6, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
-        gameState.ctx.fill();
+        // Kiểm tra xem ảnh đã load chưa
+        if (imagesLoaded && loadedImages.cloud && loadedImages.cloud[cloud.imageIndex]) {
+            gameState.ctx.save();
+            gameState.ctx.globalAlpha = cloud.opacity;
+            
+            const img = loadedImages.cloud[cloud.imageIndex];
+            const width = cloud.size;
+            const height = cloud.size * 0.6; // Tỉ lệ chiều cao/rộng của mây
+            
+            gameState.ctx.drawImage(img, cloud.x, cloud.y, width, height);
+            gameState.ctx.restore();
+        }
 
+        // Di chuyển mây
         cloud.x += cloud.speed;
-        if (cloud.x > gameState.canvas.width + cloud.size * 2) {
-            cloud.x = -cloud.size * 2;
+        if (cloud.x > gameState.canvas.width + cloud.size) {
+            cloud.x = -cloud.size;
             cloud.y = Math.random() * gameState.canvas.height;
         }
     }
@@ -811,8 +891,8 @@ function drawPlane(plane) {
     }
 
     const img = loadedImages[plane.type][plane.imageIndex];
-    const width = plane.size * 1.5;
-    const height = plane.size * 1.5;
+    const width = plane.size * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
+    const height = plane.size * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
 
     gameState.ctx.drawImage(img, -width / 2, -height / 2, width, height);
 
@@ -845,17 +925,8 @@ function rateStar(value) {
         5: '😍'   // Tuyệt vời
     };
 
-    const ratingTextMap = {
-        1: 'Rất tệ',
-        2: 'Không hài lòng',
-        3: 'Bình thường',
-        4: 'Hài lòng',
-        5: 'Rất hài lòng'
-    };
-
     document.getElementById('rating-emoji').textContent = emojiMap[value];
-    document.getElementById('rating-value').textContent =
-        ratingTextMap[value] + ' - ' + value + ' sao';
+    document.getElementById('rating-value').textContent = '';
 
     setTimeout(function () {
         showThankYou();

@@ -28,20 +28,29 @@
         <div class="splash-cloud cloud-5">
             <img src="assets/cloud.png" alt="Cloud">
         </div>
-        <div class="splash-cloud cloud-6">
+        <!-- <div class="splash-cloud cloud-6">
             <img src="assets/cloud_2.png" alt="Cloud">
-        </div>
+        </div> -->
         
         <!-- Animated planes -->
         <div class="splash-plane plane-anim-1">
             <img src="assets/player/vj1.png" alt="Plane">
         </div>
         <div class="splash-plane plane-anim-2">
-            <img src="assets/player/vj2.png" alt="Plane">
-        </div>
-        <div class="splash-plane plane-anim-3">
             <img src="assets/player/vj3.png" alt="Plane">
         </div>
+        <div class="splash-plane plane-anim-3">
+            <img src="assets/player/vj8.png" alt="Plane">
+        </div>
+        <div class="splash-plane plane-anim-4">
+            <img src="assets/player/vj10.png" alt="Plane">
+        </div>
+        <!-- <div class="splash-plane plane-anim-5">
+            <img src="assets/player/vj11.png" alt="Plane">
+        </div>
+        <div class="splash-plane plane-anim-6">
+            <img src="assets/player/vj14.png" alt="Plane">
+        </div> -->
         
         <div class="splash-container">
             <div class="splash-logo">
@@ -138,7 +147,72 @@
                     </div> -->
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="startGame()">Bắt đầu chơi</button>
+            <button class="btn btn-primary" onclick="showMapSelection()">Bắt đầu chơi</button>
+        </div>
+    </div>
+
+    <!-- Màn hình chọn map -->
+    <div id="map-selection-screen" class="screen">
+        <div class="container">
+            <h2 class="screen-title">Chọn bản đồ</h2>
+            <p class="intro-text">Chọn một bản đồ để bắt đầu chơi</p>
+            <div class="map-grid">
+                <div class="map-item" onclick="selectMap(1)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_1.jpg" alt="Map 1">
+                    </div>
+                    <span class="map-label">Bản đồ 1</span>
+                </div>
+                <div class="map-item" onclick="selectMap(2)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_2.jpg" alt="Map 2">
+                    </div>
+                    <span class="map-label">Bản đồ 2</span>
+                </div>
+                <div class="map-item" onclick="selectMap(3)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_3.jpg" alt="Map 3">
+                    </div>
+                    <span class="map-label">Bản đồ 3</span>
+                </div>
+                <div class="map-item" onclick="selectMap(4)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_4.jpg" alt="Map 4">
+                    </div>
+                    <span class="map-label">Bản đồ 4</span>
+                </div>
+                <div class="map-item" onclick="selectMap(5)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_5.jpg" alt="Map 5">
+                    </div>
+                    <span class="map-label">Bản đồ 5</span>
+                </div>
+                <div class="map-item" onclick="selectMap(6)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_6.jpg" alt="Map 6">
+                    </div>
+                    <span class="map-label">Bản đồ 6</span>
+                </div>
+                <div class="map-item" onclick="selectMap(7)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_7.jpg" alt="Map 7">
+                    </div>
+                    <span class="map-label">Bản đồ 7</span>
+                </div>
+                <div class="map-item" onclick="selectMap(8)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_8.jpg" alt="Map 8">
+                    </div>
+                    <span class="map-label">Bản đồ 8</span>
+                </div>
+                <div class="map-item" onclick="selectMap(9)">
+                    <div class="map-image-wrapper">
+                        <img src="assets/map/map_9.jpg" alt="Map 9">
+                    </div>
+                    <span class="map-label">Bản đồ 9</span>
+                </div>
+            </div>
+            </div>
         </div>
     </div>
 

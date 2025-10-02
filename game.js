@@ -27,7 +27,7 @@ const GAME_CONFIG = {
 
     // Kích thước máy bay
     PLANE_SIZE: 50,          // Kích thước cơ bản của máy bay (px)
-    PLANE_SIZE_MULTIPLIER: 1.5, // Hệ số nhân khi vẽ ảnh (1.5 = gấp 1.5 lần)
+    PLANE_SIZE_MULTIPLIER: 2, // Hệ số nhân khi vẽ ảnh (1.5 = gấp 1.5 lần)
 
     // Tốc độ bay của máy bay
     SPEED_DEFAULT: 1,        // Tốc độ mặc định
@@ -180,11 +180,24 @@ function validateAndShowIntro() {
     const q2 = document.querySelector('input[name="q2"]:checked');
 
     if (!q1 || !q2) {
-        alert('Vui lòng trả lời tất cả các câu hỏi!');
+        showFlashMessage();
         return;
     }
 
     showScreen('intro-screen');
+}
+
+// Hiển thị flash message khi thiếu câu trả lời
+function showFlashMessage() {
+    const flashMessage = document.getElementById('flash-message');
+    
+    // Hiển thị message với animation
+    flashMessage.classList.add('show');
+    
+    // Ẩn message sau 3 giây
+    setTimeout(function() {
+        flashMessage.classList.remove('show');
+    }, 3000);
 }
 
 // Bắt đầu game
@@ -259,8 +272,22 @@ function initGame() {
 
 function resizeCanvas() {
     if (!gameState.canvas) return;
-    gameState.canvas.width = window.innerWidth;
-    gameState.canvas.height = window.innerHeight - 80;
+    
+    // Lấy device pixel ratio để đảm bảo độ phân giải cao
+    const dpr = window.devicePixelRatio || 1;
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight - 80;
+    
+    // Set canvas size với device pixel ratio
+    gameState.canvas.width = displayWidth * dpr;
+    gameState.canvas.height = displayHeight * dpr;
+    
+    // Scale canvas để hiển thị đúng kích thước
+    gameState.canvas.style.width = displayWidth + 'px';
+    gameState.canvas.style.height = displayHeight + 'px';
+    
+    // Reset transform và scale context để vẽ đúng tỷ lệ
+    gameState.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function handleCanvasClick(e) {
@@ -715,12 +742,19 @@ function gameLoop() {
 
     // Draw map background
     if (gameState.mapBackground && gameState.mapBackground.complete) {
+        gameState.ctx.save();
+        
+        // Cải thiện chất lượng ảnh background
+        gameState.ctx.imageSmoothingEnabled = true;
+        gameState.ctx.imageSmoothingQuality = 'high';
+        
         gameState.ctx.drawImage(
             gameState.mapBackground,
             0, 0,
             gameState.canvas.width,
             gameState.canvas.height
         );
+        gameState.ctx.restore();
     }
 
     // Draw clouds
@@ -782,6 +816,11 @@ function drawClouds() {
         // Kiểm tra xem ảnh đã load chưa
         if (imagesLoaded && loadedImages.cloud && loadedImages.cloud[cloud.imageIndex]) {
             gameState.ctx.save();
+            
+            // Cải thiện chất lượng ảnh mây
+            gameState.ctx.imageSmoothingEnabled = true;
+            gameState.ctx.imageSmoothingQuality = 'high';
+            
             gameState.ctx.globalAlpha = cloud.opacity;
             
             const img = loadedImages.cloud[cloud.imageIndex];
@@ -822,17 +861,7 @@ function drawPlane(plane) {
             gameState.ctx.stroke();
             gameState.ctx.restore();
         }
-        // Vẽ hiệu ứng cho máy bay siêu nhanh
-        else if (plane.isFast) {
-            gameState.ctx.save();
-            gameState.ctx.strokeStyle = '#FFA500'; // Màu cam
-            gameState.ctx.lineWidth = 3;
-            gameState.ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 200) * 0.4; // Nhấp nháy
-            gameState.ctx.beginPath();
-            gameState.ctx.arc(plane.x, plane.y, plane.size / 2 + 5, 0, Math.PI * 2);
-            gameState.ctx.stroke();
-            gameState.ctx.restore();
-        }
+        // Máy bay siêu nhanh không có hiệu ứng đặc biệt - chỉ dùng hitbox bình thường
     }
 
     // Vẽ vòng tròn debug để thấy phạm vi click (chỉ khi SHOW_HITBOX = true)
@@ -865,6 +894,10 @@ function drawPlane(plane) {
 
     // Vẽ ảnh máy bay
     gameState.ctx.save();
+    
+    // Cải thiện chất lượng ảnh khi scale
+    gameState.ctx.imageSmoothingEnabled = true;
+    gameState.ctx.imageSmoothingQuality = 'high';
     gameState.ctx.translate(plane.x, plane.y);
 
     // Xử lý rotation và flip

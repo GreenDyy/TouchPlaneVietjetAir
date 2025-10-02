@@ -179,6 +179,7 @@ body {
 }
 
 .screen-title {
+    color: #ca161c; /* Fallback color cho browser không hỗ trợ gradient text */
     background: linear-gradient(135deg, #ca161c 0%, #e60012 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -855,11 +856,33 @@ body {
     #map-selection-screen .container {
         width: 95%;
         padding: 25px 20px;
+        margin-top: 20px; /* Thêm margin-top để tránh bị khuất */
     }
     
     .map-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
+    }
+    
+    /* Đảm bảo screen-title hiển thị rõ trên mobile */
+    #map-selection-screen .screen-title {
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+    
+    /* Điều chỉnh decorative circles trên mobile để không che khuất title */
+    #map-selection-screen::before {
+        top: -200px;
+        right: -200px;
+        width: 200px;
+        height: 200px;
+    }
+    
+    #map-selection-screen::after {
+        bottom: -150px;
+        left: -150px;
+        width: 150px;
+        height: 150px;
     }
     
     .map-label {
@@ -1586,6 +1609,62 @@ body {
     
     .cloud-4, .cloud-5, .cloud-6 {
         display: none;
+    }
+}
+
+/* Flash Message Styles */
+.flash-message {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    color: #333;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    transform: translateX(100%);
+}
+
+.flash-message.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+.flash-message span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@keyframes slideInFromRight {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive cho flash message */
+@media (max-width: 768px) {
+    .flash-message {
+        font-size: 14px;
+        padding: 12px 20px;
+        top: 0;
+        right: 0;
+        max-width: calc(100% - 20px);
     }
 }
 

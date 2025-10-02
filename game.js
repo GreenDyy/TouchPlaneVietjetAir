@@ -1,15 +1,20 @@
 // Hệ thống âm thanh
 const sounds = {
+    menuTheme: new Audio('assets/sounds/menu_theme.mp3'),
     bgMusic: new Audio('assets/sounds/bg_song.mp3'),
     touchRight: new Audio('assets/sounds/touch_right.mp3'),
     bruh: new Audio('assets/sounds/bruh.mp3'),
     gameOver: new Audio('assets/sounds/sfx_game_over.mp3'),
     winner: new Audio('assets/sounds/sfx_winner.mp3'),
     cutIn: new Audio('assets/sounds/cut_in.mp3'),
-    timerBeep: new Audio('assets/sounds/timer_beep.mp3')
+    timerBeep: new Audio('assets/sounds/timer_beep.mp3'),
+    rating: new Audio('assets/sounds/rating.mp3')
 };
 
 // Cấu hình âm thanh
+sounds.menuTheme.loop = true; // Nhạc menu lặp lại
+sounds.menuTheme.volume = 1;
+
 sounds.bgMusic.loop = true; // Nhạc nền lặp lại
 sounds.bgMusic.volume = 0.5; // Giảm âm lượng nhạc nền
 
@@ -19,8 +24,10 @@ sounds.gameOver.volume = 0.5;
 sounds.winner.volume = 0.5;
 sounds.cutIn.volume = 0.7;
 sounds.timerBeep.volume = 0.6;
+sounds.rating.volume = 0.5;
 
 // Preload audio cho Android WebView
+sounds.menuTheme.preload = 'auto';
 sounds.bgMusic.preload = 'auto';
 sounds.touchRight.preload = 'auto';
 sounds.bruh.preload = 'auto';
@@ -28,6 +35,7 @@ sounds.gameOver.preload = 'auto';
 sounds.winner.preload = 'auto';
 sounds.cutIn.preload = 'auto';
 sounds.timerBeep.preload = 'auto';
+sounds.rating.preload = 'auto';
 
 // Helper function để play audio an toàn (tránh lỗi trên Android)
 function playSoundSafe(sound) {
@@ -310,6 +318,10 @@ function showCountdown() {
 function showCutinAnimation() {
     const cutinOverlay = document.getElementById('cutin-overlay');
     
+    // Dừng nhạc menu theme
+    sounds.menuTheme.pause();
+    sounds.menuTheme.currentTime = 0;
+    
     // Phát âm thanh cut-in ngay khi animation bắt đầu
     playSoundSafe(sounds.cutIn);
     
@@ -327,7 +339,7 @@ function showCutinAnimation() {
             // Bắt đầu game thật sự
             initGame();
             
-            // Phát nhạc nền
+            // Phát nhạc nền game
             playSoundSafe(sounds.bgMusic);
         }, 500);
     }, 2000);
@@ -1061,6 +1073,10 @@ let selectedRating = 0;
 
 function rateStar(value) {
     selectedRating = value;
+    
+    // Phát âm thanh rating
+    playSoundSafe(sounds.rating);
+    
     const stars = document.querySelectorAll('.star');
 
     stars.forEach(function (star, index) {
@@ -1129,11 +1145,34 @@ function restartGame() {
 
     // Show welcome screen
     showScreen('welcome-screen');
+    
+    // Phát lại nhạc menu theme
+    playSoundSafe(sounds.menuTheme);
+}
+
+// Audio unlock handler
+function unlockAudio() {
+    const audioUnlock = document.getElementById('audio-unlock');
+    
+    // Phát nhạc menu theme
+    playSoundSafe(sounds.menuTheme);
+    
+    // Ẩn overlay
+    audioUnlock.classList.add('hidden');
+    
+    // Remove event listener
+    audioUnlock.removeEventListener('click', unlockAudio);
+    audioUnlock.removeEventListener('touchstart', unlockAudio);
 }
 
 // Initialize game when page loads
 window.addEventListener('load', function () {
     preloadImages();
     showScreen('welcome-screen');
+    
+    // Setup audio unlock
+    const audioUnlock = document.getElementById('audio-unlock');
+    audioUnlock.addEventListener('click', unlockAudio);
+    audioUnlock.addEventListener('touchstart', unlockAudio);
 });
 

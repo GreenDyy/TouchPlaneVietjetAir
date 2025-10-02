@@ -92,9 +92,9 @@
             </div>
 
              <!-- Building (center bottom) -->
-             <div class="building-layer">
+             <!-- <div class="building-layer">
                 <img src="assets/main_menu/building.png" alt="Building">
-            </div>
+            </div> -->
             
             <!-- Cloud Left -->
             <div class="cloud-left">
@@ -267,6 +267,54 @@
         </div>
     </div>
 
+    <!-- Màn hình chọn độ khó -->
+    <div id="difficulty-screen" class="screen">
+        <!-- Confetti particles background -->
+        <div class="confetti-container"></div>
+        
+        <!-- Header banner -->
+        <div class="difficulty-header">
+            <div class="header-banner">
+                <span class="banner-text">CHỌN ĐỘ KHÓ</span>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="difficulty-main">
+            <!-- Difficulty options -->
+            <div class="difficulty-options">
+                <div class="difficulty-card easy" onclick="selectDifficulty('easy')">
+                    <div class="card-icon">✈️</div>
+                    <div class="card-content">
+                        <h3>DỄ</h3>
+                        <p>Ít chướng ngại vật, thời gian dài</p>
+                    </div>
+                </div>
+                
+                <div class="difficulty-card normal" onclick="selectDifficulty('medium')">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-content">
+                        <h3>THƯỜNG</h3>
+                        <p>Cân bằng, thử thách vừa phải</p>
+                    </div>
+                </div>
+                
+                <div class="difficulty-card hard" onclick="selectDifficulty('hard')">
+                    <div class="card-icon">🔥</div>
+                    <div class="card-content">
+                        <h3>KHÓ</h3>
+                        <p>Nhanh & gay cấn, điểm cao!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Return button -->
+        <div class="difficulty-footer">
+            <button class="btn btn-secondary" onclick="showMapSelection()">QUAY LẠI</button>
+        </div>
+    </div>
+
     <!-- Màn hình game -->
     <div id="game-screen" class="screen">
         <!-- Countdown Overlay -->
@@ -349,6 +397,10 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Rain effect (only for hard mode) -->
+        <div id="rain-container" class="rain-container"></div>
+        
         <!-- Main game canvas -->
         <canvas id="game-canvas"></canvas>
     </div>
@@ -363,7 +415,7 @@
             <p class="result-text">Bạn đã bắt được các máy bay Vietjet</p>
             <p class="intro-text">Tuyệt vời! Đây là phần quà dành cho bạn. Hãy nhận voucher ngay nhé.</p>
             <div class="qr-code">
-                <img src="assets/qr_vietjet.png" alt="QR Vietjet" width="180">
+                <img id="qr-image" src="assets/qr_code_level_1.png" alt="QR Vietjet" width="180">
                 <p class="qr-label">Quét mã để nhận voucher</p>
                 <a href="https://evoucher.vietjetair.com/" target="_blank" class="link">evoucher.vietjetair.com</a>
             </div>

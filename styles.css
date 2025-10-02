@@ -1356,6 +1356,32 @@ body {
         padding: 28px 30px;
     }
     
+    /* Difficulty selection mobile */
+    .difficulty-main {
+        padding: 0 20px;
+    }
+    
+    .difficulty-options {
+        max-width: 400px;
+    }
+    
+    .banner-text {
+        font-size: 20px;
+        letter-spacing: 1px;
+    }
+    
+    .header-banner {
+        padding: 12px 30px;
+    }
+    
+    .card-content h3 {
+        font-size: 18px;
+    }
+    
+    .card-content p {
+        font-size: 13px;
+    }
+    
     .map-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
@@ -1660,6 +1686,212 @@ body {
     border-radius: 10px;
 }
 
+/* ========== DIFFICULTY SELECTION ========== */
+#difficulty-screen {
+    background: linear-gradient(180deg, #ff6b6b 0%, #ca161c 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    /* display: flex; - Đã xóa vì conflict với .screen */
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Chỉ set display:flex khi active */
+#difficulty-screen.active {
+    display: flex;
+}
+
+/* Confetti particles */
+.confetti-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.confetti-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    animation: confettiFall 3s linear infinite;
+}
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Header banner */
+.difficulty-header {
+    position: relative;
+    z-index: 10;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.header-banner {
+    display: inline-block;
+    background: #ca161c;
+    padding: 15px 40px;
+    border-radius: 25px;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.header-banner::before,
+.header-banner::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+.header-banner::before {
+    left: -15px;
+    border-width: 15px 15px 15px 0;
+    border-color: transparent #ca161c transparent transparent;
+}
+
+.header-banner::after {
+    right: -15px;
+    border-width: 15px 0 15px 15px;
+    border-color: transparent transparent transparent #ca161c;
+}
+
+.banner-text {
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: 2px;
+}
+
+/* Main content */
+.difficulty-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 30px;
+    position: relative;
+    z-index: 5;
+}
+
+/* Difficulty options */
+.difficulty-options {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.difficulty-card {
+    background: white;
+    border-radius: 15px;
+    border: 3px solid #ca161c;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: skew(-10deg);
+}
+
+.difficulty-card:hover {
+    transform: skew(-10deg) translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.card-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-content h3 {
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0 0 5px 0;
+    color: #ca161c;
+}
+
+.card-content p {
+    font-size: 14px;
+    margin: 0;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Footer */
+.difficulty-footer {
+    padding: 20px 0;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+/* ========== RAIN EFFECT ========== */
+.rain-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+}
+
+.rain-container.active {
+    display: block;
+}
+
+.raindrop {
+    position: absolute;
+    width: 2px;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.6), transparent);
+    animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+    0% {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
 /* ========== SPLASH SCREEN ========== */
 .splash-screen {
     background: radial-gradient(circle at center, #e6374a 0%, #ca161c 50%, #a01218 100%);
@@ -1677,6 +1909,7 @@ body {
     height: 100vh;
     text-align: center;
     animation: fadeInSplash 1s ease-out;
+    margin-top: -15vh;
 }
 
 @keyframes fadeInSplash {
@@ -2113,9 +2346,9 @@ body {
 .cloud-left {
     position: absolute;
     bottom: -2%;
-    left: -10%;
+    left: 0;
     z-index: 4;
-    width: 50%;
+    width: 40%;
     z-index: 5;
     animation: cloudFloatLeft 4s ease-in-out infinite;
 }
@@ -2191,6 +2424,10 @@ body {
 
 /* Responsive Splash */
 @media (max-width: 480px) {
+    .splash-container {
+        margin-top: -10vh;
+    }
+    
     .splash-logo img {
         width: 180px;
     }
@@ -2770,7 +3007,6 @@ body {
     .cloud-left,
     .cloud-right {
         width: 40%;
-        bottom: 10%;
     }
     
     .skyline-layer {

@@ -88,6 +88,31 @@ const GAME_CONFIG = {
     }
 };
 
+// Difficulty settings
+const DIFFICULTY_CONFIG = {
+    easy: {
+        gameTime: 30,
+        speedMultiplier: 1,
+        timeBonus: 3,
+        qrCode: 'assets/qr_code_level_1.png',
+        hasRain: false
+    },
+    medium: {
+        gameTime: 20,
+        speedMultiplier: 1.5,
+        timeBonus: 2,
+        qrCode: 'assets/qr_code_level_2.png',
+        hasRain: false
+    },
+    hard: {
+        gameTime: 15,
+        speedMultiplier: 2,
+        timeBonus: 1,
+        qrCode: 'assets/qr_code_level_3.png',
+        hasRain: true
+    }
+};
+
 // Danh sách hình ảnh theo loại
 const imageCategories = {
     player: [
@@ -185,11 +210,14 @@ let gameState = {
     timeLeft: GAME_CONFIG.GAME_TIME,
     timerInterval: null,
     selectedMap: 1,       // Map mặc định
-    mapBackground: null   // Image object của map
+    mapBackground: null,  // Image object của map
+    difficulty: 'medium'  // Độ khó mặc định
 };
 
 // Chuyển màn hình
 function showScreen(screenId) {
+    console.log('showScreen called with:', screenId);
+    console.trace('Call stack:'); // In ra call stack để biết ai gọi
     const screens = document.querySelectorAll('.screen');
     screens.forEach(screen => screen.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
@@ -241,7 +269,32 @@ function showMapSelection() {
     showScreen('map-selection-screen');
 }
 
-// Chọn map và bắt đầu game
+// Hiển thị màn hình chọn độ khó
+function showDifficultySelection() {
+    showScreen('difficulty-screen');
+    createConfettiEffect();
+}
+
+// Tạo hiệu ứng confetti
+function createConfettiEffect() {
+    const confettiContainer = document.querySelector('.confetti-container');
+    confettiContainer.innerHTML = '';
+    
+    // Tạo 30 particles
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'confetti-particle';
+        
+        // Random vị trí và timing
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 3 + 's';
+        particle.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        
+        confettiContainer.appendChild(particle);
+    }
+}
+
+// Chọn map và chuyển sang màn hình chọn độ khó
 function selectMap(mapId) {
     gameState.selectedMap = mapId;
 
@@ -249,16 +302,21 @@ function selectMap(mapId) {
     gameState.mapBackground = new Image();
     gameState.mapBackground.src = `assets/map/map_${mapId}.jpg`;
 
-    // Chờ ảnh load xong rồi mới bắt đầu game
-    gameState.mapBackground.onload = function () {
-        startGame();
-    };
+    // Chuyển sang màn hình chọn độ khó
+    showDifficultySelection();
+}
 
-    // Nếu load lỗi, vẫn bắt đầu game (không có background)
-    gameState.mapBackground.onerror = function () {
-        console.log('Lỗi load map:', mapId);
-        startGame();
-    };
+// Chọn độ khó và bắt đầu game
+function selectDifficulty(difficulty) {
+    gameState.difficulty = difficulty;
+    
+    // Áp dụng config theo độ khó
+    const config = DIFFICULTY_CONFIG[difficulty];
+    gameState.timeLeft = config.gameTime;
+    GAME_CONFIG.TIME_BONUS = config.timeBonus;
+    
+    // Bắt đầu game
+    startGame();
 }
 
 function startGame() {
@@ -353,7 +411,10 @@ function initGame() {
     gameState.chances = 3;
     gameState.planes = [];
     gameState.isGameRunning = true;
-    gameState.timeLeft = GAME_CONFIG.GAME_TIME;
+    
+    // Áp dụng thời gian theo độ khó
+    const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
+    gameState.timeLeft = difficultyConfig.gameTime;
 
     gameState.canvas = document.getElementById('game-canvas');
     gameState.ctx = gameState.canvas.getContext('2d');
@@ -368,6 +429,11 @@ function initGame() {
 
     // Start countdown timer
     startTimer();
+    
+    // Start rain effect nếu là hard mode
+    if (difficultyConfig.hasRain) {
+        startRain();
+    }
 
     // Start spawning planes
     spawnPlane();
@@ -683,6 +749,7 @@ function checkGameEnd() {
 }
 
 function endGame(isWin) {
+    console.log('endGame called with isWin:', isWin);
     gameState.isGameRunning = false;
 
     if (gameState.animationFrame) {
@@ -696,11 +763,22 @@ function endGame(isWin) {
     sounds.bgMusic.pause();
     sounds.bgMusic.currentTime = 0;
 
+    // Dừng rain nếu có
+    stopRain();
+    
     setTimeout(function () {
+        console.log('endGame setTimeout executing, isWin:', isWin);
         if (isWin) {
+            // Cập nhật QR code theo level
+            const qrImage = document.getElementById('qr-image');
+            const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
+            qrImage.src = difficultyConfig.qrCode;
+            
+            console.log('About to show win-screen');
             showScreen('win-screen');
             playSoundSafe(sounds.winner);
         } else {
+            console.log('About to show lose-screen');
             showScreen('lose-screen');
             playSoundSafe(sounds.gameOver);
         }
@@ -735,9 +813,13 @@ function spawnPlane() {
 
     // Random tạo máy bay siêu nhanh
     const isFastPlane = Math.random() < GAME_CONFIG.FAST_PLANE_CHANCE;
-    const speed = isFastPlane
+    const baseSpeed = isFastPlane
         ? GAME_CONFIG.SPEED_FAST + Math.random() * GAME_CONFIG.SPEED_FAST_RANGE
         : GAME_CONFIG.SPEED_DEFAULT + Math.random() * GAME_CONFIG.SPEED_RANGE;
+    
+    // Áp dụng speed multiplier theo độ khó
+    const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
+    const speed = baseSpeed * difficultyConfig.speedMultiplier;
 
     if (type === 'vertical') {
         // Vertical = Bay theo chiều dọc (từ trên xuống hoặc dưới lên)
@@ -1148,6 +1230,43 @@ function restartGame() {
     
     // Phát lại nhạc menu theme
     playSoundSafe(sounds.menuTheme);
+}
+
+// Rain effect functions
+function startRain() {
+    const rainContainer = document.getElementById('rain-container');
+    rainContainer.classList.add('active');
+    
+    // Tạo 50 giọt mưa
+    for (let i = 0; i < 50; i++) {
+        createRaindrop();
+    }
+}
+
+function createRaindrop() {
+    const rainContainer = document.getElementById('rain-container');
+    const drop = document.createElement('div');
+    drop.className = 'raindrop';
+    
+    // Random vị trí và timing
+    drop.style.left = Math.random() * 100 + '%';
+    drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+    drop.style.animationDelay = Math.random() * 2 + 's';
+    
+    rainContainer.appendChild(drop);
+    
+    // Tự động tạo giọt mưa mới khi giọt cũ kết thúc
+    drop.addEventListener('animationiteration', function() {
+        if (rainContainer.classList.contains('active')) {
+            drop.style.left = Math.random() * 100 + '%';
+        }
+    });
+}
+
+function stopRain() {
+    const rainContainer = document.getElementById('rain-container');
+    rainContainer.classList.remove('active');
+    rainContainer.innerHTML = '';
 }
 
 // Audio unlock handler

@@ -1206,9 +1206,11 @@ body {
     background: white;
     padding: 15px;
     border-radius: 15px;
-    display: inline-block;
-    margin: 15px 0;
+    display: block;
+    margin: 15px auto;
+    max-width: fit-content;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 .qr-code img {
@@ -1216,6 +1218,7 @@ body {
     max-width: 100%;
     height: auto;
     border-radius: 10px;
+    margin: 0 auto;
 }
 
 .qr-label {
@@ -1223,6 +1226,7 @@ body {
     margin-bottom: 3px;
     font-size: 13px;
     color: #75767a;
+    text-align: center;
 }
 
 .link {

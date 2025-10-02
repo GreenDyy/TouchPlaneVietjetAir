@@ -99,7 +99,6 @@ const DIFFICULTY_CONFIG = {
     easy: {
         gameTime: 30,
         speedMultiplier: 1,
-        timeBonus: 3,
         qrCode: 'assets/qr_code_level_1.png',
         voucherLink: 'https://evoucher.vietjetair.com',
         hasRain: false,
@@ -108,7 +107,6 @@ const DIFFICULTY_CONFIG = {
     medium: {
         gameTime: 20,
         speedMultiplier: 1.5,
-        timeBonus: 2,
         qrCode: 'assets/qr_code_level_2.png',
         voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
         hasRain: false,
@@ -117,7 +115,6 @@ const DIFFICULTY_CONFIG = {
     hard: {
         gameTime: 15,
         speedMultiplier: 2,
-        timeBonus: 1,
         qrCode: 'assets/qr_code_level_3.png',
         voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
         hasRain: true,
@@ -343,7 +340,6 @@ function selectDifficulty(difficulty) {
     // Áp dụng config theo độ khó
     const config = DIFFICULTY_CONFIG[difficulty];
     gameState.timeLeft = config.gameTime;
-    GAME_CONFIG.TIME_BONUS = config.timeBonus;
     
     // Bắt đầu game
     startGame();
@@ -1340,7 +1336,7 @@ function startLightning() {
         }, 500);
         
         // Schedule next lightning (random 5-12 giây)
-        const nextLightning = 5000 + Math.random() * 7000;
+        const nextLightning = 2000 + Math.random() * 5000;
         lightningInterval = setTimeout(triggerLightning, nextLightning);
     }
     

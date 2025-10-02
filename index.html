@@ -236,6 +236,54 @@
 
     <!-- Màn hình game -->
     <div id="game-screen" class="screen">
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay" class="countdown-overlay">
+            <div class="countdown-content">
+                <div class="countdown-text">Vietjet Air sẽ cất cánh trong</div>
+                <div class="countdown-number" id="countdown-number">3</div>
+            </div>
+        </div>
+        
+        <!-- Cut-in Animation -->
+        <div id="cutin-overlay" class="cutin-overlay">
+            <!-- Speed Lines Background -->
+            <div class="speed-lines">
+                <div class="speed-line"></div>
+                <div class="speed-line"></div>
+                <div class="speed-line"></div>
+                <div class="speed-line"></div>
+                <div class="speed-line"></div>
+            </div>
+            
+            <!-- Flash Effect -->
+            <div class="flash-effect"></div>
+            
+            <!-- Main Cut-in Image -->
+            <div class="cutin-main">
+                <img src="assets/cut_in/cut_in_animation.png" alt="Vietjet Takeoff">
+            </div>
+            
+            <!-- Slash Lines -->
+            <div class="slash-lines">
+                <div class="slash-line slash-1"></div>
+                <div class="slash-line slash-2"></div>
+                <div class="slash-line slash-3"></div>
+            </div>
+            
+            <!-- Particles -->
+            <div class="particles">
+                <div class="particle p1"></div>
+                <div class="particle p2"></div>
+                <div class="particle p3"></div>
+                <div class="particle p4"></div>
+                <div class="particle p5"></div>
+                <div class="particle p6"></div>
+            </div>
+            
+            <!-- Text Effect -->
+            <div class="cutin-text">CẤT CÁNH!</div>
+        </div>
+        
         <div class="game-header">
             <div class="score-board">
                 <div class="score-box">
@@ -268,6 +316,7 @@
                 </div>
             </div>
         </div>
+        <!-- Main game canvas -->
         <canvas id="game-canvas"></canvas>
     </div>
 

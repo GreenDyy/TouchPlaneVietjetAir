@@ -484,6 +484,9 @@ body {
 /* Game screen */
 #game-screen {
     background: #f5f5f5;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .game-header {
@@ -495,6 +498,439 @@ body {
     padding: 15px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     z-index: 10;
+}
+
+/* Countdown Overlay */
+.countdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.countdown-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.countdown-content {
+    text-align: center;
+    color: white;
+}
+
+.countdown-text {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8),
+                 0 0 30px rgba(202, 22, 28, 0.6);
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+    animation: fadeInDown 0.5s ease-out;
+}
+
+.countdown-number {
+    font-size: 120px;
+    font-weight: 900;
+    text-shadow: 0 6px 25px rgba(0, 0, 0, 0.9),
+                 0 0 40px rgba(202, 22, 28, 0.8),
+                 0 0 60px rgba(202, 22, 28, 0.5);
+    -webkit-text-stroke: 2px rgba(0, 0, 0, 0.3);
+    animation: countdownPulse 1s ease-out;
+}
+
+.countdown-number.takeoff {
+    font-size: 60px;
+    animation: takeoffZoom 1s ease-out;
+}
+
+@keyframes fadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes countdownPulse {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes takeoffZoom {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(5);
+        opacity: 0;
+    }
+}
+
+/* ============================================
+   CUT-IN ANIMATION - DYNAMIC & PROFESSIONAL
+   ============================================ */
+
+.cutin-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.cutin-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Speed Lines Background */
+.speed-lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.speed-line {
+    position: absolute;
+    height: 3px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(202, 22, 28, 0.8) 50%, 
+        transparent 100%);
+    transform-origin: left center;
+    opacity: 0;
+}
+
+.speed-line:nth-child(1) {
+    top: 20%;
+    width: 150%;
+    animation: speedLineSlide 0.6s ease-out 0s;
+    transform: skewY(-2deg);
+}
+
+.speed-line:nth-child(2) {
+    top: 35%;
+    width: 120%;
+    animation: speedLineSlide 0.6s ease-out 0.1s;
+    transform: skewY(-3deg);
+}
+
+.speed-line:nth-child(3) {
+    top: 50%;
+    width: 180%;
+    animation: speedLineSlide 0.6s ease-out 0.05s;
+    transform: skewY(-1deg);
+}
+
+.speed-line:nth-child(4) {
+    top: 65%;
+    width: 140%;
+    animation: speedLineSlide 0.6s ease-out 0.15s;
+    transform: skewY(-2.5deg);
+}
+
+.speed-line:nth-child(5) {
+    top: 80%;
+    width: 160%;
+    animation: speedLineSlide 0.6s ease-out 0.08s;
+    transform: skewY(-1.5deg);
+}
+
+@keyframes speedLineSlide {
+    0% {
+        transform: translateX(-100%) skewY(-2deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%) skewY(-2deg);
+        opacity: 0;
+    }
+}
+
+/* Flash Effect - Smoother */
+.flash-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.4) 0%, 
+        rgba(202, 22, 28, 0.3) 30%, 
+        transparent 70%);
+    opacity: 0;
+    animation: flashBurst 0.6s ease-out;
+}
+
+@keyframes flashBurst {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    40% {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+/* Main Cut-in Image - SMOOTH SLIDE FROM RIGHT */
+.cutin-main {
+    position: absolute;
+    top: 50%;
+    right: -100%;
+    transform: translateY(-50%) rotate(-10deg);
+    opacity: 0;
+    animation: cutinSlideIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 10;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cutin-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: drop-shadow(0 10px 40px rgba(202, 22, 28, 0.6))
+            drop-shadow(0 0 40px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes cutinSlideIn {
+    0% {
+        right: -100%;
+        transform: translateY(-50%) rotate(-10deg);
+        opacity: 0;
+    }
+    100% {
+        right: 50%;
+        transform: translateY(-50%) translateX(50%) rotate(-5deg);
+        opacity: 1;
+    }
+}
+
+/* Slash Lines - DIAGONAL DECORATION */
+.slash-lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.slash-line {
+    position: absolute;
+    background: linear-gradient(135deg, 
+        transparent 0%, 
+        rgba(202, 22, 28, 0.9) 50%, 
+        transparent 100%);
+    transform-origin: center;
+    opacity: 0;
+}
+
+.slash-1 {
+    top: 10%;
+    left: -20%;
+    width: 60%;
+    height: 8px;
+    transform: rotate(-25deg) scaleX(0);
+    animation: slashExpand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.3s;
+}
+
+.slash-2 {
+    top: 25%;
+    right: -15%;
+    width: 50%;
+    height: 6px;
+    transform: rotate(-20deg) scaleX(0);
+    animation: slashExpand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.4s;
+}
+
+.slash-3 {
+    bottom: 15%;
+    left: 10%;
+    width: 70%;
+    height: 10px;
+    transform: rotate(-30deg) scaleX(0);
+    animation: slashExpand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.35s;
+}
+
+@keyframes slashExpand {
+    0% {
+        transform: rotate(-25deg) scaleX(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: rotate(-25deg) scaleX(1);
+        opacity: 0.3;
+    }
+}
+
+/* Particles */
+.particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #ca161c;
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 0 20px rgba(202, 22, 28, 0.8);
+}
+
+.particle.p1 {
+    top: 20%;
+    left: 30%;
+    animation: particleBurst 0.8s ease-out 0.3s;
+}
+
+.particle.p2 {
+    top: 40%;
+    left: 70%;
+    animation: particleBurst 0.9s ease-out 0.35s;
+}
+
+.particle.p3 {
+    top: 60%;
+    left: 20%;
+    animation: particleBurst 0.7s ease-out 0.4s;
+}
+
+.particle.p4 {
+    top: 30%;
+    left: 80%;
+    animation: particleBurst 0.85s ease-out 0.32s;
+}
+
+.particle.p5 {
+    top: 70%;
+    left: 50%;
+    animation: particleBurst 0.75s ease-out 0.38s;
+}
+
+.particle.p6 {
+    top: 50%;
+    left: 40%;
+    animation: particleBurst 0.95s ease-out 0.36s;
+}
+
+@keyframes particleBurst {
+    0% {
+        transform: translate(0, 0) scale(0);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translate(
+            calc(var(--dx, 50px) * 1), 
+            calc(var(--dy, -50px) * 1)
+        ) scale(0);
+        opacity: 0;
+    }
+}
+
+.particle.p1 { --dx: -60px; --dy: -80px; }
+.particle.p2 { --dx: 70px; --dy: -60px; }
+.particle.p3 { --dx: -50px; --dy: 70px; }
+.particle.p4 { --dx: 80px; --dy: 50px; }
+.particle.p5 { --dx: 30px; --dy: 90px; }
+.particle.p6 { --dx: -70px; --dy: -40px; }
+
+/* Cut-in Text - SMOOTH FADE IN */
+.cutin-text {
+    position: absolute;
+    bottom: 15%;
+    right: 10%;
+    font-size: 60px;
+    font-weight: 900;
+    color: white;
+    text-transform: uppercase;
+    transform: rotate(-5deg);
+    opacity: 0;
+    text-shadow: 
+        3px 3px 0 #ca161c,
+        6px 6px 0 rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(202, 22, 28, 0.6);
+    -webkit-text-stroke: 2px #ca161c;
+    animation: textCutinFade 0.8s ease-out forwards 0.6s;
+    letter-spacing: 4px;
+    z-index: 15;
+}
+
+@keyframes textCutinFade {
+    0% {
+        transform: rotate(-5deg) translateX(30px);
+        opacity: 0;
+    }
+    100% {
+        transform: rotate(-5deg) translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Fade Out Animation */
+.cutin-overlay.fadeout {
+    animation: cutinFadeOut 0.5s ease-out forwards;
+}
+
+@keyframes cutinFadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 
 .score-board {

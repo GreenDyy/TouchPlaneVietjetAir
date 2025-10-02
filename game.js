@@ -4,7 +4,9 @@ const sounds = {
     touchRight: new Audio('assets/sounds/touch_right.mp3'),
     bruh: new Audio('assets/sounds/bruh.mp3'),
     gameOver: new Audio('assets/sounds/sfx_game_over.mp3'),
-    winner: new Audio('assets/sounds/sfx_winner.mp3')
+    winner: new Audio('assets/sounds/sfx_winner.mp3'),
+    cutIn: new Audio('assets/sounds/cut_in.mp3'),
+    timerBeep: new Audio('assets/sounds/timer_beep.mp3')
 };
 
 // Cấu hình âm thanh
@@ -15,6 +17,8 @@ sounds.touchRight.volume = 0.5;
 sounds.bruh.volume = 0.5;
 sounds.gameOver.volume = 0.5;
 sounds.winner.volume = 0.5;
+sounds.cutIn.volume = 0.7;
+sounds.timerBeep.volume = 0.6;
 
 // Preload audio cho Android WebView
 sounds.bgMusic.preload = 'auto';
@@ -22,6 +26,8 @@ sounds.touchRight.preload = 'auto';
 sounds.bruh.preload = 'auto';
 sounds.gameOver.preload = 'auto';
 sounds.winner.preload = 'auto';
+sounds.cutIn.preload = 'auto';
+sounds.timerBeep.preload = 'auto';
 
 // Helper function để play audio an toàn (tránh lỗi trên Android)
 function playSoundSafe(sound) {
@@ -249,10 +255,82 @@ function selectMap(mapId) {
 
 function startGame() {
     showScreen('game-screen');
-    initGame();
+    
+    // Set background map cho game screen
+    const gameScreen = document.getElementById('game-screen');
+    gameScreen.style.backgroundImage = `url('assets/map/map_${gameState.selectedMap}.jpg')`;
+    gameScreen.style.backgroundSize = 'cover';
+    gameScreen.style.backgroundPosition = 'center';
+    
+    // Hiển thị countdown trước khi bắt đầu game
+    showCountdown();
+}
 
-    // Phát nhạc nền
-    playSoundSafe(sounds.bgMusic);
+function showCountdown() {
+    const overlay = document.getElementById('countdown-overlay');
+    const numberElement = document.getElementById('countdown-number');
+    
+    // Hiển thị overlay
+    overlay.classList.add('active');
+    
+    let count = 3;
+    numberElement.textContent = count;
+    
+    // Phát âm thanh beep cho số 3
+    playSoundSafe(sounds.timerBeep);
+    
+    const countdownInterval = setInterval(function() {
+        count--;
+        
+        if (count > 0) {
+            // Hiển thị số 2, 1
+            numberElement.textContent = count;
+            
+            // Phát âm thanh beep
+            playSoundSafe(sounds.timerBeep);
+            
+            // Reset animation bằng cách xóa và thêm lại class
+            numberElement.style.animation = 'none';
+            setTimeout(function() {
+                numberElement.style.animation = 'countdownPulse 1s ease-out';
+            }, 10);
+        } else {
+            // Ẩn countdown overlay
+            overlay.classList.remove('active');
+            numberElement.textContent = '3'; // Reset về 3 cho lần sau
+            
+            // Hiển thị Cut-in Animation
+            showCutinAnimation();
+            
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+}
+
+function showCutinAnimation() {
+    const cutinOverlay = document.getElementById('cutin-overlay');
+    
+    // Phát âm thanh cut-in ngay khi animation bắt đầu
+    playSoundSafe(sounds.cutIn);
+    
+    // Hiển thị cut-in
+    cutinOverlay.classList.add('active');
+    
+    // Sau 2 giây, fade out và bắt đầu game (để animation chạy đủ)
+    setTimeout(function() {
+        cutinOverlay.classList.add('fadeout');
+        
+        // Đợi fade out xong rồi mới bắt đầu game
+        setTimeout(function() {
+            cutinOverlay.classList.remove('active', 'fadeout');
+            
+            // Bắt đầu game thật sự
+            initGame();
+            
+            // Phát nhạc nền
+            playSoundSafe(sounds.bgMusic);
+        }, 500);
+    }, 2000);
 }
 
 // Khởi tạo game

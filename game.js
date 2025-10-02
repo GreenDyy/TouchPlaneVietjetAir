@@ -16,6 +16,27 @@ sounds.bruh.volume = 0.5;
 sounds.gameOver.volume = 0.5;
 sounds.winner.volume = 0.5;
 
+// Preload audio cho Android WebView
+sounds.bgMusic.preload = 'auto';
+sounds.touchRight.preload = 'auto';
+sounds.bruh.preload = 'auto';
+sounds.gameOver.preload = 'auto';
+sounds.winner.preload = 'auto';
+
+// Helper function để play audio an toàn (tránh lỗi trên Android)
+function playSoundSafe(sound) {
+    try {
+        if (sound.readyState >= 2) { // HAVE_CURRENT_DATA
+            sound.currentTime = 0;
+            sound.play().catch(function(e) {
+                console.log('Audio play blocked:', e);
+            });
+        }
+    } catch (e) {
+        console.log('Audio error:', e);
+    }
+}
+
 // Game Configuration - Cấu hình game
 const GAME_CONFIG = {
     // Debug
@@ -231,8 +252,7 @@ function startGame() {
     initGame();
 
     // Phát nhạc nền
-    sounds.bgMusic.currentTime = 0;
-    sounds.bgMusic.play().catch(e => console.log('Auto-play bị chặn:', e));
+    playSoundSafe(sounds.bgMusic);
 }
 
 // Khởi tạo game
@@ -273,8 +293,14 @@ function initGame() {
 function resizeCanvas() {
     if (!gameState.canvas) return;
 
-    // Lấy device pixel ratio để đảm bảo độ phân giải cao
-    const dpr = window.devicePixelRatio || 1;
+    // Lấy device pixel ratio, giới hạn tối đa 2 cho Android cũ để tăng performance
+    let dpr = window.devicePixelRatio || 1;
+    
+    // Giảm DPR xuống 1.5 hoặc 1 cho thiết bị cũ để tăng FPS
+    if (dpr > 2) {
+        dpr = 2; // Giới hạn DPR tối đa là 2
+    }
+    
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight - 80;
 
@@ -301,6 +327,8 @@ function handleCanvasClick(e) {
 function handleCanvasTouch(e) {
     if (!gameState.isGameRunning) return;
     e.preventDefault();
+    e.stopPropagation(); // Ngăn event bubbling để tăng performance
+    
     const rect = gameState.canvas.getBoundingClientRect();
     const touch = e.touches[0];
     const x = touch.clientX - rect.left;
@@ -335,14 +363,12 @@ function checkHit(x, y) {
                 showTimeBonusEffect();
 
                 showHitEffect(x, y, true);
-                sounds.touchRight.currentTime = 0;
-                sounds.touchRight.play();
+                playSoundSafe(sounds.touchRight);
             } else {
                 // Chạm nhầm vào horizontal/vertical -> -1 mạng
                 gameState.chances--;
                 showHitEffect(x, y, false);
-                sounds.bruh.currentTime = 0;
-                sounds.bruh.play();
+                playSoundSafe(sounds.bruh);
             }
 
             updateScore();
@@ -583,12 +609,10 @@ function endGame(isWin) {
     setTimeout(function () {
         if (isWin) {
             showScreen('win-screen');
-            sounds.winner.currentTime = 0;
-            sounds.winner.play();
+            playSoundSafe(sounds.winner);
         } else {
             showScreen('lose-screen');
-            sounds.gameOver.currentTime = 0;
-            sounds.gameOver.play();
+            playSoundSafe(sounds.gameOver);
         }
     }, 500);
 }
@@ -750,7 +774,10 @@ function gameLoop() {
 
         // Cải thiện chất lượng ảnh background
         gameState.ctx.imageSmoothingEnabled = true;
-        gameState.ctx.imageSmoothingQuality = 'high';
+        // imageSmoothingQuality không được hỗ trợ trên Android 6, kiểm tra trước khi dùng
+        if (gameState.ctx.imageSmoothingQuality) {
+            gameState.ctx.imageSmoothingQuality = 'high';
+        }
 
         gameState.ctx.drawImage(
             gameState.mapBackground,
@@ -773,7 +800,8 @@ function gameLoop() {
         plane.y += plane.vy;
 
         // Update rotation cho player planes (tạo hiệu ứng lắc lư nhẹ)
-        if (['player', 'horizontal', 'vertical'].includes(plane.type)) {
+        // Dùng indexOf thay vì includes để tương thích Android 6
+        if (plane.type === 'player' || plane.type === 'horizontal' || plane.type === 'vertical') {
             plane.rotationTime += plane.rotationSpeed;
             // Dao động từ -0.15 đến +0.15 radian (~-8° đến +8°)
             plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
@@ -830,7 +858,9 @@ function drawClouds() {
 
             // Cải thiện chất lượng ảnh mây
             gameState.ctx.imageSmoothingEnabled = true;
-            gameState.ctx.imageSmoothingQuality = 'high';
+            if (gameState.ctx.imageSmoothingQuality) {
+                gameState.ctx.imageSmoothingQuality = 'high';
+            }
 
             gameState.ctx.globalAlpha = cloud.opacity;
 
@@ -908,7 +938,9 @@ function drawPlane(plane) {
 
     // Cải thiện chất lượng ảnh khi scale
     gameState.ctx.imageSmoothingEnabled = true;
-    gameState.ctx.imageSmoothingQuality = 'high';
+    if (gameState.ctx.imageSmoothingQuality) {
+        gameState.ctx.imageSmoothingQuality = 'high';
+    }
     gameState.ctx.translate(plane.x, plane.y);
 
     // Xử lý rotation và flip

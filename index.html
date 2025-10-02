@@ -2,8 +2,21 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Tối ưu cho Android WebView -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Tắt các tính năng không cần thiết để tăng performance -->
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="cleartype" content="on">
+    
+    <!-- Preconnect để load ảnh nhanh hơn -->
+    <link rel="preconnect" href="." crossorigin>
+    
     <title>Vietjet - Chơi là có quà</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ca161c">

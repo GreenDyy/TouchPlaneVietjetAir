@@ -19,7 +19,7 @@ sounds.winner.volume = 0.5;
 // Game Configuration - Cấu hình game
 const GAME_CONFIG = {
     // Debug
-    SHOW_HITBOX: true,       // Bật/tắt hiển thị vòng tròn hitbox (true = hiện, false = ẩn)
+    SHOW_HITBOX: false,       // Bật/tắt hiển thị vòng tròn hitbox (true = hiện, false = ẩn)
 
     // Thời gian chơi
     GAME_TIME: 20,           // Thời gian countdown ban đầu (giây)
@@ -30,8 +30,8 @@ const GAME_CONFIG = {
     PLANE_SIZE_MULTIPLIER: 2, // Hệ số nhân khi vẽ ảnh (1.5 = gấp 1.5 lần)
 
     // Tốc độ bay của máy bay
-    SPEED_DEFAULT: 1,        // Tốc độ mặc định
-    SPEED_RANGE: 1,          // Khoảng random tốc độ thường
+    SPEED_DEFAULT: 4,        // Tốc độ mặc định
+    SPEED_RANGE: 2,          // Khoảng random tốc độ thường
 
     // Máy bay siêu nhanh (Fast Planes)
     FAST_PLANE_CHANCE: 0.2,  // 20% cơ hội xuất hiện máy bay siêu nhanh
@@ -190,12 +190,12 @@ function validateAndShowIntro() {
 // Hiển thị flash message khi thiếu câu trả lời
 function showFlashMessage() {
     const flashMessage = document.getElementById('flash-message');
-    
+
     // Hiển thị message với animation
     flashMessage.classList.add('show');
-    
+
     // Ẩn message sau 3 giây
-    setTimeout(function() {
+    setTimeout(function () {
         flashMessage.classList.remove('show');
     }, 3000);
 }
@@ -209,18 +209,18 @@ function showMapSelection() {
 // Chọn map và bắt đầu game
 function selectMap(mapId) {
     gameState.selectedMap = mapId;
-    
+
     // Load ảnh map
     gameState.mapBackground = new Image();
     gameState.mapBackground.src = `assets/map/map_${mapId}.jpg`;
-    
+
     // Chờ ảnh load xong rồi mới bắt đầu game
-    gameState.mapBackground.onload = function() {
+    gameState.mapBackground.onload = function () {
         startGame();
     };
-    
+
     // Nếu load lỗi, vẫn bắt đầu game (không có background)
-    gameState.mapBackground.onerror = function() {
+    gameState.mapBackground.onerror = function () {
         console.log('Lỗi load map:', mapId);
         startGame();
     };
@@ -272,20 +272,20 @@ function initGame() {
 
 function resizeCanvas() {
     if (!gameState.canvas) return;
-    
+
     // Lấy device pixel ratio để đảm bảo độ phân giải cao
     const dpr = window.devicePixelRatio || 1;
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight - 80;
-    
+
     // Set canvas size với device pixel ratio
     gameState.canvas.width = displayWidth * dpr;
     gameState.canvas.height = displayHeight * dpr;
-    
+
     // Scale canvas để hiển thị đúng kích thước
     gameState.canvas.style.width = displayWidth + 'px';
     gameState.canvas.style.height = displayHeight + 'px';
-    
+
     // Reset transform và scale context để vẽ đúng tỷ lệ
     gameState.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
@@ -718,7 +718,11 @@ function spawnPlane() {
         type: type,
         imageIndex: imageIndex,
         isFast: isFastPlane,  // Đánh dấu máy bay siêu nhanh
-        isLastVietjet: isLastVietjet  // Đánh dấu máy bay VietJet thứ 10
+        isLastVietjet: isLastVietjet,  // Đánh dấu máy bay VietJet thứ 10
+        // Thêm thuộc tính cho animation xoay nhẹ của player
+        rotationOffset: 0,  // Góc xoay hiện tại (dao động)
+        rotationSpeed: 0.02 + Math.random() * 0.02,  // Tốc độ xoay (áp dụng bộ object)
+        rotationTime: 0  // Biến thời gian để tính sin wave
     };
 
     gameState.planes.push(plane);
@@ -743,11 +747,11 @@ function gameLoop() {
     // Draw map background
     if (gameState.mapBackground && gameState.mapBackground.complete) {
         gameState.ctx.save();
-        
+
         // Cải thiện chất lượng ảnh background
         gameState.ctx.imageSmoothingEnabled = true;
         gameState.ctx.imageSmoothingQuality = 'high';
-        
+
         gameState.ctx.drawImage(
             gameState.mapBackground,
             0, 0,
@@ -767,6 +771,13 @@ function gameLoop() {
         // Update position
         plane.x += plane.vx;
         plane.y += plane.vy;
+
+        // Update rotation cho player planes (tạo hiệu ứng lắc lư nhẹ)
+        if (['player', 'horizontal', 'vertical'].includes(plane.type)) {
+            plane.rotationTime += plane.rotationSpeed;
+            // Dao động từ -0.15 đến +0.15 radian (~-8° đến +8°)
+            plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
+        }
 
         // Remove if out of bounds
         if (plane.x < -100 || plane.x > gameState.canvas.width + 100 ||
@@ -816,17 +827,17 @@ function drawClouds() {
         // Kiểm tra xem ảnh đã load chưa
         if (imagesLoaded && loadedImages.cloud && loadedImages.cloud[cloud.imageIndex]) {
             gameState.ctx.save();
-            
+
             // Cải thiện chất lượng ảnh mây
             gameState.ctx.imageSmoothingEnabled = true;
             gameState.ctx.imageSmoothingQuality = 'high';
-            
+
             gameState.ctx.globalAlpha = cloud.opacity;
-            
+
             const img = loadedImages.cloud[cloud.imageIndex];
             const width = cloud.size;
             const height = cloud.size * 0.6; // Tỉ lệ chiều cao/rộng của mây
-            
+
             gameState.ctx.drawImage(img, cloud.x, cloud.y, width, height);
             gameState.ctx.restore();
         }
@@ -894,7 +905,7 @@ function drawPlane(plane) {
 
     // Vẽ ảnh máy bay
     gameState.ctx.save();
-    
+
     // Cải thiện chất lượng ảnh khi scale
     gameState.ctx.imageSmoothingEnabled = true;
     gameState.ctx.imageSmoothingQuality = 'high';
@@ -903,22 +914,25 @@ function drawPlane(plane) {
     // Xử lý rotation và flip
     switch (plane.type) {
         case 'vertical':
-            // gameState.ctx.rotate(plane.rotation);
-            break;
+            gameState.ctx.rotate(plane.rotationOffset); break;
 
         case 'horizontal':
+            gameState.ctx.rotate(plane.rotationOffset);
             if (plane.vx < 0) {
                 gameState.ctx.scale(-1, 1); // Flip ngang
             }
             break;
-            
+
         case 'player':
-            // Player: Chỉ flip ngang khi bay từ phải sang trái
+            // Player: Áp dụng rotation nhẹ để tạo cảm giác bay
+            gameState.ctx.rotate(plane.rotationOffset);
+
+            // Chỉ flip ngang khi bay từ phải sang trái
             if (plane.vx < 0) {
                 gameState.ctx.scale(-1, 1); // Flip ngang
             }
             break;
-            
+
         default:
             break;
     }

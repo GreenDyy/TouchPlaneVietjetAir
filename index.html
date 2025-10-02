@@ -192,7 +192,7 @@
             
             <!-- Mission Text -->
             <div class="mission-box">
-                <div class="mission-icon">🎯</div>
+                <!-- <div class="mission-icon">🎯</div> -->
                 <p class="mission-text">Chạm để bắt máy bay Vietjet và nhận quà nhé!</p>
             </div>
             
@@ -448,8 +448,21 @@
         <!-- Rain effect (only for hard mode) -->
         <div id="rain-container" class="rain-container"></div>
         
+        <!-- Lightning effect (only for hard mode) -->
+        <div id="lightning-overlay" class="lightning-overlay"></div>
+        
         <!-- Main game canvas -->
         <canvas id="game-canvas"></canvas>
+        
+        <!-- Game Over Popup -->
+        <div id="game-over-popup" class="game-over-popup">
+            <div class="game-over-content">
+                <div class="game-over-icon">💔</div>
+                <h2 class="game-over-text">BẠN ĐÃ THUA!</h2>
+                <p class="game-over-score">Số máy bay bắt được: <span id="popup-score">0</span>/10</p>
+                <p class="game-over-hint">(Chạm để tiếp tục)</p>
+            </div>
+        </div>
     </div>
 
     <!-- Màn hình thắng -->

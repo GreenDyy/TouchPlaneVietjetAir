@@ -9,7 +9,8 @@ const sounds = {
     cutIn: new Audio('assets/sounds/cut_in.mp3'),
     timerBeep: new Audio('assets/sounds/timer_beep.mp3'),
     rating: new Audio('assets/sounds/rating.mp3'),
-    tap: new Audio('assets/sounds/tap_1.mp3')
+    tap: new Audio('assets/sounds/tap_1.mp3'),
+    thunder: new Audio('assets/sounds/thunder.mp3')
 };
 
 // Cấu hình âm thanh
@@ -27,6 +28,7 @@ sounds.cutIn.volume = 0.7;
 sounds.timerBeep.volume = 0.6;
 sounds.rating.volume = 0.5;
 sounds.tap.volume = 0.6;
+sounds.thunder.volume = 0.7;
 
 // Preload audio cho Android WebView
 sounds.menuTheme.preload = 'auto';
@@ -39,6 +41,7 @@ sounds.cutIn.preload = 'auto';
 sounds.timerBeep.preload = 'auto';
 sounds.rating.preload = 'auto';
 sounds.tap.preload = 'auto';
+sounds.thunder.preload = 'auto';
 
 // Helper function để play audio an toàn (tránh lỗi trên Android)
 function playSoundSafe(sound) {
@@ -462,6 +465,11 @@ function initGame() {
     if (difficultyConfig.hasRain) {
         startRain();
     }
+    
+    // Start lightning effect nếu là hard mode
+    if (difficultyConfig.hasRain) {
+        startLightning();
+    }
 
     // Start spawning planes
     spawnPlane();
@@ -804,6 +812,9 @@ function endGame(isWin) {
     // Dừng rain nếu có
     stopRain();
     
+    // Dừng lightning nếu có
+    stopLightning();
+    
     setTimeout(function () {
         if (isWin) {
             // Cập nhật QR code và link theo level
@@ -818,8 +829,8 @@ function endGame(isWin) {
             showScreen('win-screen');
             playSoundSafe(sounds.winner);
         } else {
-            showScreen('lose-screen');
-            playSoundSafe(sounds.gameOver);
+            // Hiển thị popup "THUA" trước
+            showGameOverPopup();
         }
     }, 500);
 }
@@ -1306,6 +1317,91 @@ function stopRain() {
     const rainContainer = document.getElementById('rain-container');
     rainContainer.classList.remove('active');
     rainContainer.innerHTML = '';
+}
+
+// Lightning effect functions for hard mode
+let lightningInterval = null;
+
+function startLightning() {
+    const lightningOverlay = document.getElementById('lightning-overlay');
+    
+    function triggerLightning() {
+        if (!gameState.isGameRunning) return;
+        
+        // Phát âm thanh sấm
+        playSoundSafe(sounds.thunder);
+        
+        // Add flash class
+        lightningOverlay.classList.add('flash');
+        
+        // Remove class sau khi animation xong
+        setTimeout(function() {
+            lightningOverlay.classList.remove('flash');
+        }, 500);
+        
+        // Schedule next lightning (random 5-12 giây)
+        const nextLightning = 5000 + Math.random() * 7000;
+        lightningInterval = setTimeout(triggerLightning, nextLightning);
+    }
+    
+    // Trigger lightning đầu tiên sau 3-8 giây
+    const firstLightning = 3000 + Math.random() * 5000;
+    lightningInterval = setTimeout(triggerLightning, firstLightning);
+}
+
+function stopLightning() {
+    if (lightningInterval) {
+        clearTimeout(lightningInterval);
+        lightningInterval = null;
+    }
+    
+    const lightningOverlay = document.getElementById('lightning-overlay');
+    if (lightningOverlay) {
+        lightningOverlay.classList.remove('flash');
+    }
+}
+
+// Game Over Popup
+let gameOverTimeout = null;
+
+function showGameOverPopup() {
+    const popup = document.getElementById('game-over-popup');
+    const popupScore = document.getElementById('popup-score');
+    
+    // Cập nhật số máy bay bắt được
+    popupScore.textContent = gameState.caughtPlanes;
+    
+    // Phát âm thanh game over
+    playSoundSafe(sounds.gameOver);
+    
+    // Hiển thị popup
+    popup.classList.add('show');
+    
+    // Function để chuyển màn
+    function goToLoseScreen() {
+        if (gameOverTimeout) {
+            clearTimeout(gameOverTimeout);
+            gameOverTimeout = null;
+        }
+        
+        popup.classList.remove('show');
+        
+        // Đợi fade out xong rồi chuyển màn
+        setTimeout(function() {
+            showScreen('lose-screen');
+        }, 300);
+        
+        // Remove event listeners
+        popup.removeEventListener('click', goToLoseScreen);
+        popup.removeEventListener('touchstart', goToLoseScreen);
+    }
+    
+    // Thêm event listener cho click/touch để skip
+    popup.addEventListener('click', goToLoseScreen);
+    popup.addEventListener('touchstart', goToLoseScreen);
+    
+    // Sau 3 giây, tự động chuyển màn
+    gameOverTimeout = setTimeout(goToLoseScreen, 5000);
 }
 
 // Audio unlock handler

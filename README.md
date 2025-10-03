@@ -1,3 +1,6 @@
+- để chạy trên android
+
+
 chạy file index.html
 - idea game: ...
 - bắt dc 6 trên 10 máy bay là win

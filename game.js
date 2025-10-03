@@ -241,8 +241,17 @@ function closeRulesModal() {
 
 // Màn hình khảo sát
 function showSurvey() {
-    showScreen('survey-screen');
-    createSurveyConfetti();
+    console.log('========== SHOW SURVEY CALLED ==========');
+    try {
+        console.log('Navigating to survey screen...');
+        showScreen('survey-screen');
+        console.log('Creating confetti...');
+        createSurveyConfetti();
+        console.log('========== SHOW SURVEY SUCCESS ==========');
+    } catch (error) {
+        console.error('ERROR in showSurvey:', error);
+        console.error('Error stack:', error.stack);
+    }
 }
 
 // Tạo hiệu ứng confetti cho survey
@@ -437,7 +446,6 @@ function initGame() {
     gameState.chances = 3;
     gameState.planes = [];
     gameState.isGameRunning = true;
-    isPaused = false; // Reset pause state
     
     // Áp dụng thời gian theo độ khó
     const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
@@ -506,7 +514,7 @@ function resizeCanvas() {
 }
 
 function handleCanvasClick(e) {
-    if (!gameState.isGameRunning || isPaused) return;
+    if (!gameState.isGameRunning) return;
     const rect = gameState.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -514,7 +522,7 @@ function handleCanvasClick(e) {
 }
 
 function handleCanvasTouch(e) {
-    if (!gameState.isGameRunning || isPaused) return;
+    if (!gameState.isGameRunning) return;
     e.preventDefault();
     e.stopPropagation(); // Ngăn event bubbling để tăng performance
     
@@ -706,7 +714,7 @@ function startTimer() {
     }
 
     gameState.timerInterval = setInterval(function () {
-        if (gameState.isGameRunning && !isPaused) {
+        if (gameState.isGameRunning) {
             gameState.timeLeft--;
             updateTimer();
 
@@ -794,7 +802,6 @@ function checkGameEnd() {
 
 function endGame(isWin) {
     gameState.isGameRunning = false;
-    isPaused = false; // Reset pause state
 
     if (gameState.animationFrame) {
         cancelAnimationFrame(gameState.animationFrame);
@@ -835,12 +842,6 @@ function endGame(isWin) {
 
 function spawnPlane() {
     if (!gameState.isGameRunning) {
-        return;
-    }
-    
-    // Nếu đang pause thì delay spawn
-    if (isPaused) {
-        setTimeout(spawnPlane, 100);
         return;
     }
 
@@ -990,12 +991,6 @@ function spawnPlane() {
 
 function gameLoop() {
     if (!gameState.isGameRunning) return;
-    
-    // Nếu đang pause thì vẫn vẽ nhưng không update
-    if (isPaused) {
-        gameState.animationFrame = requestAnimationFrame(gameLoop);
-        return;
-    }
 
     // Clear canvas
     gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
@@ -1267,15 +1262,6 @@ function showThankYou() {
 }
 
 function restartGame() {
-    // Reset pause state
-    isPaused = false;
-    
-    // Ẩn pause menu nếu đang hiển thị
-    const pauseMenu = document.getElementById('pause-menu');
-    if (pauseMenu) {
-        pauseMenu.classList.remove('show');
-    }
-    
     // Dừng timer
     stopTimer();
 
@@ -1347,13 +1333,6 @@ function startLightning() {
     function triggerLightning() {
         if (!gameState.isGameRunning) return;
         
-        // Nếu đang pause thì skip lần này và đợi lần sau
-        if (isPaused) {
-            const nextLightning = 1000; // Check lại sau 1 giây
-            lightningInterval = setTimeout(triggerLightning, nextLightning);
-            return;
-        }
-        
         // Phát âm thanh sấm
         playSoundSafe(sounds.thunder);
         
@@ -1387,83 +1366,7 @@ function stopLightning() {
     }
 }
 
-// Pause Game Functions
-let isPaused = false;
-
-function pauseGame() {
-    if (!gameState.isGameRunning || isPaused) return;
-    
-    isPaused = true;
-    
-    // Hiển thị pause menu
-    const pauseMenu = document.getElementById('pause-menu');
-    pauseMenu.classList.add('show');
-    
-    // Tạm dừng tất cả âm thanh
-    sounds.bgMusic.pause();
-    sounds.menuTheme.pause();
-}
-
-function resumeGame() {
-    if (!isPaused) return;
-    
-    isPaused = false;
-    
-    // Ẩn pause menu
-    const pauseMenu = document.getElementById('pause-menu');
-    pauseMenu.classList.remove('show');
-    
-    // Resume âm thanh nền game
-    playSoundSafe(sounds.bgMusic);
-}
-
-function restartFromPause() {
-    isPaused = false;
-    
-    // Ẩn pause menu
-    const pauseMenu = document.getElementById('pause-menu');
-    pauseMenu.classList.remove('show');
-    
-    // Dừng game hiện tại
-    gameState.isGameRunning = false;
-    if (gameState.animationFrame) {
-        cancelAnimationFrame(gameState.animationFrame);
-    }
-    stopTimer();
-    stopRain();
-    stopLightning();
-    
-    // Dừng nhạc nền
-    sounds.bgMusic.pause();
-    sounds.bgMusic.currentTime = 0;
-    
-    // Chuyển về màn chọn map để chơi lại
-    showScreen('map-selection-screen');
-}
-
-function backToMenu() {
-    isPaused = false;
-    
-    // Ẩn pause menu
-    const pauseMenu = document.getElementById('pause-menu');
-    pauseMenu.classList.remove('show');
-    
-    // Dừng game
-    gameState.isGameRunning = false;
-    if (gameState.animationFrame) {
-        cancelAnimationFrame(gameState.animationFrame);
-    }
-    stopTimer();
-    stopRain();
-    stopLightning();
-    
-    // Dừng nhạc nền
-    sounds.bgMusic.pause();
-    sounds.bgMusic.currentTime = 0;
-    
-    // Reset và về welcome screen
-    restartGame();
-}
+// Pause feature removed
 
 // Game Over Popup
 let gameOverTimeout = null;
@@ -1508,48 +1411,213 @@ function showGameOverPopup() {
     gameOverTimeout = setTimeout(goToLoseScreen, 5000);
 }
 
-// Audio unlock handler
-function unlockAudio() {
-    const audioUnlock = document.getElementById('audio-unlock');
+// Universal click handler cho touch/mouse/pointer (hỗ trợ tất cả thiết bị)
+function addClickLikeHandler(el, handler) {
+    // Prevent multiple binds
+    if (!el) return;
     
-    // Phát nhạc menu theme
-    playSoundSafe(sounds.menuTheme);
+    let handled = false;
     
-    // Ẩn overlay
-    audioUnlock.classList.add('hidden');
+    // Pointer (modern - Chrome 55+, Safari 13+)
+    if ('onpointerdown' in window) {
+        el.addEventListener('pointerdown', function(e) {
+            console.log('pointerdown event triggered on', el.id || el.className);
+            if (!handled) {
+                handled = true;
+                handler(e);
+                setTimeout(function() { handled = false; }, 300);
+            }
+        }, false);
+    }
     
-    // Remove event listener
-    audioUnlock.removeEventListener('click', unlockAudio);
-    audioUnlock.removeEventListener('touchstart', unlockAudio);
+    // Touch fallback (Android/iOS cũ)
+    el.addEventListener('touchend', function(e) {
+        console.log('touchend event triggered on', el.id || el.className);
+        e.preventDefault(); // Tránh sinh mouse events đôi
+        if (!handled) {
+            handled = true;
+            handler(e);
+            setTimeout(function() { handled = false; }, 300);
+        }
+    }, false);
+    
+    // Mouse fallback (desktop/testing)
+    el.addEventListener('click', function(e) {
+        console.log('click event triggered on', el.id || el.className);
+        if (!handled) {
+            handled = true;
+            handler(e);
+            setTimeout(function() { handled = false; }, 300);
+        }
+    }, false);
 }
 
-// Setup tap sound cho tất cả buttons
-function setupButtonTapSound() {
-    // Lấy tất cả các button và element có class btn
-    const buttons = document.querySelectorAll('button, .btn, .map-item, .difficulty-card, .star');
+// Audio unlock handler
+let audioUnlocked = false; // Flag để tránh gọi nhiều lần
+function unlockAudio(e) {
+    console.log('========== UNLOCK AUDIO START ==========');
+    console.log('Event type:', e ? e.type : 'no event');
+    console.log('audioUnlocked flag:', audioUnlocked);
     
-    buttons.forEach(function(button) {
-        // Click event
-        button.addEventListener('click', function() {
-            playSoundSafe(sounds.tap);
-        }, { passive: true });
+    // Tránh gọi nhiều lần (vì có nhiều event types)
+    if (audioUnlocked) {
+        console.log('Already unlocked, returning early');
+        return;
+    }
+    
+    try {
+        // Ngăn default behavior để tránh conflict
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         
-        // Touch event cho mobile
-        button.addEventListener('touchstart', function() {
+        console.log('Setting audioUnlocked = true');
+        audioUnlocked = true;
+        
+        const audioUnlock = document.getElementById('audio-unlock');
+        
+        console.log('audioUnlock element:', audioUnlock);
+        
+        if (!audioUnlock) {
+            console.error('CRITICAL: audio-unlock element not found!');
+            return;
+        }
+        
+        // Phát nhạc menu theme
+        console.log('Playing menu theme...');
+        playSoundSafe(sounds.menuTheme);
+        
+        // Ẩn overlay - thử nhiều cách
+        console.log('Hiding overlay...');
+        
+        // Cách 1: Add class
+        audioUnlock.classList.add('hidden');
+        console.log('Added .hidden class');
+        
+        // Cách 2: Inline style (fallback cho Android cũ)
+        audioUnlock.style.display = 'none';
+        console.log('Set display = none');
+        
+        // Cách 3: Visibility (thêm fallback)
+        audioUnlock.style.visibility = 'hidden';
+        console.log('Set visibility = hidden');
+        
+        console.log('========== UNLOCK AUDIO SUCCESS ==========');
+        
+    } catch (error) {
+        console.error('ERROR in unlockAudio:', error);
+        console.error('Error stack:', error.stack);
+    }
+}
+
+// Setup universal handlers cho tất cả interactive elements
+function setupUniversalHandlers() {
+    console.log('========== SETUP UNIVERSAL HANDLERS ==========');
+    
+    // Setup map items
+    const mapItems = document.querySelectorAll('.map-item');
+    console.log('Found', mapItems.length, 'map items');
+    mapItems.forEach(function(item, index) {
+        addClickLikeHandler(item, function(e) {
+            const mapNumber = index + 1;
+            console.log('Map item', mapNumber, 'clicked');
             playSoundSafe(sounds.tap);
-        }, { passive: true });
+            selectMap(mapNumber);
+        });
     });
+    
+    // Setup difficulty cards
+    const difficultyCards = document.querySelectorAll('.difficulty-card');
+    console.log('Found', difficultyCards.length, 'difficulty cards');
+    difficultyCards.forEach(function(card) {
+        const difficulty = card.classList.contains('easy') ? 'easy' : 
+                         card.classList.contains('normal') ? 'medium' : 'hard';
+        addClickLikeHandler(card, function(e) {
+            console.log('Difficulty card clicked:', difficulty);
+            playSoundSafe(sounds.tap);
+            selectDifficulty(difficulty);
+        });
+    });
+    
+    // Setup rating stars
+    const stars = document.querySelectorAll('.star');
+    console.log('Found', stars.length, 'rating stars');
+    stars.forEach(function(star) {
+        const value = parseInt(star.getAttribute('data-value'));
+        addClickLikeHandler(star, function(e) {
+            console.log('Star clicked:', value);
+            playSoundSafe(sounds.tap);
+            rateStar(value);
+        });
+    });
+    
+    // Setup all buttons
+    const allButtons = document.querySelectorAll('button, .btn');
+    console.log('Found', allButtons.length, 'buttons/btns');
+    allButtons.forEach(function(button) {
+        // Skip các button đã có handler riêng (chỉ splash-button)
+        if (button.classList.contains('splash-button')) {
+            console.log('Skipping button with dedicated handler:', button.className);
+            return;
+        }
+        
+        // Thêm universal handler với tap sound
+        addClickLikeHandler(button, function(e) {
+            playSoundSafe(sounds.tap);
+            // Handler đã có trong onclick attribute sẽ tự chạy
+            console.log('Button clicked via universal handler:', button.textContent.trim().substring(0, 20));
+        });
+    });
+    
+    console.log('========== SETUP COMPLETE ==========');
+}
+
+// Setup tap sound cho tất cả buttons (deprecated - moved to setupUniversalHandlers)
+function setupButtonTapSound() {
+    console.log('setupButtonTapSound: Now handled by setupUniversalHandlers with tap sound');
+    // Tap sound đã được integrated vào setupUniversalHandlers
 }
 
 // Initialize game when page loads
 window.addEventListener('load', function () {
+    console.log('Page loaded, initializing...');
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Touch support:', 'ontouchstart' in window);
+    console.log('Pointer support:', 'onpointerdown' in window);
+    
     preloadImages();
     showScreen('welcome-screen');
     
-    // Setup audio unlock
+    // Setup audio unlock với universal event handler
     const audioUnlock = document.getElementById('audio-unlock');
-    audioUnlock.addEventListener('click', unlockAudio);
-    audioUnlock.addEventListener('touchstart', unlockAudio);
+    
+    console.log('audioUnlock element:', audioUnlock);
+    
+    if (!audioUnlock) {
+        console.error('Missing audio-unlock element!');
+        return;
+    }
+    
+    // Sử dụng universal click handler cho overlay (không cần button riêng)
+    addClickLikeHandler(audioUnlock, unlockAudio);
+    console.log('Added universal event listeners to audio unlock overlay');
+    
+    // Setup splash button (TAP TO START) với universal handler + tap sound
+    const splashButton = document.querySelector('.splash-button');
+    if (splashButton) {
+        addClickLikeHandler(splashButton, function(e) {
+            console.log('Splash button clicked!');
+            playSoundSafe(sounds.tap);
+            showSurvey();
+        });
+        console.log('Added universal event listeners to splash button with tap sound');
+    } else {
+        console.warn('Splash button not found');
+    }
+    
+    // Setup universal handlers cho tất cả các interactive elements
+    setupUniversalHandlers();
     
     // Setup tap sound cho tất cả buttons
     setupButtonTapSound();

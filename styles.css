@@ -20,6 +20,10 @@
     z-index: 99999;
     cursor: pointer;
     animation: fadeIn 0.3s ease-out;
+    /* Hỗ trợ touch events trên Android cũ */
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .audio-unlock-overlay.hidden {
@@ -43,6 +47,17 @@
     font-weight: 600;
     color: #fff;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes buttonPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 8px 20px rgba(202, 22, 28, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 10px 30px rgba(202, 22, 28, 0.6);
+    }
 }
 
 @keyframes pulse {
@@ -2010,6 +2025,16 @@ body {
     animation: buttonPulse 2s ease-in-out infinite;
     position: relative;
     overflow: hidden;
+    /* Tối ưu cho touch trên Android cũ */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(202, 22, 28, 0.3);
+    -webkit-user-select: none;
+    user-select: none;
+    /* Đảm bảo button có vùng touch đủ lớn */
+    min-width: 200px;
+    min-height: 60px;
+    /* Z-index cao để đảm bảo có thể click */
+    z-index: 10;
 }
 
 .splash-button::before {

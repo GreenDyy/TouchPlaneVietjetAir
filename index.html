@@ -24,7 +24,9 @@
 </head>
 <body>
     <!-- Audio Unlock Overlay -->
-    <div id="audio-unlock" class="audio-unlock-overlay">
+    <div id="audio-unlock" class="audio-unlock-overlay" 
+         onclick="if(typeof unlockAudio === 'function') unlockAudio();"
+         ontouchend="event.preventDefault(); if(typeof unlockAudio === 'function') unlockAudio();">
         <div class="audio-unlock-content">
             <div class="audio-icon">🎮</div>
             <p>Chạm để bắt đầu</p>
@@ -79,7 +81,9 @@
             </div>
             <h1 class="splash-title">BẮT MÁY BAY VIETJET</h1>
             <p class="splash-subtitle">MASTER THE SKIES</p>
-            <button class="splash-button" onclick="showSurvey()">
+            <button class="splash-button" 
+                    onclick="if(typeof showSurvey === 'function') showSurvey();"
+                    ontouchend="event.preventDefault(); if(typeof showSurvey === 'function') showSurvey();">
                 <span>TAP TO START</span>
             </button>
         </div>
@@ -165,7 +169,11 @@
             </div>
 
             <div class="question-block" style="margin-top: -30px;">
-                <button class="btn btn-primary" onclick="validateAndShowIntro()">Tiếp tục</button>
+                <button class="btn btn-primary" 
+                        onclick="validateAndShowIntro();"
+                        ontouchend="event.preventDefault(); validateAndShowIntro();">
+                    Tiếp tục
+                </button>
             </div>
         </div>
     </div>
@@ -185,7 +193,9 @@
                 <div class="intro-header-banner">
                     <h2 class="intro-title">🎮 HƯỚNG DẪN CHƠI</h2>
                 </div>
-                <button class="help-button-gaming" onclick="showRulesModal()">
+                <button class="help-button-gaming" 
+                        onclick="showRulesModal();"
+                        ontouchend="event.preventDefault(); showRulesModal();">
                     <span>?</span>
                 </button>
             </div>
@@ -230,7 +240,9 @@
             </div>
             
             <!-- Play Button -->
-            <button class="btn-play-game" onclick="showMapSelection()">
+            <button class="btn-play-game" 
+                    onclick="showMapSelection();"
+                    ontouchend="event.preventDefault(); showMapSelection();">
                 <span>BẮT ĐẦU CHƠI</span>
             </button>
         </div>
@@ -351,7 +363,11 @@
         
         <!-- Return button -->
         <div class="difficulty-footer">
-            <button class="btn btn-secondary" onclick="showMapSelection()">QUAY LẠI</button>
+            <button class="btn btn-secondary" 
+                    onclick="showMapSelection();"
+                    ontouchend="event.preventDefault(); showMapSelection();">
+                QUAY LẠI
+            </button>
         </div>
     </div>
 
@@ -406,9 +422,6 @@
         </div>
         
         <div class="game-header">
-            <button class="pause-button" onclick="pauseGame()">
-                <span>⏸</span>
-            </button>
             <div class="score-board">
                 <div class="score-box">
                     <div class="score-icon">🛫</div>
@@ -466,38 +479,6 @@
                 <p class="game-over-hint">(Chạm để tiếp tục)</p>
             </div>
         </div>
-        
-        <!-- Pause Menu -->
-        <div id="pause-menu" class="pause-menu">
-            <div class="pause-content">
-                <h2 class="pause-title">TẠM DỪNG</h2>
-                <div class="pause-options">
-                    <div class="pause-card resume-card" onclick="resumeGame()">
-                        <div class="pause-card-icon">▶</div>
-                        <div class="pause-card-content">
-                            <h3>TIẾP TỤC</h3>
-                            <p>Quay lại chơi tiếp</p>
-                        </div>
-                    </div>
-                    
-                    <div class="pause-card restart-card" onclick="restartFromPause()">
-                        <div class="pause-card-icon">🔄</div>
-                        <div class="pause-card-content">
-                            <h3>CHƠI LẠI</h3>
-                            <p>Bắt đầu màn mới</p>
-                        </div>
-                    </div>
-                    
-                    <div class="pause-card menu-card" onclick="backToMenu()">
-                        <div class="pause-card-icon">🏠</div>
-                        <div class="pause-card-content">
-                            <h3>VỀ MENU</h3>
-                            <p>Quay về màn hình chính</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Màn hình thắng -->
@@ -514,7 +495,11 @@
                 <p class="qr-label">Quét mã để nhận voucher</p>
                 <a id="voucher-link" href="https://evoucher.vietjetair.com/" target="_blank" class="link">evoucher.vietjetair.com</a>
             </div>
-            <button class="btn btn-primary" onclick="showRating()">Tiếp tục</button>
+            <button class="btn btn-primary" 
+                    onclick="showRating();"
+                    ontouchend="event.preventDefault(); showRating();">
+                Tiếp tục
+            </button>
         </div>
     </div>
 
@@ -527,7 +512,11 @@
             <h2 class="screen-title">Bạn suýt bắt được máy bay rồi</h2>
             <p class="result-text">Hãy thử lại vào lần sau nhé!</p>
             <p class="intro-text">Không sao, Vietjet vẫn luôn đồng hành cùng bạn trong mọi hành trình!</p>
-            <button class="btn btn-primary" onclick="showRating()">Tiếp tục</button>
+            <button class="btn btn-primary" 
+                    onclick="showRating();"
+                    ontouchend="event.preventDefault(); showRating();">
+                Tiếp tục
+            </button>
         </div>
     </div>
 
@@ -538,11 +527,21 @@
             <p class="intro-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
             <div id="rating-emoji" class="rating-emoji">🤔</div>
             <div class="star-rating">
-                <span class="star" data-value="1" onclick="rateStar(1)">☆</span>
-                <span class="star" data-value="2" onclick="rateStar(2)">☆</span>
-                <span class="star" data-value="3" onclick="rateStar(3)">☆</span>
-                <span class="star" data-value="4" onclick="rateStar(4)">☆</span>
-                <span class="star" data-value="5" onclick="rateStar(5)">☆</span>
+                <span class="star" data-value="1" 
+                      onclick="rateStar(1);"
+                      ontouchend="event.preventDefault(); rateStar(1);">☆</span>
+                <span class="star" data-value="2" 
+                      onclick="rateStar(2);"
+                      ontouchend="event.preventDefault(); rateStar(2);">☆</span>
+                <span class="star" data-value="3" 
+                      onclick="rateStar(3);"
+                      ontouchend="event.preventDefault(); rateStar(3);">☆</span>
+                <span class="star" data-value="4" 
+                      onclick="rateStar(4);"
+                      ontouchend="event.preventDefault(); rateStar(4);">☆</span>
+                <span class="star" data-value="5" 
+                      onclick="rateStar(5);"
+                      ontouchend="event.preventDefault(); rateStar(5);">☆</span>
             </div>
             <p id="rating-value" class="rating-value"></p>
         </div>
@@ -558,15 +557,23 @@
             <h2 class="screen-title">Cảm ơn bạn!</h2>
             <p class="intro-text">Xin cảm ơn bạn đã sử dụng dịch vụ của Vietjet ngày hôm nay. Chúc bạn có 1 chuyến đi vui vẻ và an toàn nhé.</p>
         
-            <button class="btn btn-primary" onclick="restartGame()">Chơi lại</button>
+            <button class="btn btn-primary" 
+                    onclick="restartGame();"
+                    ontouchend="event.preventDefault(); restartGame();">
+                Chơi lại
+            </button>
         </div>
     </div>
 
     <!-- Modal điều kiện thắng thua -->
     <div id="rules-modal" class="modal">
-        <div class="modal-overlay" onclick="closeRulesModal()"></div>
+        <div class="modal-overlay" 
+             onclick="closeRulesModal();"
+             ontouchend="event.preventDefault(); closeRulesModal();"></div>
         <div class="modal-content">
-            <button class="modal-close" onclick="closeRulesModal()">×</button>
+            <button class="modal-close" 
+                    onclick="closeRulesModal();"
+                    ontouchend="event.preventDefault(); closeRulesModal();">×</button>
             <h3 class="modal-title"><span style="filter: none; -webkit-text-fill-color: initial;">📋</span> <span>Điều kiện thắng - thua</span></h3>
             
             <div class="rules-section">
@@ -597,7 +604,11 @@
             </div>
             
             <div style="display: flex; justify-content: center;">
-                <button class="btn btn-primary" onclick="closeRulesModal()">Đã hiểu</button>
+                <button class="btn btn-primary" 
+                        onclick="closeRulesModal();"
+                        ontouchend="event.preventDefault(); closeRulesModal();">
+                    Đã hiểu
+                </button>
             </div>
         </div>
     </div>

@@ -1372,18 +1372,90 @@ body {
 
 /* Responsive - Tablet */
 @media (max-width: 768px) {
+    /* Allow scroll for all screens on mobile/tablet */
+    .screen {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Game screen and splash screen exceptions - keep fixed height */
+    #game-screen,
+    #welcome-screen {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
     #map-selection-screen .container {
         width: 90%;
         padding: 28px 30px;
     }
     
-    /* Difficulty selection mobile */
+    /* Survey screen */
+    #survey-screen .container {
+        padding: 25px 20px;
+    }
+    
+    /* Intro screen mobile */
+    #intro-screen {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    #intro-screen .intro-container {
+        padding: 25px 0;
+    }
+    
+    /* Win/Lose/Rating/Thank screens */
+    #win-screen .container,
+    #lose-screen .container,
+    #rating-screen .container,
+    #thank-screen .container {
+        padding: 30px 25px;
+    }
+    
+    /* Difficulty selection mobile - FIX OVERFLOW */
+    #difficulty-screen {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .difficulty-header {
+        padding: 15px 0 10px 0;
+    }
+    
     .difficulty-main {
-        padding: 0 20px;
+        padding: 20px 20px;
+        min-height: auto;
     }
     
     .difficulty-options {
         max-width: 400px;
+        gap: 12px;
+    }
+    
+    .difficulty-card {
+        padding: 15px;
+    }
+    
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
+    .card-content h3 {
+        font-size: 18px;
+    }
+    
+    .card-content p {
+        font-size: 13px;
+    }
+    
+    .difficulty-footer {
+        padding: 15px 0 20px 0;
     }
     
     .banner-text {
@@ -1395,14 +1467,6 @@ body {
         padding: 12px 30px;
     }
     
-    .card-content h3 {
-        font-size: 18px;
-    }
-    
-    .card-content p {
-        font-size: 13px;
-    }
-    
     .map-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
@@ -1411,9 +1475,47 @@ body {
 
 /* Responsive - Mobile */
 @media (max-width: 480px) {
+    /* Allow scroll for all screens on small mobile */
+    .screen {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Game screen and splash screen exceptions - keep fixed height */
+    #game-screen,
+    #welcome-screen {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
     .container {
         padding: 40px 25px;
         max-width: 95%;
+    }
+    
+    /* Survey screen */
+    #survey-screen .container {
+        padding: 20px 18px;
+    }
+    
+    /* Intro screen small mobile */
+    #intro-screen {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    #intro-screen .intro-container {
+        padding: 20px 0;
+    }
+    
+    /* Win/Lose/Rating/Thank screens */
+    #win-screen .container,
+    #lose-screen .container,
+    #rating-screen .container,
+    #thank-screen .container {
+        padding: 25px 20px;
     }
     
     #map-selection-screen .container {
@@ -2739,6 +2841,21 @@ body {
 
 /* Tablet 11" Portrait (768px - 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
+    /* Allow scroll for all screens on tablet */
+    .screen {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Game screen and splash screen exceptions - keep fixed height */
+    #game-screen,
+    #welcome-screen {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
     .container {
         max-width: 550px;
         padding: 40px 45px;
@@ -2749,6 +2866,100 @@ body {
         max-width: 95%;
         width: 700px;
         padding: 35px 40px;
+    }
+    
+    /* Survey screen */
+    #survey-screen .container {
+        padding: 30px 35px;
+    }
+    
+    /* Intro screen */
+    #intro-screen {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    #intro-screen .intro-container {
+        padding: 30px 0;
+        max-width: 650px;
+    }
+    
+    #intro-screen .intro-header-banner {
+        padding: 14px 35px;
+    }
+    
+    #intro-screen .intro-title {
+        font-size: 1.4rem;
+    }
+    
+    #intro-screen .mission-box {
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    #intro-screen .mission-text {
+        font-size: 1.15rem;
+    }
+    
+    #intro-screen .game-rules-grid {
+        gap: 16px;
+    }
+    
+    #intro-screen .rule-card {
+        padding: 20px;
+    }
+    
+    #intro-screen .btn-play-game {
+        padding: 16px 50px;
+        font-size: 1.3rem;
+    }
+    
+    /* Win/Lose/Rating/Thank screens */
+    #win-screen .container,
+    #lose-screen .container,
+    #rating-screen .container,
+    #thank-screen .container {
+        padding: 35px 40px;
+    }
+    
+    /* Difficulty screen tablet */
+    #difficulty-screen {
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .difficulty-header {
+        padding: 25px 0 15px 0;
+    }
+    
+    .difficulty-main {
+        padding: 25px 40px;
+    }
+    
+    .difficulty-options {
+        max-width: 550px;
+        gap: 18px;
+    }
+    
+    .difficulty-card {
+        padding: 22px;
+    }
+    
+    .card-icon {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .card-content h3 {
+        font-size: 22px;
+    }
+    
+    .card-content p {
+        font-size: 15px;
+    }
+    
+    .difficulty-footer {
+        padding: 20px 0 25px 0;
     }
     
     .logo img {
@@ -2922,19 +3133,121 @@ body {
 
 /* Landscape orientation optimization for tablets */
 @media (min-width: 768px) and (max-height: 600px) and (orientation: landscape) {
+    /* Allow scroll for all screens in landscape */
+    .screen {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Game screen and splash screen exceptions - keep fixed height */
+    #game-screen,
+    #welcome-screen {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
     .container {
-        max-height: 88vh;
+        max-height: none;
         padding: 20px 30px;
     }
     
     #survey-screen .container {
         padding: 18px 28px;
-        max-height: 88vh;
+        max-height: none;
     }
     
     #survey-screen .screen-title {
         font-size: 1.5rem;
         margin-bottom: 8px;
+    }
+    
+    /* Win/Lose/Rating/Thank screens */
+    #win-screen .container,
+    #lose-screen .container,
+    #rating-screen .container,
+    #thank-screen .container {
+        padding: 20px 30px;
+    }
+    
+    /* Intro screen landscape */
+    #intro-screen {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    #intro-screen .intro-container {
+        padding: 20px 0;
+        max-width: 700px;
+    }
+    
+    #intro-screen .intro-header-banner {
+        padding: 10px 30px;
+    }
+    
+    #intro-screen .intro-title {
+        font-size: 1.2rem;
+    }
+    
+    #intro-screen .mission-box {
+        padding: 15px;
+        gap: 12px;
+    }
+    
+    #intro-screen .mission-text {
+        font-size: 1rem;
+    }
+    
+    #intro-screen .game-rules-grid {
+        gap: 12px;
+    }
+    
+    #intro-screen .rule-card {
+        padding: 15px;
+    }
+    
+    #intro-screen .rule-icon-wrapper {
+        width: 50px;
+        height: 50px;
+    }
+    
+    #intro-screen .btn-play-game {
+        padding: 14px 45px;
+        font-size: 1.1rem;
+    }
+    
+    /* Difficulty screen landscape */
+    #difficulty-screen {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .difficulty-header {
+        padding: 10px 0;
+    }
+    
+    .difficulty-main {
+        padding: 15px 30px;
+    }
+    
+    .difficulty-options {
+        gap: 10px;
+        max-width: 500px;
+    }
+    
+    .difficulty-card {
+        padding: 12px 15px;
+    }
+    
+    .card-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .difficulty-footer {
+        padding: 10px 0 15px 0;
     }
     
     #survey-screen .intro-text {
@@ -3061,7 +3374,8 @@ body {
 /* ========== INTRO SCREEN GAMING DESIGN ========== */
 #intro-screen {
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Background effects */

@@ -99,6 +99,7 @@ const DIFFICULTY_CONFIG = {
     easy: {
         gameTime: 30,
         speedMultiplier: 1,
+        chances: 3,
         qrCode: 'assets/qr_code_level_1.png',
         voucherLink: 'https://evoucher.vietjetair.com',
         hasRain: false,
@@ -107,6 +108,7 @@ const DIFFICULTY_CONFIG = {
     medium: {
         gameTime: 20,
         speedMultiplier: 1.5,
+        chances: 2,
         qrCode: 'assets/qr_code_level_2.png',
         voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
         hasRain: false,
@@ -115,6 +117,7 @@ const DIFFICULTY_CONFIG = {
     hard: {
         gameTime: 15,
         speedMultiplier: 2,
+        chances: 1,
         qrCode: 'assets/qr_code_level_3.png',
         voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
         hasRain: true,
@@ -443,13 +446,13 @@ function initGame() {
     gameState.caughtPlanes = 0;
     gameState.planesSpawned = 0;
     gameState.vietjetSpawned = 0;
-    gameState.chances = 3;
     gameState.planes = [];
     gameState.isGameRunning = true;
     
-    // Áp dụng thời gian theo độ khó
+    // Áp dụng config theo độ khó
     const difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
     gameState.timeLeft = difficultyConfig.gameTime;
+    gameState.chances = difficultyConfig.chances;
 
     gameState.canvas = document.getElementById('game-canvas');
     gameState.ctx = gameState.canvas.getContext('2d');
@@ -879,60 +882,63 @@ function spawnPlane() {
     if (type === 'vertical') {
         // Vertical = Bay theo chiều dọc (từ trên xuống hoặc dưới lên)
         const fromTop = Math.random() < 0.5;
-        x = Math.random() * gameState.canvas.width;
+        // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền trái/phải)
+        x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
 
         if (fromTop) {
-            y = -50;
+            y = 0; // Spawn từ biên trên
             vx = 0;
             vy = speed;
         } else {
-            y = gameState.canvas.height + 50;
+            y = gameState.canvas.height; // Spawn từ biên dưới
             vx = 0;
             vy = -speed;
         }
     } else if (type === 'horizontal') {
         // Horizontal = Bay theo chiều ngang (từ trái qua phải hoặc ngược lại)
         const fromLeft = Math.random() < 0.5;
-        // Giới hạn vùng spawn: từ 15% đến 75% chiều cao màn hình (tránh quá thấp hoặc quá cao)
-        y = gameState.canvas.height * 0.15 + Math.random() * (gameState.canvas.height * 0.6);
+        // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền trên/dưới)
+        y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
 
         if (fromLeft) {
-            x = -50;
+            x = 0; // Spawn từ biên trái
             vx = speed;
             vy = 0;
         } else {
-            x = gameState.canvas.width + 50;
+            x = gameState.canvas.width; // Spawn từ biên phải
             vx = -speed;
             vy = 0;
         }
     } else {
-        // Player: bay từ 4 hướng random như cũ
+        // Player: bay từ 4 hướng random
         const side = Math.floor(Math.random() * 4);
 
         switch (side) {
             case 0: // top
-                x = Math.random() * gameState.canvas.width;
-                y = -50;
+                // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
+                x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
+                y = 0; // Spawn từ biên trên
                 vx = (Math.random() - 0.5) * speed;
                 vy = speed;
                 break;
             case 1: // right
-                x = gameState.canvas.width + 50;
-                // Giới hạn vùng spawn: từ 15% đến 75% chiều cao (tránh quá thấp)
-                y = gameState.canvas.height * 0.15 + Math.random() * (gameState.canvas.height * 0.6);
+                x = gameState.canvas.width; // Spawn từ biên phải
+                // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
+                y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = -speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
             case 2: // bottom
-                x = Math.random() * gameState.canvas.width;
-                y = gameState.canvas.height + 50;
+                // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
+                x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
+                y = gameState.canvas.height; // Spawn từ biên dưới
                 vx = (Math.random() - 0.5) * speed;
                 vy = -speed;
                 break;
             case 3: // left
-                x = -50;
-                // Giới hạn vùng spawn: từ 15% đến 75% chiều cao (tránh quá thấp)
-                y = gameState.canvas.height * 0.15 + Math.random() * (gameState.canvas.height * 0.6);
+                x = 0; // Spawn từ biên trái
+                // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
+                y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
@@ -1034,9 +1040,10 @@ function gameLoop() {
             plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
         }
 
-        // Remove if out of bounds
-        if (plane.x < -100 || plane.x > gameState.canvas.width + 100 ||
-            plane.y < -100 || plane.y > gameState.canvas.height + 100) {
+        // Remove if out of bounds (ra khỏi biên màn hình)
+        const margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
+        if (plane.x < -margin || plane.x > gameState.canvas.width + margin ||
+            plane.y < -margin || plane.y > gameState.canvas.height + margin) {
 
             // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
             if (plane.isLastVietjet) {
@@ -1101,8 +1108,9 @@ function drawClouds() {
 
         // Di chuyển mây
         cloud.x += cloud.speed;
-        if (cloud.x > gameState.canvas.width + cloud.size) {
-            cloud.x = -cloud.size;
+        // Reset từ biên trái khi ra khỏi biên phải
+        if (cloud.x > gameState.canvas.width) {
+            cloud.x = 0; // Spawn từ biên trái
             cloud.y = Math.random() * gameState.canvas.height;
         }
     }

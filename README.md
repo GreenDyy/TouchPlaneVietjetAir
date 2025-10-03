@@ -1,4 +1,6 @@
 - để chạy trên android
+-ES5 nha
+'User Agent Mozila 5.0 (Linux Android 6.0.1, Chrome 44.0.2403.119, Safari /537.36, Touch support: true, Pointer support false
 
 
 chạy file index.html

@@ -887,6 +887,10 @@ function spawnPlane() {
     var difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
     var speed = baseSpeed * difficultyConfig.speedMultiplier;
 
+    // Tính kích thước thực tế của máy bay khi vẽ (để spawn ngoài màn hình)
+    var planeDisplaySize = GAME_CONFIG.PLANE_SIZE * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
+    var spawnOffset = planeDisplaySize / 2 + 10; // Offset thêm 10px để chắc chắn
+
     if (type === 'vertical') {
         // Vertical = Bay theo chiều dọc (từ trên xuống hoặc dưới lên)
         var fromTop = Math.random() < 0.5;
@@ -894,11 +898,11 @@ function spawnPlane() {
         x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
 
         if (fromTop) {
-            y = 0; // Spawn từ biên trên
+            y = -spawnOffset; // Spawn ngoài biên trên
             vx = 0;
             vy = speed;
         } else {
-            y = gameState.canvas.height; // Spawn từ biên dưới
+            y = gameState.canvas.height + spawnOffset; // Spawn ngoài biên dưới
             vx = 0;
             vy = -speed;
         }
@@ -909,11 +913,11 @@ function spawnPlane() {
         y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
 
         if (fromLeft) {
-            x = 0; // Spawn từ biên trái
+            x = -spawnOffset; // Spawn ngoài biên trái
             vx = speed;
             vy = 0;
         } else {
-            x = gameState.canvas.width; // Spawn từ biên phải
+            x = gameState.canvas.width + spawnOffset; // Spawn ngoài biên phải
             vx = -speed;
             vy = 0;
         }
@@ -925,12 +929,12 @@ function spawnPlane() {
             case 0: // top
                 // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
                 x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
-                y = 0; // Spawn từ biên trên
+                y = -spawnOffset; // Spawn ngoài biên trên
                 vx = (Math.random() - 0.5) * speed;
                 vy = speed;
                 break;
             case 1: // right
-                x = gameState.canvas.width; // Spawn từ biên phải
+                x = gameState.canvas.width + spawnOffset; // Spawn ngoài biên phải
                 // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
                 y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = -speed;
@@ -939,12 +943,12 @@ function spawnPlane() {
             case 2: // bottom
                 // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
                 x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
-                y = gameState.canvas.height; // Spawn từ biên dưới
+                y = gameState.canvas.height + spawnOffset; // Spawn ngoài biên dưới
                 vx = (Math.random() - 0.5) * speed;
                 vy = -speed;
                 break;
             case 3: // left
-                x = 0; // Spawn từ biên trái
+                x = -spawnOffset; // Spawn ngoài biên trái
                 // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
                 y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = speed;

@@ -229,9 +229,13 @@ var gameState = {
 // Chuyển màn hình
 function showScreen(screenId) {
     var screens = document.querySelectorAll('.screen');
-    screens.forEach(function(screen) {
-        screen.classList.remove('active');
-    });
+    
+    // QUAN TRỌNG: Chrome 44 KHÔNG hỗ trợ forEach() cho NodeList!
+    // Phải dùng vòng lặp for truyền thống
+    for (var i = 0; i < screens.length; i++) {
+        screens[i].classList.remove('active');
+    }
+    
     document.getElementById(screenId).classList.add('active');
 }
 
@@ -487,9 +491,9 @@ function initGame() {
     // Start game loop
     gameLoop();
 
-    // Add touch/click event
-    gameState.canvas.addEventListener('click', handleCanvasClick);
-    gameState.canvas.addEventListener('touchstart', handleCanvasTouch);
+    // Add touch/click event - dùng touchstart cho Android cũ
+    gameState.canvas.addEventListener('touchstart', handleCanvasTouch, false);
+    gameState.canvas.addEventListener('click', handleCanvasClick, false);
 }
 
 function resizeCanvas() {
@@ -528,13 +532,28 @@ function handleCanvasClick(e) {
 
 function handleCanvasTouch(e) {
     if (!gameState.isGameRunning) return;
-    e.preventDefault();
-    e.stopPropagation(); // Ngăn event bubbling để tăng performance
+    
+    // Lấy tọa độ từ touch hoặc changedTouches (cho touchend)
+    var touch = e.touches && e.touches[0] ? e.touches[0] : 
+                (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : null);
+    
+    if (!touch) {
+        console.warn('No touch data found');
+        return;
+    }
+    
+    // QUAN TRỌNG: preventDefault() PHẢI được gọi để tránh double-tap zoom trên Android cũ
+    try {
+        e.preventDefault();
+    } catch (err) {
+        console.log('preventDefault failed:', err);
+    }
     
     var rect = gameState.canvas.getBoundingClientRect();
-    var touch = e.touches[0];
     var x = touch.clientX - rect.left;
     var y = touch.clientY - rect.top;
+    
+    console.log('Canvas touch at:', x, y);
     checkHit(x, y);
 }
 
@@ -1236,15 +1255,16 @@ function rateStar(value) {
     
     var stars = document.querySelectorAll('.star');
 
-    stars.forEach(function (star, index) {
-        if (index < value) {
-            star.classList.add('active');
-            star.textContent = '★';
+    // Chrome 44: Dùng for loop thay vì forEach
+    for (var i = 0; i < stars.length; i++) {
+        if (i < value) {
+            stars[i].classList.add('active');
+            stars[i].textContent = '★';
         } else {
-            star.classList.remove('active');
-            star.textContent = '☆';
+            stars[i].classList.remove('active');
+            stars[i].textContent = '☆';
         }
-    });
+    }
 
     // Emoji tương ứng với từng mức đánh giá
     var emojiMap = {
@@ -1270,10 +1290,13 @@ function showRating() {
     document.getElementById('rating-emoji').textContent = '🤔';
     document.getElementById('rating-value').textContent = '';
     var stars = document.querySelectorAll('.star');
-    stars.forEach(function (star) {
-        star.classList.remove('active');
-        star.textContent = '☆';
-    });
+    
+    // Chrome 44: Dùng for loop thay vì forEach
+    for (var i = 0; i < stars.length; i++) {
+        stars[i].classList.remove('active');
+        stars[i].textContent = '☆';
+    }
+    
     document.getElementById('rating-value').textContent = '';
 }
 
@@ -1293,9 +1316,11 @@ function restartGame() {
 
     // Reset survey
     var radios = document.querySelectorAll('input[type="radio"]');
-    radios.forEach(function (radio) {
-        radio.checked = false;
-    });
+    
+    // Chrome 44: Dùng for loop thay vì forEach
+    for (var i = 0; i < radios.length; i++) {
+        radios[i].checked = false;
+    }
 
     // Reset clouds
     clouds = [];
@@ -1432,165 +1457,294 @@ function showGameOverPopup() {
 }
 
 // Universal click handler cho touch/mouse/pointer (hỗ trợ tất cả thiết bị)
+// Đơn giản hóa cho Android 6 / Chrome 44
 function addClickLikeHandler(el, handler) {
-    // Prevent multiple binds
     if (!el) return;
     
     var handled = false;
+    var hasTouchSupport = 'ontouchstart' in window;
     
-    // Pointer (modern - Chrome 55+, Safari 13+)
-    if ('onpointerdown' in window) {
-        el.addEventListener('pointerdown', function(e) {
-            console.log('pointerdown event triggered on', el.id || el.className);
+    console.log('Adding click handler to element:', el.id || el.className, 'Touch support:', hasTouchSupport);
+    
+    // Cho Android 6 / Chrome 44 - phương pháp đơn giản nhất
+    if (hasTouchSupport) {
+        // Dùng touchstart cho phản hồi ngay lập tức
+        el.addEventListener('touchstart', function(e) {
+            console.log('touchstart event triggered on', el.id || el.className);
+            // KHÔNG preventDefault() - để browser xử lý bình thường
             if (!handled) {
                 handled = true;
                 handler(e);
-                setTimeout(function() { handled = false; }, 300);
+                setTimeout(function() { handled = false; }, 500);
             }
         }, false);
     }
     
-    // Touch fallback (Android/iOS cũ)
-    el.addEventListener('touchend', function(e) {
-        console.log('touchend event triggered on', el.id || el.className);
-        e.preventDefault(); // Tránh sinh mouse events đôi
-        if (!handled) {
-            handled = true;
-            handler(e);
-            setTimeout(function() { handled = false; }, 300);
-        }
-    }, false);
-    
-    // Mouse fallback (desktop/testing)
+    // LUÔN thêm click event (quan trọng cho tất cả thiết bị)
     el.addEventListener('click', function(e) {
         console.log('click event triggered on', el.id || el.className);
         if (!handled) {
             handled = true;
             handler(e);
-            setTimeout(function() { handled = false; }, 300);
+            setTimeout(function() { handled = false; }, 500);
         }
     }, false);
 }
 
 // Audio unlock handler
-var audioUnlocked = false; // Flag để tránh gọi nhiều lần
-function unlockAudio(e) {
+var audioUnlocked = false;
+function unlockAudio() {
     console.log('========== UNLOCK AUDIO START ==========');
-    console.log('Event type:', e ? e.type : 'no event');
-    console.log('audioUnlocked flag:', audioUnlocked);
     
-    // Tránh gọi nhiều lần (vì có nhiều event types)
+    // Tránh gọi nhiều lần
     if (audioUnlocked) {
-        console.log('Already unlocked, returning early');
+        console.log('Already unlocked');
         return;
     }
     
-    try {
-        // Ngăn default behavior để tránh conflict
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
+    audioUnlocked = true;
+    
+    // Phát nhạc menu theme
+    console.log('Playing menu theme...');
+    playSoundSafe(sounds.menuTheme);
+    
+    // Ẩn overlay - QUAN TRỌNG: XÓA HOÀN TOÀN khỏi DOM
+    var audioUnlock = document.getElementById('audio-unlock');
+    if (audioUnlock) {
+        console.log('Removing overlay from DOM...');
+        
+        // Xóa khỏi DOM (cách an toàn nhất)
+        if (audioUnlock.parentNode) {
+            audioUnlock.parentNode.removeChild(audioUnlock);
+            console.log('Overlay removed successfully');
         }
-        
-        console.log('Setting audioUnlocked = true');
-        audioUnlocked = true;
-        
-        var audioUnlock = document.getElementById('audio-unlock');
-        
-        console.log('audioUnlock element:', audioUnlock);
-        
-        if (!audioUnlock) {
-            console.error('CRITICAL: audio-unlock element not found!');
-            return;
-        }
-        
-        // Phát nhạc menu theme
-        console.log('Playing menu theme...');
-        playSoundSafe(sounds.menuTheme);
-        
-        // Ẩn overlay - thử nhiều cách
-        console.log('Hiding overlay...');
-        
-        // Cách 1: Add class
-        audioUnlock.classList.add('hidden');
-        console.log('Added .hidden class');
-        
-        // Cách 2: Inline style (fallback cho Android cũ)
-        audioUnlock.style.display = 'none';
-        console.log('Set display = none');
-        
-        // Cách 3: Visibility (thêm fallback)
-        audioUnlock.style.visibility = 'hidden';
-        console.log('Set visibility = hidden');
-        
-        console.log('========== UNLOCK AUDIO SUCCESS ==========');
-        
-    } catch (error) {
-        console.error('ERROR in unlockAudio:', error);
-        console.error('Error stack:', error.stack);
     }
+    
+    console.log('========== UNLOCK AUDIO SUCCESS ==========');
 }
 
-// Setup universal handlers cho tất cả interactive elements
-function setupUniversalHandlers() {
-    console.log('========== SETUP UNIVERSAL HANDLERS ==========');
+// Setup ALL event handlers (TẤT CẢ handlers được setup ở đây)
+function setupAllEventHandlers() {
+    console.log('========== SETUP ALL EVENT HANDLERS START ==========');
     
-    // Setup map items
+    // 1. Setup Audio Unlock Overlay
+    var audioUnlock = document.getElementById('audio-unlock');
+    if (audioUnlock) {
+        console.log('✓ Setting up audio-unlock overlay');
+        addClickLikeHandler(audioUnlock, unlockAudio);
+    }
+    
+    // 2. Setup Splash Button (TAP TO START)
+    var splashButton = document.querySelector('.splash-button');
+    if (splashButton) {
+        console.log('✓ Setting up splash-button');
+        addClickLikeHandler(splashButton, function(e) {
+            console.log('Splash button clicked!');
+            playSoundSafe(sounds.tap);
+            showSurvey();
+        });
+    }
+    
+    // 3. Setup Survey Continue Button
+    var surveyContinueBtn = document.getElementById('survey-continue-btn');
+    if (surveyContinueBtn) {
+        console.log('✓ Setting up survey-continue-btn');
+        addClickLikeHandler(surveyContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            validateAndShowIntro();
+        });
+    }
+    
+    // 4. Setup Help Button
+    var helpButton = document.getElementById('help-button');
+    if (helpButton) {
+        console.log('✓ Setting up help-button');
+        addClickLikeHandler(helpButton, function(e) {
+            playSoundSafe(sounds.tap);
+            showRulesModal();
+        });
+    }
+    
+    // 5. Setup Start Game Button
+    var startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        console.log('✓ Setting up start-game-btn');
+        addClickLikeHandler(startGameBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showMapSelection();
+        });
+    }
+    
+    // 6. Setup Back to Map Button
+    var backToMapBtn = document.getElementById('back-to-map-btn');
+    if (backToMapBtn) {
+        console.log('✓ Setting up back-to-map-btn');
+        addClickLikeHandler(backToMapBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showMapSelection();
+        });
+    }
+    
+    // 7. Setup Win Continue Button
+    var winContinueBtn = document.getElementById('win-continue-btn');
+    if (winContinueBtn) {
+        console.log('✓ Setting up win-continue-btn');
+        addClickLikeHandler(winContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showRating();
+        });
+    }
+    
+    // 8. Setup Lose Continue Button
+    var loseContinueBtn = document.getElementById('lose-continue-btn');
+    if (loseContinueBtn) {
+        console.log('✓ Setting up lose-continue-btn');
+        addClickLikeHandler(loseContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showRating();
+        });
+    }
+    
+    // 9. Setup Restart Button
+    var restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) {
+        console.log('✓ Setting up restart-btn');
+        addClickLikeHandler(restartBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            restartGame();
+        });
+    }
+    
+    // 10. Setup Modal Close Button
+    var modalCloseBtn = document.getElementById('modal-close-btn');
+    if (modalCloseBtn) {
+        console.log('✓ Setting up modal-close-btn');
+        addClickLikeHandler(modalCloseBtn, closeRulesModal);
+    }
+    
+    // 11. Setup Modal Overlay
+    var modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) {
+        console.log('✓ Setting up modal-overlay');
+        addClickLikeHandler(modalOverlay, closeRulesModal);
+    }
+    
+    // 12. Setup Modal OK Button
+    var modalOkBtn = document.getElementById('modal-ok-btn');
+    if (modalOkBtn) {
+        console.log('✓ Setting up modal-ok-btn');
+        addClickLikeHandler(modalOkBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            closeRulesModal();
+        });
+    }
+    
+    console.log('========== SETUP BASIC BUTTONS COMPLETE ==========');
+    
+    // Setup map items với data-map attribute
     var mapItems = document.querySelectorAll('.map-item');
     console.log('Found', mapItems.length, 'map items');
-    mapItems.forEach(function(item, index) {
-        addClickLikeHandler(item, function(e) {
-            var mapNumber = index + 1;
-            console.log('Map item', mapNumber, 'clicked');
-            playSoundSafe(sounds.tap);
-            selectMap(mapNumber);
-        });
-    });
     
-    // Setup difficulty cards
+    // Chrome 44: Dùng for loop thay vì forEach
+    if (mapItems.length > 0) {
+        for (var i = 0; i < mapItems.length; i++) {
+            (function(item, index) {
+                var mapNumber = parseInt(item.getAttribute('data-map'));
+                console.log('Setting up map item', index + 1, 'with data-map:', mapNumber);
+                addClickLikeHandler(item, function(e) {
+                    console.log('Map item', mapNumber, 'clicked');
+                    playSoundSafe(sounds.tap);
+                    selectMap(mapNumber);
+                });
+            })(mapItems[i], i);
+        }
+    } else {
+        console.warn('WARNING: No map items found!');
+    }
+    
+    // Setup difficulty cards với data-difficulty attribute
     var difficultyCards = document.querySelectorAll('.difficulty-card');
     console.log('Found', difficultyCards.length, 'difficulty cards');
-    difficultyCards.forEach(function(card) {
-        var difficulty = card.classList.contains('easy') ? 'easy' : 
-                         card.classList.contains('normal') ? 'medium' : 'hard';
-        addClickLikeHandler(card, function(e) {
-            console.log('Difficulty card clicked:', difficulty);
-            playSoundSafe(sounds.tap);
-            selectDifficulty(difficulty);
-        });
-    });
+    
+    // Chrome 44: Dùng for loop thay vì forEach
+    if (difficultyCards.length > 0) {
+        for (var i = 0; i < difficultyCards.length; i++) {
+            (function(card, index) {
+                var difficulty = card.getAttribute('data-difficulty');
+                console.log('Setting up difficulty card', index + 1, 'with difficulty:', difficulty);
+                addClickLikeHandler(card, function(e) {
+                    console.log('Difficulty card clicked:', difficulty);
+                    playSoundSafe(sounds.tap);
+                    selectDifficulty(difficulty);
+                });
+            })(difficultyCards[i], i);
+        }
+    } else {
+        console.warn('WARNING: No difficulty cards found!');
+    }
     
     // Setup rating stars
     var stars = document.querySelectorAll('.star');
     console.log('Found', stars.length, 'rating stars');
-    stars.forEach(function(star) {
-        var value = parseInt(star.getAttribute('data-value'));
-        addClickLikeHandler(star, function(e) {
-            console.log('Star clicked:', value);
-            playSoundSafe(sounds.tap);
-            rateStar(value);
-        });
-    });
     
-    // Setup all buttons
-    var allButtons = document.querySelectorAll('button, .btn');
-    console.log('Found', allButtons.length, 'buttons/btns');
-    allButtons.forEach(function(button) {
-        // Skip các button đã có handler riêng (chỉ splash-button)
-        if (button.classList.contains('splash-button')) {
-            console.log('Skipping button with dedicated handler:', button.className);
-            return;
+    // Chrome 44: Dùng for loop thay vì forEach
+    if (stars.length > 0) {
+        for (var i = 0; i < stars.length; i++) {
+            (function(star, index) {
+                var value = parseInt(star.getAttribute('data-value'));
+                console.log('Setting up star', index + 1, 'with value:', value);
+                addClickLikeHandler(star, function(e) {
+                    console.log('Star clicked:', value);
+                    playSoundSafe(sounds.tap);
+                    rateStar(value);
+                });
+            })(stars[i], i);
         }
-        
-        // Thêm universal handler với tap sound
-        addClickLikeHandler(button, function(e) {
-            playSoundSafe(sounds.tap);
-            // Handler đã có trong onclick attribute sẽ tự chạy
-            console.log('Button clicked via universal handler:', button.textContent.trim().substring(0, 20));
-        });
+    } else {
+        console.warn('WARNING: No stars found!');
+    }
+    
+    // Setup specific buttons với ID
+    var buttonHandlers = {
+        'survey-continue-btn': validateAndShowIntro,
+        'help-button': showRulesModal,
+        'start-game-btn': showMapSelection,
+        'back-to-map-btn': showMapSelection,
+        'win-continue-btn': showRating,
+        'lose-continue-btn': showRating,
+        'restart-btn': restartGame,
+        'modal-close-btn': closeRulesModal,
+        'modal-ok-btn': closeRulesModal
+    };
+    
+    console.log('Setting up', Object.keys(buttonHandlers).length, 'specific buttons...');
+    Object.keys(buttonHandlers).forEach(function(btnId) {
+        var btn = document.getElementById(btnId);
+        if (btn) {
+            console.log('✓ Found button:', btnId);
+            addClickLikeHandler(btn, function(e) {
+                console.log('Button clicked:', btnId);
+                playSoundSafe(sounds.tap);
+                buttonHandlers[btnId]();
+            });
+        } else {
+            console.warn('✗ Button NOT found:', btnId);
+        }
     });
     
-    console.log('========== SETUP COMPLETE ==========');
+    // Setup modal overlay
+    var modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) {
+        console.log('✓ Found modal overlay');
+        addClickLikeHandler(modalOverlay, function(e) {
+            console.log('Modal overlay clicked');
+            closeRulesModal();
+        });
+    } else {
+        console.warn('✗ Modal overlay NOT found');
+    }
+    
+    console.log('========== SETUP ALL EVENT HANDLERS COMPLETE ==========');
 }
 
 // Setup tap sound cho tất cả buttons (deprecated - moved to setupUniversalHandlers)
@@ -1601,44 +1755,39 @@ function setupButtonTapSound() {
 
 // Initialize game when page loads
 window.addEventListener('load', function () {
-    console.log('Page loaded, initializing...');
+    console.log('========== PAGE LOAD START ==========');
     console.log('User Agent:', navigator.userAgent);
     console.log('Touch support:', 'ontouchstart' in window);
     console.log('Pointer support:', 'onpointerdown' in window);
     
-    preloadImages();
-    showScreen('welcome-screen');
+    // Debug: Thêm global touch listener để test
+    document.addEventListener('touchstart', function(e) {
+        console.log('🟢 GLOBAL touchstart detected at:', e.touches[0].clientX, e.touches[0].clientY);
+        console.log('Target element:', e.target.tagName, e.target.className, e.target.id);
+    }, false);
     
-    // Setup audio unlock với universal event handler
-    var audioUnlock = document.getElementById('audio-unlock');
+    document.addEventListener('touchend', function(e) {
+        console.log('🔴 GLOBAL touchend detected');
+    }, false);
     
-    console.log('audioUnlock element:', audioUnlock);
+    document.addEventListener('click', function(e) {
+        console.log('🔵 GLOBAL click detected at:', e.clientX, e.clientY);
+        console.log('Target element:', e.target.tagName, e.target.className, e.target.id);
+    }, false);
     
-    if (!audioUnlock) {
-        console.error('Missing audio-unlock element!');
-        return;
-    }
-    
-    // Sử dụng universal click handler cho overlay (không cần button riêng)
-    addClickLikeHandler(audioUnlock, unlockAudio);
-    console.log('Added universal event listeners to audio unlock overlay');
-    
-    // Setup splash button (TAP TO START) với universal handler + tap sound
-    var splashButton = document.querySelector('.splash-button');
-    if (splashButton) {
-        addClickLikeHandler(splashButton, function(e) {
-            console.log('Splash button clicked!');
-            playSoundSafe(sounds.tap);
-            showSurvey();
-        });
-        console.log('Added universal event listeners to splash button with tap sound');
-    } else {
-        console.warn('Splash button not found');
-    }
-    
-    // Setup universal handlers cho tất cả các interactive elements
-    setupUniversalHandlers();
-    
-    // Setup tap sound cho tất cả buttons
-    setupButtonTapSound();
+    // Đợi một chút để đảm bảo DOM đã render hoàn toàn (quan trọng cho Android cũ)
+    setTimeout(function() {
+        console.log('========== INITIALIZING AFTER DELAY ==========');
+        
+        preloadImages();
+        showScreen('welcome-screen');
+        
+        // Chờ người dùng click vào overlay "Chạm để bắt đầu" để unlock audio
+        console.log('Waiting for user to tap audio-unlock overlay...');
+        
+        // Setup TẤT CẢ event handlers
+        setupAllEventHandlers();
+        
+        console.log('========== INITIALIZATION COMPLETE ==========');
+    }, 100); // Đợi 100ms để DOM render
 });

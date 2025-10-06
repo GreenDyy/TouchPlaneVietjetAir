@@ -7,6 +7,23 @@
     -webkit-tap-highlight-color: rgba(202, 22, 28, 0.2);
 }
 
+/* Prevent horizontal scroll and ensure smooth scrolling */
+html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    /* Prevent zoom on double tap for better UX */
+    touch-action: manipulation;
+}
+
+body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* Ensure full height coverage */
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+}
+
 /* Audio Unlock Overlay */
 .audio-unlock-overlay {
     position: fixed;
@@ -104,7 +121,7 @@ html {
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: white;
+    background: radial-gradient(circle at center, #e6374a 0%, #ca161c 50%, #a01218 100%);
     width: 100%;
     height: 100vh;
     overflow: hidden;
@@ -120,17 +137,51 @@ body {
     display: none;
     width: 100%;
     height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height for mobile browsers */
     position: absolute;
     top: 0;
     left: 0;
     animation: fadeIn 0.5s ease-in-out;
     z-index: 1;
+    /* Prevent content from overflowing */
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-x: hidden;
 }
 
 .screen.active {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Survey screen slide animations */
+.screen.slide-in-right {
+    transform: translateX(100%);
+    animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.screen.slide-out-left {
+    animation: slideOutLeft 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
 }
 
 @keyframes fadeIn {
@@ -155,9 +206,14 @@ body {
         0 0 0 4px rgba(255, 255, 255, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 1);
     border: none;
-    text-align: center;
-    max-height: 90vh;
+    /* Prevent overflow */
+    overflow-x: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Ensure proper sizing on all devices */
+    max-height: 90vh;
+    max-height: 90dvh;
+    text-align: center;
     position: relative;
     animation: containerFloat 3s ease-in-out infinite;
     backdrop-filter: blur(20px);
@@ -386,6 +442,15 @@ body {
 }
 
 
+.question-number {
+    color: #E20074;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .question {
     color: #333;
     font-size: 16px;
@@ -512,6 +577,8 @@ body {
 
 /* Màn hình khảo sát và giới thiệu - Gradient đỏ đẹp */
 #survey-screen,
+#survey-screen-q1,
+#survey-screen-q2,
 #intro-screen,
 #map-selection-screen,
 #win-screen,
@@ -520,10 +587,14 @@ body {
 #thank-screen {
     background: radial-gradient(circle at center, #e6374a 0%, #ca161c 50%, #a01218 100%);
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Thêm decorative circles cho các màn hình */
 #survey-screen::before,
+#survey-screen-q1::before,
+#survey-screen-q2::before,
 #intro-screen::before,
 #map-selection-screen::before,
 #win-screen::before,
@@ -542,6 +613,8 @@ body {
 }
 
 #survey-screen::after,
+#survey-screen-q1::after,
+#survey-screen-q2::after,
 #intro-screen::after,
 #map-selection-screen::after,
 #win-screen::after,
@@ -1155,10 +1228,15 @@ body {
     display: block;
     width: 100%;
     height: calc(100vh - 80px);
+    height: calc(100dvh - 80px); /* Use dynamic viewport height for mobile browsers */
     position: absolute;
     top: 80px;
     left: 0;
     touch-action: none; /* Prevent default touch behavior */
+    /* Prevent canvas overflow */
+    max-width: 100vw;
+    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
 }
 
 /* Result screens */
@@ -1398,8 +1476,11 @@ body {
     }
     
     /* Survey screen */
-    #survey-screen .container {
+    #survey-screen .container,
+    #survey-screen-q1 .container,
+    #survey-screen-q2 .container {
         padding: 25px 20px;
+        max-height: none;
     }
     
     /* Intro screen mobile */
@@ -1501,8 +1582,11 @@ body {
     }
     
     /* Survey screen */
-    #survey-screen .container {
+    #survey-screen .container,
+    #survey-screen-q1 .container,
+    #survey-screen-q2 .container {
         padding: 20px 18px;
+        max-height: none;
     }
     
     /* Intro screen small mobile */
@@ -1841,24 +1925,6 @@ body {
     z-index: 1;
 }
 
-.confetti-particle {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: white;
-    animation: confettiFall 3s linear infinite;
-}
-
-@keyframes confettiFall {
-    0% {
-        transform: translateY(-100px) rotate(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(100vh) rotate(360deg);
-        opacity: 0;
-    }
-}
 
 /* Header banner */
 .difficulty-header {
@@ -1991,47 +2057,6 @@ body {
     z-index: 10;
 }
 
-/* ========== RAIN EFFECT ========== */
-.rain-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 100;
-    display: none;
-}
-
-.rain-container.active {
-    display: block;
-}
-
-.raindrop {
-    position: absolute;
-    width: 2px;
-    height: 50px;
-    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.6), transparent);
-    animation: rainFall linear infinite;
-}
-
-@keyframes rainFall {
-    0% {
-        transform: translateY(-100px);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(100vh);
-        opacity: 0;
-    }
-}
-
 /* ========== SPLASH SCREEN ========== */
 .splash-screen {
     background: radial-gradient(circle at center, #e6374a 0%, #ca161c 50%, #a01218 100%);
@@ -2070,7 +2095,6 @@ body {
 
 .splash-logo img {
     width: 250px;
-    filter: brightness(0) invert(1) drop-shadow(0 10px 30px rgba(255, 255, 255, 0.5));
 }
 
 @keyframes logoFloat {
@@ -2312,14 +2336,6 @@ body {
     animation-delay: -8s;
 }
 
-.cloud-6 {
-    width: 160px;
-    top: 10%;
-    left: -160px;
-    animation: cloudMove6 32s linear infinite;
-    animation-delay: -20s;
-}
-
 @keyframes cloudMove1 {
     0% {
         left: -150px;
@@ -2365,15 +2381,6 @@ body {
     }
 }
 
-@keyframes cloudMove6 {
-    0% {
-        left: -160px;
-    }
-    100% {
-        left: 110%;
-    }
-}
-
 /* Animated planes in splash */
 .splash-plane {
     position: absolute;
@@ -2408,28 +2415,6 @@ body {
     transform: scaleX(-1); /* Flip để bay ngược chiều */
     animation: planeFlyReverse 18s linear infinite;
     animation-delay: -4s;
-}
-
-.plane-anim-4 {
-    top: 70%;
-    left: -100px;
-    animation: planeFlyStraight1 14s linear infinite;
-    animation-delay: -2s;
-}
-
-.plane-anim-5 {
-    top: 25%;
-    left: -100px;
-    animation: planeFlyStraight2 16s linear infinite;
-    animation-delay: -10s;
-}
-
-.plane-anim-6 {
-    top: 55%;
-    right: -100px;
-    transform: scaleX(-1); /* Flip để bay ngược chiều */
-    animation: planeFlyReverse 20s linear infinite;
-    animation-delay: -12s;
 }
 
 @keyframes planeFlyStraight1 {
@@ -2608,7 +2593,7 @@ body {
         opacity: 0.4;
     }
     
-    .cloud-4, .cloud-5, .cloud-6 {
+    .cloud-4, .cloud-5 {
         display: none;
     }
 }
@@ -2628,6 +2613,7 @@ body {
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
+    display: none;
     transition: all 0.3s ease;
     border: 2px solid rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
@@ -2635,6 +2621,7 @@ body {
 }
 
 .flash-message.show {
+    display: block;
     opacity: 1;
     visibility: visible;
     transform: translateX(0);
@@ -2740,17 +2727,23 @@ body {
     }
     
     /* Survey & Forms */
-    #survey-screen .container {
+    #survey-screen .container,
+    #survey-screen-q1 .container,
+    #survey-screen-q2 .container {
         padding: 30px 40px;
-        max-height: 92vh;
+        max-height: none;
     }
     
-    #survey-screen .screen-title {
+    #survey-screen .screen-title,
+    #survey-screen-q1 .screen-title,
+    #survey-screen-q2 .screen-title {
         font-size: 2rem;
         margin-bottom: 12px;
     }
     
-    #survey-screen .intro-text {
+    #survey-screen .intro-text,
+    #survey-screen-q1 .intro-text,
+    #survey-screen-q2 .intro-text {
         font-size: 1rem;
         margin-bottom: 20px;
     }
@@ -2874,8 +2867,11 @@ body {
     }
     
     /* Survey screen */
-    #survey-screen .container {
+    #survey-screen .container,
+    #survey-screen-q1 .container,
+    #survey-screen-q2 .container {
         padding: 30px 35px;
+        max-height: none;
     }
     
     /* Intro screen */
@@ -3031,17 +3027,23 @@ body {
     }
     
     /* Survey & Forms */
-    #survey-screen .container {
+    #survey-screen .container,
+    #survey-screen-q1 .container,
+    #survey-screen-q2 .container {
         padding: 25px 35px;
-        max-height: 92vh;
+        max-height: none;
     }
     
-    #survey-screen .screen-title {
+    #survey-screen .screen-title,
+    #survey-screen-q1 .screen-title,
+    #survey-screen-q2 .screen-title {
         font-size: 1.9rem;
         margin-bottom: 10px;
     }
     
-    #survey-screen .intro-text {
+    #survey-screen .intro-text,
+    #survey-screen-q1 .intro-text,
+    #survey-screen-q2 .intro-text {
         font-size: 0.95rem;
         margin-bottom: 18px;
     }
@@ -3158,12 +3160,16 @@ body {
         padding: 20px 30px;
     }
     
-    #survey-screen .container {
+    #survey-screen .container,
+    #survey-screen-q1 .container,
+    #survey-screen-q2 .container {
         padding: 18px 28px;
         max-height: none;
     }
     
-    #survey-screen .screen-title {
+    #survey-screen .screen-title,
+    #survey-screen-q1 .screen-title,
+    #survey-screen-q2 .screen-title {
         font-size: 1.5rem;
         margin-bottom: 8px;
     }
@@ -4098,50 +4104,771 @@ body {
     }
 }
 
-/* ========== LIGHTNING EFFECT FOR HARD MODE ========== */
-.lightning-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0);
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0;
+/* ========================================
+   RESPONSIVE FOR SPECIFIC SCREEN SIZES
+   ======================================== */
+
+/* Mobile 1080x1920 (Portrait) */
+@media screen and (max-width: 1080px) and (max-height: 1920px) and (orientation: portrait) {
+    /* Base screen adjustments */
+    .screen {
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Splash screen */
+    .splash-container {
+        padding: 20px;
+        margin-top: 0;
+    }
+    
+    .splash-logo img {
+        width: 200px;
+        max-width: 60vw;
+    }
+    
+    .splash-title {
+        font-size: 2.5rem;
+        margin: 20px 0;
+    }
+    
+    .splash-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+    }
+    
+    .splash-button {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+    }
+    
+    /* Container adjustments */
+    .container {
+        max-width: 95%;
+        padding: 25px 20px;
+        margin: 0 auto;
+    }
+    
+    .screen-title {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+    
+    .intro-text {
+        font-size: 1.1rem;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    /* Map selection */
+    .map-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 25px;
+    }
+    
+    .map-item {
+        aspect-ratio: 1;
+    }
+    
+    .map-image-wrapper {
+        height: 120px;
+    }
+    
+    .map-label {
+        font-size: 14px;
+        margin-top: 8px;
+    }
+    
+    /* Survey screen */
+    .question-block {
+        margin-bottom: 25px;
+    }
+    
+    .question {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+    
+    .options {
+        gap: 10px;
+        flex-direction: column;
+    }
+    
+    .option {
+        padding: 12px 15px;
+        font-size: 1rem;
+    }
+    
+    /* Intro screen */
+    #intro-screen .intro-container {
+        padding: 20px 15px;
+        max-width: 100%;
+    }
+    
+    #intro-screen .intro-header-banner {
+        padding: 12px 25px;
+        margin-bottom: 20px;
+    }
+    
+    #intro-screen .intro-title {
+        font-size: 1.3rem;
+    }
+    
+    #intro-screen .mission-box {
+        padding: 20px 15px;
+        margin-bottom: 25px;
+    }
+    
+    #intro-screen .mission-text {
+        font-size: 1.1rem;
+    }
+    
+    #intro-screen .game-rules-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    #intro-screen .rule-card {
+        padding: 15px;
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    #intro-screen .rule-icon-wrapper {
+        margin-right: 15px;
+        margin-bottom: 0;
+    }
+    
+    #intro-screen .btn-play-game {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+    }
+    
+    /* Difficulty screen */
+    #difficulty-screen {
+        padding: 20px 15px;
+    }
+    
+    .difficulty-header {
+        padding: 15px 0;
+    }
+    
+    .header-banner {
+        padding: 12px 25px;
+    }
+    
+    .banner-text {
+        font-size: 1.2rem;
+    }
+    
+    .difficulty-main {
+        padding: 20px 15px;
+    }
+    
+    .difficulty-options {
+        gap: 15px;
+    }
+    
+    .difficulty-card {
+        padding: 20px 15px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .card-icon {
+        margin-bottom: 15px;
+        margin-right: 0;
+    }
+    
+    .card-icon img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .card-content h3 {
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+    }
+    
+    .card-content p {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+    
+    .difficulty-footer {
+        padding: 15px 0;
+    }
+    
+    /* Game screen */
+    .game-header {
+        padding: 10px 15px;
+    }
+    
+    .score-board {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .score-box {
+        padding: 8px 10px;
+    }
+    
+    .score-icon {
+        font-size: 1.2rem;
+        margin-right: 8px;
+    }
+    
+    .score-label {
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
+    
+    .score-value {
+        font-size: 1rem;
+    }
+    
+    #game-canvas {
+        height: calc(100vh - 120px);
+        max-height: calc(100vh - 120px);
+    }
+    
+    /* Win/Lose screens */
+    #win-screen .container,
+    #lose-screen .container {
+        padding: 30px 20px;
+        max-width: 95%;
+    }
+    
+    .result-icon {
+        margin-bottom: 20px;
+    }
+    
+    .result-icon img {
+        max-width: 100px;
+        height: auto;
+    }
+    
+    .result-text {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+    }
+    
+    .qr-code {
+        margin: 25px 0;
+    }
+    
+    .qr-code img {
+        max-width: 160px;
+    }
+    
+    .qr-label {
+        font-size: 1rem;
+        margin-top: 10px;
+    }
+    
+    .link {
+        font-size: 1rem;
+        margin-top: 8px;
+    }
+    
+    /* Rating screen */
+    .rating-emoji {
+        font-size: 5rem;
+        margin: 20px 0;
+    }
+    
+    .star-rating {
+        margin: 20px 0;
+    }
+    
+    .star {
+        font-size: 2.5rem;
+        margin: 0 8px;
+    }
+    
+    .rating-value {
+        font-size: 1.2rem;
+        margin-top: 15px;
+    }
+    
+    /* Thank screen */
+    .logo {
+        margin-bottom: 20px;
+    }
+    
+    .logo img {
+        max-width: 180px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        max-width: 95%;
+        margin: 20px auto;
+        padding: 25px 20px;
+    }
+    
+    .modal-title {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+    }
+    
+    .rules-section {
+        margin-bottom: 20px;
+    }
+    
+    .rules-heading {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    
+    .rules-list li {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 12px 25px;
+        font-size: 1rem;
+        margin: 10px 0;
+    }
+    
+    .btn-primary, .btn-secondary {
+        min-height: 45px;
+    }
 }
 
-.lightning-overlay.flash {
-    animation: lightningFlash 0.5s ease-out;
+/* Tablet 800x1280 (Portrait) */
+@media screen and (max-width: 800px) and (max-height: 1280px) and (orientation: portrait) {
+    /* Base adjustments for tablet */
+    .screen {
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Splash screen */
+    .splash-container {
+        padding: 25px;
+        margin-top: 0;
+    }
+    
+    .splash-logo img {
+        width: 220px;
+        max-width: 65vw;
+    }
+    
+    .splash-title {
+        font-size: 2.8rem;
+        margin: 25px 0;
+    }
+    
+    .splash-subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 35px;
+    }
+    
+    .splash-button {
+        padding: 18px 45px;
+        font-size: 1.2rem;
+    }
+    
+    /* Container adjustments */
+    .container {
+        max-width: 90%;
+        padding: 30px 25px;
+        margin: 0 auto;
+    }
+    
+    .screen-title {
+        font-size: 2.2rem;
+        margin-bottom: 25px;
+    }
+    
+    .intro-text {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    /* Map selection */
+    .map-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 30px;
+    }
+    
+    .map-item {
+        aspect-ratio: 1;
+    }
+    
+    .map-image-wrapper {
+        height: 140px;
+    }
+    
+    .map-label {
+        font-size: 16px;
+        margin-top: 10px;
+    }
+    
+    /* Survey screen */
+    .question-block {
+        margin-bottom: 30px;
+    }
+    
+    .question {
+        font-size: 1.3rem;
+        margin-bottom: 18px;
+        line-height: 1.5;
+    }
+    
+    .options {
+        gap: 12px;
+        flex-direction: column;
+    }
+    
+    .option {
+        padding: 15px 18px;
+        font-size: 1.1rem;
+    }
+    
+    /* Intro screen */
+    #intro-screen .intro-container {
+        padding: 25px 20px;
+        max-width: 100%;
+    }
+    
+    #intro-screen .intro-header-banner {
+        padding: 15px 30px;
+        margin-bottom: 25px;
+    }
+    
+    #intro-screen .intro-title {
+        font-size: 1.5rem;
+    }
+    
+    #intro-screen .mission-box {
+        padding: 25px 20px;
+        margin-bottom: 30px;
+    }
+    
+    #intro-screen .mission-text {
+        font-size: 1.2rem;
+    }
+    
+    #intro-screen .game-rules-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+    
+    #intro-screen .rule-card {
+        padding: 18px;
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    #intro-screen .rule-icon-wrapper {
+        margin-right: 18px;
+        margin-bottom: 0;
+    }
+    
+    #intro-screen .btn-play-game {
+        padding: 18px 35px;
+        font-size: 1.2rem;
+    }
+    
+    /* Difficulty screen */
+    #difficulty-screen {
+        padding: 25px 20px;
+    }
+    
+    .difficulty-header {
+        padding: 20px 0;
+    }
+    
+    .header-banner {
+        padding: 15px 30px;
+    }
+    
+    .banner-text {
+        font-size: 1.3rem;
+    }
+    
+    .difficulty-main {
+        padding: 25px 20px;
+    }
+    
+    .difficulty-options {
+        gap: 18px;
+    }
+    
+    .difficulty-card {
+        padding: 25px 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .card-icon {
+        margin-bottom: 18px;
+        margin-right: 0;
+    }
+    
+    .card-icon img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .card-content h3 {
+        font-size: 1.6rem;
+        margin-bottom: 10px;
+    }
+    
+    .card-content p {
+        font-size: 1.1rem;
+        line-height: 1.4;
+    }
+    
+    .difficulty-footer {
+        padding: 20px 0;
+    }
+    
+    /* Game screen */
+    .game-header {
+        padding: 12px 18px;
+    }
+    
+    .score-board {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    
+    .score-box {
+        padding: 10px 12px;
+    }
+    
+    .score-icon {
+        font-size: 1.4rem;
+        margin-right: 10px;
+    }
+    
+    .score-label {
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+    
+    .score-value {
+        font-size: 1.1rem;
+    }
+    
+    #game-canvas {
+        height: calc(100vh - 140px);
+        max-height: calc(100vh - 140px);
+    }
+    
+    /* Win/Lose screens */
+    #win-screen .container,
+    #lose-screen .container {
+        padding: 35px 25px;
+        max-width: 90%;
+    }
+    
+    .result-icon {
+        margin-bottom: 25px;
+    }
+    
+    .result-icon img {
+        max-width: 120px;
+        height: auto;
+    }
+    
+    .result-text {
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+    }
+    
+    .qr-code {
+        margin: 30px 0;
+    }
+    
+    .qr-code img {
+        max-width: 180px;
+    }
+    
+    .qr-label {
+        font-size: 1.1rem;
+        margin-top: 12px;
+    }
+    
+    .link {
+        font-size: 1.1rem;
+        margin-top: 10px;
+    }
+    
+    /* Rating screen */
+    .rating-emoji {
+        font-size: 6rem;
+        margin: 25px 0;
+    }
+    
+    .star-rating {
+        margin: 25px 0;
+    }
+    
+    .star {
+        font-size: 3rem;
+        margin: 0 10px;
+    }
+    
+    .rating-value {
+        font-size: 1.3rem;
+        margin-top: 18px;
+    }
+    
+    /* Thank screen */
+    .logo {
+        margin-bottom: 25px;
+    }
+    
+    .logo img {
+        max-width: 200px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        max-width: 90%;
+        margin: 25px auto;
+        padding: 30px 25px;
+    }
+    
+    .modal-title {
+        font-size: 1.6rem;
+        margin-bottom: 25px;
+    }
+    
+    .rules-section {
+        margin-bottom: 25px;
+    }
+    
+    .rules-heading {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+    
+    .rules-list li {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        margin: 12px 0;
+    }
+    
+    .btn-primary, .btn-secondary {
+        min-height: 50px;
+    }
 }
 
-@keyframes lightningFlash {
-    0% {
-        opacity: 0;
-        background: rgba(255, 255, 255, 0);
+/* Landscape orientation for both screen sizes */
+@media screen and (max-width: 1920px) and (max-height: 1080px) and (orientation: landscape),
+       screen and (max-width: 1280px) and (max-height: 800px) and (orientation: landscape) {
+    
+    /* Game screen landscape adjustments */
+    #game-screen {
+        overflow: hidden;
     }
-    10% {
-        opacity: 1;
-        background: rgba(255, 255, 255, 0.9);
+    
+    .game-header {
+        padding: 8px 15px;
     }
-    20% {
-        opacity: 0;
-        background: rgba(255, 255, 255, 0);
+    
+    .score-board {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
     }
-    30% {
-        opacity: 1;
-        background: rgba(200, 220, 255, 0.7);
+    
+    .score-box {
+        padding: 6px 8px;
     }
-    40% {
-        opacity: 0;
-        background: rgba(255, 255, 255, 0);
+    
+    .score-icon {
+        font-size: 1rem;
+        margin-right: 6px;
     }
-    50% {
-        opacity: 1;
-        background: rgba(255, 255, 255, 0.95);
+    
+    .score-label {
+        font-size: 0.7rem;
+        line-height: 1.1;
     }
-    100% {
-        opacity: 0;
-        background: rgba(255, 255, 255, 0);
+    
+    .score-value {
+        font-size: 0.9rem;
+    }
+    
+    #game-canvas {
+        height: calc(100vh - 80px);
+        max-height: calc(100vh - 80px);
+    }
+    
+    /* Other screens - reduce content */
+    .container {
+        max-width: 95%;
+        padding: 20px 15px;
+    }
+    
+    .screen-title {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .intro-text {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+    
+    .map-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+    
+    .map-image-wrapper {
+        height: 100px;
+    }
+    
+    .difficulty-options {
+        flex-direction: row;
+        gap: 15px;
+    }
+    
+    .difficulty-card {
+        flex: 1;
+        padding: 15px;
+    }
+    
+    .card-icon img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-content h3 {
+        font-size: 1.2rem;
+    }
+    
+    .card-content p {
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
     }
 }

@@ -1,3 +1,26 @@
+/*
+ * ==============================================
+ * VIRTUAL RESOLUTION SYSTEM
+ * ==============================================
+ * 
+ * Hệ thống này đảm bảo game hiển thị đồng nhất trên mọi thiết bị với độ phân giải khác nhau.
+ * 
+ * Cách hoạt động:
+ * 1. Định nghĩa Virtual Resolution cố định (1280×720)
+ * 2. Tính scale = min(viewportWidth/virtualWidth, viewportHeight/virtualHeight)
+ * 3. Canvas buffer = viewport × DPR (để render sắc nét trên màn hình Retina)
+ * 4. Canvas CSS = viewport (phủ full màn hình)
+ * 5. Context scale = scale × DPR
+ * 6. Tất cả game objects sử dụng virtual coordinates
+ * 7. Context tự động convert virtual → screen khi vẽ
+ * 
+ * Lợi ích~
+ * - Game logic luôn dùng tọa độ cố định (1280×720) - dễ code
+ * - Tự động scale phù hợp với mọi màn hình
+ * - Tận dụng DPR để render sắc nét (test với DPR=3)
+ * - Maintain aspect ratio (không bị méo)
+ */
+
 // Hệ thống âm thanh
 var sounds = {
     menuTheme: new Audio('assets/sounds/menu_theme.mp3'),
@@ -9,8 +32,7 @@ var sounds = {
     cutIn: new Audio('assets/sounds/cut_in.mp3'),
     timerBeep: new Audio('assets/sounds/timer_beep.mp3'),
     rating: new Audio('assets/sounds/rating.mp3'),
-    tap: new Audio('assets/sounds/tap_1.mp3'),
-    thunder: new Audio('assets/sounds/thunder.mp3')
+    tap: new Audio('assets/sounds/tap_1.mp3')
 };
 
 // Cấu hình âm thanh
@@ -28,7 +50,6 @@ sounds.cutIn.volume = 0.7;
 sounds.timerBeep.volume = 0.6;
 sounds.rating.volume = 0.5;
 sounds.tap.volume = 0.6;
-sounds.thunder.volume = 0.7;
 
 // Preload audio cho Android WebView
 sounds.menuTheme.preload = 'auto';
@@ -41,7 +62,6 @@ sounds.cutIn.preload = 'auto';
 sounds.timerBeep.preload = 'auto';
 sounds.rating.preload = 'auto';
 sounds.tap.preload = 'auto';
-sounds.thunder.preload = 'auto';
 
 // Helper function để play audio an toàn (tránh lỗi trên Android)
 function playSoundSafe(sound) {
@@ -59,6 +79,10 @@ function playSoundSafe(sound) {
 
 // Game Configuration - Cấu hình game
 var GAME_CONFIG = {
+    // Virtual Resolution - Độ phân giải ảo cố định
+    VIRTUAL_WIDTH: 1280,     // Chiều rộng ảo chuẩn
+    VIRTUAL_HEIGHT: 720,     // Chiều cao ảo chuẩn
+    
     // Debug
     SHOW_HITBOX: false,       // Bật/tắt hiển thị vòng tròn hitbox (true = hiện, false = ẩn)
 
@@ -94,35 +118,13 @@ var GAME_CONFIG = {
     }
 };
 
-// Difficulty settings
-var DIFFICULTY_CONFIG = {
-    easy: {
-        gameTime: 30,
-        speedMultiplier: 1,
-        chances: 3,
-        qrCode: 'assets/qr_code_level_1.png',
-        voucherLink: 'https://evoucher.vietjetair.com',
-        hasRain: false,
-        hasFireEffect: false
-    },
-    medium: {
-        gameTime: 20,
-        speedMultiplier: 1.5,
-        chances: 2,
-        qrCode: 'assets/qr_code_level_2.png',
-        voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
-        hasRain: false,
-        hasFireEffect: false
-    },
-    hard: {
-        gameTime: 15,
-        speedMultiplier: 2,
-        chances: 1,
-        qrCode: 'assets/qr_code_level_3.png',
-        voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
-        hasRain: true,
-        hasFireEffect: true
-    }
+// Game settings - cố định (không có chọn độ khó)
+var GAME_SETTINGS = {
+    gameTime: 20,
+    speedMultiplier: 1.5,
+    chances: 2,
+    qrCode: 'assets/qr_code_level_2.png',
+    voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454'
 };
 
 // Danh sách hình ảnh theo loại
@@ -223,7 +225,14 @@ var gameState = {
     timerInterval: null,
     selectedMap: 1,       // Map mặc định
     mapBackground: null,  // Image object của map
-    difficulty: 'medium'  // Độ khó mặc định
+    // Virtual Resolution System
+    virtualWidth: GAME_CONFIG.VIRTUAL_WIDTH,   // Chiều rộng ảo
+    virtualHeight: GAME_CONFIG.VIRTUAL_HEIGHT, // Chiều cao ảo
+    canvasWidth: 0,       // Canvas display width (viewport)
+    canvasHeight: 0,      // Canvas display height (viewport)
+    scale: 1,             // Tỷ lệ scale từ virtual → screen
+    devicePixelRatio: 1,  // Device pixel ratio được sử dụng
+    resizeTimeout: null   // Timeout cho debounce resize
 };
 
 // Chuyển màn hình
@@ -248,47 +257,56 @@ function closeRulesModal() {
     document.getElementById('rules-modal').classList.remove('active');
 }
 
-// Màn hình khảo sát
+// Màn hình khảo sát - Câu hỏi 1
 function showSurvey() {
     console.log('========== SHOW SURVEY CALLED ==========');
     try {
-        console.log('Navigating to survey screen...');
-        showScreen('survey-screen');
-        console.log('Creating confetti...');
-        createSurveyConfetti();
-        console.log('========== SHOW SURVEY SUCCESS ==========');
+        console.log('Navigating to survey screen Q1...');
+        showScreen('survey-screen-q1');
+        console.log('========== SHOW SURVEY Q1 SUCCESS ==========');
     } catch (error) {
         console.error('ERROR in showSurvey:', error);
         console.error('Error stack:', error.stack);
     }
 }
 
-// Tạo hiệu ứng confetti cho survey
-function createSurveyConfetti() {
-    var confettiContainer = document.querySelector('.survey-confetti-container');
-    confettiContainer.innerHTML = '';
-    
-    // Tạo 40 particles
-    for (var i = 0; i < 40; i++) {
-        var particle = document.createElement('div');
-        particle.className = 'confetti-particle';
-        
-        // Random vị trí và timing
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 3 + 's';
-        particle.style.animationDuration = (Math.random() * 2 + 2) + 's';
-        
-        confettiContainer.appendChild(particle);
+// Validate câu hỏi 1 và chuyển sang câu hỏi 2
+function validateQ1AndShowQ2() {
+    var q1 = document.querySelector('input[name="q1"]:checked');
+
+    if (!q1) {
+        showFlashMessage('flash-message-q1');
+        return;
     }
+
+    // Slide animation: Q1 trượt ra trái, Q2 trượt vào từ phải ĐỒNG THỜI
+    var q1Screen = document.getElementById('survey-screen-q1');
+    var q2Screen = document.getElementById('survey-screen-q2');
+    
+    // Hiện Q2 ngay lập tức (nhưng ở vị trí bên phải, chưa thấy)
+    q2Screen.classList.add('active', 'slide-in-right');
+    
+    // Sau 1 frame để đảm bảo CSS đã apply, bắt đầu slide cả 2 cùng lúc
+    requestAnimationFrame(function() {
+        // Q1 slide out left
+        q1Screen.classList.add('slide-out-left');
+        
+        // Sau khi animation hoàn thành (400ms)
+        setTimeout(function() {
+            // Xóa Q1
+            q1Screen.classList.remove('active', 'slide-out-left');
+            // Xóa class animation của Q2
+            q2Screen.classList.remove('slide-in-right');
+        }, 400);
+    });
 }
 
-// Validate và hiển thị màn giới thiệu
-function validateAndShowIntro() {
-    var q1 = document.querySelector('input[name="q1"]:checked');
+// Validate câu hỏi 2 và hiển thị màn giới thiệu
+function validateQ2AndShowIntro() {
     var q2 = document.querySelector('input[name="q2"]:checked');
 
-    if (!q1 || !q2) {
-        showFlashMessage();
+    if (!q2) {
+        showFlashMessage('flash-message-q2');
         return;
     }
 
@@ -296,8 +314,8 @@ function validateAndShowIntro() {
 }
 
 // Hiển thị flash message khi thiếu câu trả lời
-function showFlashMessage() {
-    var flashMessage = document.getElementById('flash-message');
+function showFlashMessage(messageId) {
+    var flashMessage = document.getElementById(messageId || 'flash-message-q1');
 
     // Hiển thị message với animation
     flashMessage.classList.add('show');
@@ -314,63 +332,82 @@ function showMapSelection() {
     showScreen('map-selection-screen');
 }
 
-// Hiển thị màn hình chọn độ khó
-function showDifficultySelection() {
-    showScreen('difficulty-screen');
-    createConfettiEffect();
-}
 
-// Tạo hiệu ứng confetti
-function createConfettiEffect() {
-    var confettiContainer = document.querySelector('.confetti-container');
-    confettiContainer.innerHTML = '';
+// Function để lấy đường dẫn map với extension phù hợp (jpg hoặc png)
+function getMapPath(mapId) {
+    var basePath = 'assets/map/map_' + mapId;
     
-    // Tạo 30 particles
-    for (var i = 0; i < 30; i++) {
-        var particle = document.createElement('div');
-        particle.className = 'confetti-particle';
-        
-        // Random vị trí và timing
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 3 + 's';
-        particle.style.animationDuration = (Math.random() * 2 + 2) + 's';
-        
-        confettiContainer.appendChild(particle);
-    }
+    // Ưu tiên các extension theo thứ tự: jpg, png, jpeg, webp
+    var extensions = ['jpg', 'png', 'jpeg', 'webp'];
+    
+    // Trả về đường dẫn với extension đầu tiên (jpg mặc định)
+    // Nếu file không tồn tại, browser sẽ tự động fallback hoặc hiển thị lỗi
+    return basePath + '.jpg';
 }
 
-// Chọn map và chuyển sang màn hình chọn độ khó
+// Function để thử load image với fallback extension
+function loadMapImage(mapId, callback) {
+    var basePath = 'assets/map/map_' + mapId;
+    var extensions = ['jpg', 'png', 'jpeg', 'webp'];
+    var currentIndex = 0;
+    
+    function tryLoadImage() {
+        if (currentIndex >= extensions.length) {
+            console.error('Không tìm thấy file map với ID:', mapId);
+            callback(null);
+            return;
+        }
+        
+        var img = new Image();
+        img.onload = function() {
+            callback(basePath + '.' + extensions[currentIndex]);
+        };
+        img.onerror = function() {
+            currentIndex++;
+            tryLoadImage();
+        };
+        img.src = basePath + '.' + extensions[currentIndex];
+    }
+    
+    tryLoadImage();
+}
+
+// Chọn map và bắt đầu game luôn
 function selectMap(mapId) {
     gameState.selectedMap = mapId;
 
-    // Load ảnh map
-    gameState.mapBackground = new Image();
-    gameState.mapBackground.src = 'assets/map/map_' + mapId + '.jpg';
-
-    // Chuyển sang màn hình chọn độ khó
-    showDifficultySelection();
-}
-
-// Chọn độ khó và bắt đầu game
-function selectDifficulty(difficulty) {
-    gameState.difficulty = difficulty;
-    
-    // Áp dụng config theo độ khó
-    var config = DIFFICULTY_CONFIG[difficulty];
-    gameState.timeLeft = config.gameTime;
-    
-    // Bắt đầu game
-    startGame();
+    // Load ảnh map với fallback extension
+    loadMapImage(mapId, function(mapPath) {
+        if (mapPath) {
+            gameState.mapBackground = new Image();
+            gameState.mapBackground.src = mapPath;
+        } else {
+            // Fallback về jpg nếu không tìm thấy file nào
+            gameState.mapBackground = new Image();
+            gameState.mapBackground.src = getMapPath(mapId);
+        }
+        
+        // Bắt đầu game luôn (không cần chọn độ khó)
+        startGame();
+    });
 }
 
 function startGame() {
     showScreen('game-screen');
     
-    // Set background map cho game screen
+    // Set background map cho game screen với fallback extension
     var gameScreen = document.getElementById('game-screen');
-    gameScreen.style.backgroundImage = 'url(\'assets/map/map_' + gameState.selectedMap + '.jpg\')';
-    gameScreen.style.backgroundSize = 'cover';
-    gameScreen.style.backgroundPosition = 'center';
+    loadMapImage(gameState.selectedMap, function(mapPath) {
+        if (mapPath) {
+            gameScreen.style.backgroundImage = 'url(\'' + mapPath + '\')';
+        } else {
+            // Fallback về jpg nếu không tìm thấy file nào
+            var fallbackPath = getMapPath(gameState.selectedMap);
+            gameScreen.style.backgroundImage = 'url(\'' + fallbackPath + '\')';
+        }
+        gameScreen.style.backgroundSize = 'cover';
+        gameScreen.style.backgroundPosition = 'center';
+    });
     
     // Hiển thị countdown trước khi bắt đầu game
     showCountdown();
@@ -455,35 +492,24 @@ function initGame() {
     gameState.planes = [];
     gameState.isGameRunning = true;
     
-    // Áp dụng config theo độ khó
-    var difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
-    gameState.timeLeft = difficultyConfig.gameTime;
-    gameState.chances = difficultyConfig.chances;
+    // Áp dụng config cố định
+    gameState.timeLeft = GAME_SETTINGS.gameTime;
+    gameState.chances = GAME_SETTINGS.chances;
 
     gameState.canvas = document.getElementById('game-canvas');
     gameState.ctx = gameState.canvas.getContext('2d');
 
     // Set canvas size
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', handleWindowResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
 
     // Update UI
     updateScore();
     updateTimer();
-    updateDifficultyDisplay();
 
     // Start countdown timer
     startTimer();
-    
-    // Start rain effect nếu là hard mode
-    if (difficultyConfig.hasRain) {
-        startRain();
-    }
-    
-    // Start lightning effect nếu là hard mode
-    if (difficultyConfig.hasRain) {
-        startLightning();
-    }
 
     // Start spawning planes
     spawnPlane();
@@ -499,35 +525,106 @@ function initGame() {
 function resizeCanvas() {
     if (!gameState.canvas) return;
 
-    // Lấy device pixel ratio, giới hạn tối đa 2 cho Android cũ để tăng performance
+    // Bước 1: Lấy kích thước viewport thực tế
+    var viewportWidth = window.innerWidth;
+    var viewportHeight = window.innerHeight - 80; // Trừ UI bar
+    
+    // Đảm bảo kích thước tối thiểu
+    viewportWidth = Math.max(viewportWidth, 320);
+    viewportHeight = Math.max(viewportHeight, 480);
+    
+    // Bước 2: Lấy và tối ưu Device Pixel Ratio
     var dpr = window.devicePixelRatio || 1;
     
-    // Giảm DPR xuống 1.5 hoặc 1 cho thiết bị cũ để tăng FPS
-    if (dpr > 2) {
-        dpr = 2; // Giới hạn DPR tối đa là 2
+    // Giới hạn DPR để tránh lag (tối đa = 3)
+    if (dpr > 3) {
+        dpr = 3;
     }
     
-    var displayWidth = window.innerWidth;
-    var displayHeight = window.innerHeight - 80;
+    // Bước 3: Tính scale để fit virtual resolution vào viewport
+    // Dùng min để maintain aspect ratio (letterbox/pillarbox)
+    var scaleX = viewportWidth / gameState.virtualWidth;
+    var scaleY = viewportHeight / gameState.virtualHeight;
+    var scale = Math.min(scaleX, scaleY);
+    
+    // Bước 4: Set canvas buffer size = viewport × DPR (cho sắc nét)
+    gameState.canvas.width = viewportWidth * dpr;
+    gameState.canvas.height = viewportHeight * dpr;
+    
+    // Bước 5: Set canvas CSS size = viewport (phủ full màn)
+    gameState.canvas.style.width = viewportWidth + 'px';
+    gameState.canvas.style.height = viewportHeight + 'px';
+    
+    // Bước 6: Scale context = scale × DPR
+    // - DPR để tận dụng pixel density
+    // - scale để convert virtual coords → screen coords
+    var contextScale = scale * dpr;
+    gameState.ctx.setTransform(contextScale, 0, 0, contextScale, 0, 0);
+    
+    // Bước 7: Cải thiện chất lượng render
+    gameState.ctx.imageSmoothingEnabled = true;
+    if (gameState.ctx.imageSmoothingQuality) {
+        gameState.ctx.imageSmoothingQuality = dpr >= 2 ? 'high' : 'medium';
+    }
+    
+    // Bước 8: Lưu state
+    gameState.canvasWidth = viewportWidth;
+    gameState.canvasHeight = viewportHeight;
+    gameState.scale = scale;
+    gameState.devicePixelRatio = dpr;
+    
+    console.log('Canvas resized with Virtual Resolution:', {
+        virtualResolution: gameState.virtualWidth + 'x' + gameState.virtualHeight,
+        viewportSize: viewportWidth + 'x' + viewportHeight,
+        bufferSize: (viewportWidth * dpr) + 'x' + (viewportHeight * dpr),
+        scale: scale.toFixed(3),
+        contextScale: contextScale.toFixed(3),
+        devicePixelRatio: dpr
+    });
+}
 
-    // Set canvas size với device pixel ratio
-    gameState.canvas.width = displayWidth * dpr;
-    gameState.canvas.height = displayHeight * dpr;
 
-    // Scale canvas để hiển thị đúng kích thước
-    gameState.canvas.style.width = displayWidth + 'px';
-    gameState.canvas.style.height = displayHeight + 'px';
+// Function để xử lý resize window
+function handleWindowResize() {
+    // Debounce resize để tránh gọi quá nhiều lần
+    clearTimeout(gameState.resizeTimeout);
+    gameState.resizeTimeout = setTimeout(function() {
+        if (gameState.canvas) {
+            resizeCanvas();
+            // Redraw game nếu đang chạy
+            if (gameState.isGameRunning) {
+                draw();
+            }
+        }
+    }, 100);
+}
 
-    // Reset transform và scale context để vẽ đúng tỷ lệ
-    gameState.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+// Function để xử lý orientation change
+function handleOrientationChange() {
+    // Delay để đảm bảo window đã resize xong
+    setTimeout(function() {
+        if (gameState.canvas) {
+            resizeCanvas();
+            // Redraw game nếu đang chạy
+            if (gameState.isGameRunning) {
+                draw();
+            }
+        }
+    }, 200);
 }
 
 function handleCanvasClick(e) {
     if (!gameState.isGameRunning) return;
     var rect = gameState.canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    checkHit(x, y);
+    // Screen coordinates
+    var screenX = e.clientX - rect.left;
+    var screenY = e.clientY - rect.top;
+    
+    // Convert screen coords → virtual coords
+    var virtualX = screenX / gameState.scale;
+    var virtualY = screenY / gameState.scale;
+    
+    checkHit(virtualX, virtualY);
 }
 
 function handleCanvasTouch(e) {
@@ -550,11 +647,16 @@ function handleCanvasTouch(e) {
     }
     
     var rect = gameState.canvas.getBoundingClientRect();
-    var x = touch.clientX - rect.left;
-    var y = touch.clientY - rect.top;
+    // Screen coordinates
+    var screenX = touch.clientX - rect.left;
+    var screenY = touch.clientY - rect.top;
     
-    console.log('Canvas touch at:', x, y);
-    checkHit(x, y);
+    // Convert screen coords → virtual coords
+    var virtualX = screenX / gameState.scale;
+    var virtualY = screenY / gameState.scale;
+    
+    console.log('Canvas touch at screen:', screenX, screenY, '→ virtual:', virtualX, virtualY);
+    checkHit(virtualX, virtualY);
 }
 
 function checkHit(x, y) {
@@ -719,16 +821,6 @@ function updateScore() {
         gameState.vietjetSpawned + '/' + gameState.maxVietjet;
 }
 
-// Update difficulty display
-function updateDifficultyDisplay() {
-    var difficultyNames = {
-        'easy': 'Dễ',
-        'medium': 'Thường',
-        'hard': 'Khó'
-    };
-    document.getElementById('difficulty-level').textContent = 
-        difficultyNames[gameState.difficulty] || 'Thường';
-}
 
 // Timer functions
 function startTimer() {
@@ -843,23 +935,16 @@ function endGame(isWin) {
     // Dừng nhạc nền
     sounds.bgMusic.pause();
     sounds.bgMusic.currentTime = 0;
-
-    // Dừng rain nếu có
-    stopRain();
-    
-    // Dừng lightning nếu có
-    stopLightning();
     
     setTimeout(function () {
         if (isWin) {
-            // Cập nhật QR code và link theo level
+            // Cập nhật QR code và link
             var qrImage = document.getElementById('qr-image');
             var voucherLink = document.getElementById('voucher-link');
-            var difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
             
-            qrImage.src = difficultyConfig.qrCode;
-            voucherLink.href = difficultyConfig.voucherLink;
-            voucherLink.textContent = difficultyConfig.voucherLink;
+            qrImage.src = GAME_SETTINGS.qrCode;
+            voucherLink.href = GAME_SETTINGS.voucherLink;
+            voucherLink.textContent = GAME_SETTINGS.voucherLink;
             
             showScreen('win-screen');
             playSoundSafe(sounds.winner);
@@ -902,9 +987,8 @@ function spawnPlane() {
         ? GAME_CONFIG.SPEED_FAST + Math.random() * GAME_CONFIG.SPEED_FAST_RANGE
         : GAME_CONFIG.SPEED_DEFAULT + Math.random() * GAME_CONFIG.SPEED_RANGE;
     
-    // Áp dụng speed multiplier theo độ khó
-    var difficultyConfig = DIFFICULTY_CONFIG[gameState.difficulty];
-    var speed = baseSpeed * difficultyConfig.speedMultiplier;
+    // Áp dụng speed multiplier
+    var speed = baseSpeed * GAME_SETTINGS.speedMultiplier;
 
     // Tính kích thước thực tế của máy bay khi vẽ (để spawn ngoài màn hình)
     var planeDisplaySize = GAME_CONFIG.PLANE_SIZE * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
@@ -914,14 +998,15 @@ function spawnPlane() {
         // Vertical = Bay theo chiều dọc (từ trên xuống hoặc dưới lên)
         var fromTop = Math.random() < 0.5;
         // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền trái/phải)
-        x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
+        // Dùng VIRTUAL coordinates
+        x = gameState.virtualWidth * 0.1 + Math.random() * (gameState.virtualWidth * 0.8);
 
         if (fromTop) {
             y = -spawnOffset; // Spawn ngoài biên trên
             vx = 0;
             vy = speed;
         } else {
-            y = gameState.canvas.height + spawnOffset; // Spawn ngoài biên dưới
+            y = gameState.virtualHeight + spawnOffset; // Spawn ngoài biên dưới
             vx = 0;
             vy = -speed;
         }
@@ -929,14 +1014,15 @@ function spawnPlane() {
         // Horizontal = Bay theo chiều ngang (từ trái qua phải hoặc ngược lại)
         var fromLeft = Math.random() < 0.5;
         // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền trên/dưới)
-        y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
+        // Dùng VIRTUAL coordinates
+        y = gameState.virtualHeight * 0.2 + Math.random() * (gameState.virtualHeight * 0.6);
 
         if (fromLeft) {
             x = -spawnOffset; // Spawn ngoài biên trái
             vx = speed;
             vy = 0;
         } else {
-            x = gameState.canvas.width + spawnOffset; // Spawn ngoài biên phải
+            x = gameState.virtualWidth + spawnOffset; // Spawn ngoài biên phải
             vx = -speed;
             vy = 0;
         }
@@ -947,29 +1033,33 @@ function spawnPlane() {
         switch (side) {
             case 0: // top
                 // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
-                x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
+                // Dùng VIRTUAL coordinates
+                x = gameState.virtualWidth * 0.1 + Math.random() * (gameState.virtualWidth * 0.8);
                 y = -spawnOffset; // Spawn ngoài biên trên
                 vx = (Math.random() - 0.5) * speed;
                 vy = speed;
                 break;
             case 1: // right
-                x = gameState.canvas.width + spawnOffset; // Spawn ngoài biên phải
+                x = gameState.virtualWidth + spawnOffset; // Spawn ngoài biên phải
                 // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
-                y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
+                // Dùng VIRTUAL coordinates
+                y = gameState.virtualHeight * 0.2 + Math.random() * (gameState.virtualHeight * 0.6);
                 vx = -speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
             case 2: // bottom
                 // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
-                x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
-                y = gameState.canvas.height + spawnOffset; // Spawn ngoài biên dưới
+                // Dùng VIRTUAL coordinates
+                x = gameState.virtualWidth * 0.1 + Math.random() * (gameState.virtualWidth * 0.8);
+                y = gameState.virtualHeight + spawnOffset; // Spawn ngoài biên dưới
                 vx = (Math.random() - 0.5) * speed;
                 vy = -speed;
                 break;
             case 3: // left
                 x = -spawnOffset; // Spawn ngoài biên trái
                 // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
-                y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
+                // Dùng VIRTUAL coordinates
+                y = gameState.virtualHeight * 0.2 + Math.random() * (gameState.virtualHeight * 0.6);
                 vx = speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
@@ -1029,10 +1119,10 @@ function spawnPlane() {
 function gameLoop() {
     if (!gameState.isGameRunning) return;
 
-    // Clear canvas
-    gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+    // Clear canvas - dùng VIRTUAL dimensions
+    gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
 
-    // Draw map background
+    // Draw map background - dùng VIRTUAL dimensions
     if (gameState.mapBackground && gameState.mapBackground.complete) {
         gameState.ctx.save();
 
@@ -1046,8 +1136,8 @@ function gameLoop() {
         gameState.ctx.drawImage(
             gameState.mapBackground,
             0, 0,
-            gameState.canvas.width,
-            gameState.canvas.height
+            gameState.virtualWidth,
+            gameState.virtualHeight
         );
         gameState.ctx.restore();
     }
@@ -1070,10 +1160,10 @@ function gameLoop() {
             plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
         }
 
-        // Remove if out of bounds (ra khỏi biên màn hình)
+        // Remove if out of bounds - dùng VIRTUAL dimensions
         var margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
-        if (plane.x < -margin || plane.x > gameState.canvas.width + margin ||
-            plane.y < -margin || plane.y > gameState.canvas.height + margin) {
+        if (plane.x < -margin || plane.x > gameState.virtualWidth + margin ||
+            plane.y < -margin || plane.y > gameState.virtualHeight + margin) {
 
             // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
             if (plane.isLastVietjet) {
@@ -1100,12 +1190,12 @@ function gameLoop() {
 var clouds = [];
 
 function drawClouds() {
-    // Initialize clouds if empty
+    // Initialize clouds if empty - dùng VIRTUAL dimensions
     if (clouds.length === 0) {
         for (var i = 0; i < 5; i++) {
             clouds.push({
-                x: Math.random() * gameState.canvas.width,
-                y: Math.random() * gameState.canvas.height,
+                x: Math.random() * gameState.virtualWidth,
+                y: Math.random() * gameState.virtualHeight,
                 size: 80 + Math.random() * 100,
                 speed: 0.2 + Math.random() * 0.3,
                 imageIndex: Math.floor(Math.random() * 2), // Random chọn cloud.png hoặc cloud_2.png
@@ -1139,10 +1229,10 @@ function drawClouds() {
 
         // Di chuyển mây
         cloud.x += cloud.speed;
-        // Reset từ biên trái khi ra khỏi biên phải
-        if (cloud.x > gameState.canvas.width) {
+        // Reset từ biên trái khi ra khỏi biên phải - dùng VIRTUAL dimensions
+        if (cloud.x > gameState.virtualWidth) {
             cloud.x = 0; // Spawn từ biên trái
-            cloud.y = Math.random() * gameState.canvas.height;
+            cloud.y = Math.random() * gameState.virtualHeight;
         }
     }
 }
@@ -1332,85 +1422,6 @@ function restartGame() {
     playSoundSafe(sounds.menuTheme);
 }
 
-// Rain effect functions
-function startRain() {
-    var rainContainer = document.getElementById('rain-container');
-    rainContainer.classList.add('active');
-    
-    // Tạo 50 giọt mưa
-    for (var i = 0; i < 50; i++) {
-        createRaindrop();
-    }
-}
-
-function createRaindrop() {
-    var rainContainer = document.getElementById('rain-container');
-    var drop = document.createElement('div');
-    drop.className = 'raindrop';
-    
-    // Random vị trí và timing
-    drop.style.left = Math.random() * 100 + '%';
-    drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
-    drop.style.animationDelay = Math.random() * 2 + 's';
-    
-    rainContainer.appendChild(drop);
-    
-    // Tự động tạo giọt mưa mới khi giọt cũ kết thúc
-    drop.addEventListener('animationiteration', function() {
-        if (rainContainer.classList.contains('active')) {
-            drop.style.left = Math.random() * 100 + '%';
-        }
-    });
-}
-
-function stopRain() {
-    var rainContainer = document.getElementById('rain-container');
-    rainContainer.classList.remove('active');
-    rainContainer.innerHTML = '';
-}
-
-// Lightning effect functions for hard mode
-var lightningInterval = null;
-
-function startLightning() {
-    var lightningOverlay = document.getElementById('lightning-overlay');
-    
-    function triggerLightning() {
-        if (!gameState.isGameRunning) return;
-        
-        // Phát âm thanh sấm
-        playSoundSafe(sounds.thunder);
-        
-        // Add flash class
-        lightningOverlay.classList.add('flash');
-        
-        // Remove class sau khi animation xong
-        setTimeout(function() {
-            lightningOverlay.classList.remove('flash');
-        }, 500);
-        
-        // Schedule next lightning (random 2-7 giây)
-        var nextLightning = 2000 + Math.random() * 5000;
-        lightningInterval = setTimeout(triggerLightning, nextLightning);
-    }
-    
-    // Trigger lightning đầu tiên sau 3-8 giây
-    var firstLightning = 3000 + Math.random() * 5000;
-    lightningInterval = setTimeout(triggerLightning, firstLightning);
-}
-
-function stopLightning() {
-    if (lightningInterval) {
-        clearTimeout(lightningInterval);
-        lightningInterval = null;
-    }
-    
-    var lightningOverlay = document.getElementById('lightning-overlay');
-    if (lightningOverlay) {
-        lightningOverlay.classList.remove('flash');
-    }
-}
-
 // Pause feature removed
 
 // Game Over Popup
@@ -1495,6 +1506,7 @@ function addClickLikeHandler(el, handler) {
 var audioUnlocked = false;
 function unlockAudio() {
     console.log('========== UNLOCK AUDIO START ==========');
+    console.log('Device Pixel Ratio:', window.devicePixelRatio);
     
     // Tránh gọi nhiều lần
     if (audioUnlocked) {
@@ -1545,13 +1557,23 @@ function setupAllEventHandlers() {
         });
     }
     
-    // 3. Setup Survey Continue Button
-    var surveyContinueBtn = document.getElementById('survey-continue-btn');
-    if (surveyContinueBtn) {
-        console.log('✓ Setting up survey-continue-btn');
-        addClickLikeHandler(surveyContinueBtn, function(e) {
+    // 3. Setup Survey Q1 Continue Button
+    var surveyQ1ContinueBtn = document.getElementById('survey-q1-continue-btn');
+    if (surveyQ1ContinueBtn) {
+        console.log('✓ Setting up survey-q1-continue-btn');
+        addClickLikeHandler(surveyQ1ContinueBtn, function(e) {
             playSoundSafe(sounds.tap);
-            validateAndShowIntro();
+            validateQ1AndShowQ2();
+        });
+    }
+    
+    // 3b. Setup Survey Q2 Continue Button
+    var surveyQ2ContinueBtn = document.getElementById('survey-q2-continue-btn');
+    if (surveyQ2ContinueBtn) {
+        console.log('✓ Setting up survey-q2-continue-btn');
+        addClickLikeHandler(surveyQ2ContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            validateQ2AndShowIntro();
         });
     }
     
@@ -1575,17 +1597,7 @@ function setupAllEventHandlers() {
         });
     }
     
-    // 6. Setup Back to Map Button
-    var backToMapBtn = document.getElementById('back-to-map-btn');
-    if (backToMapBtn) {
-        console.log('✓ Setting up back-to-map-btn');
-        addClickLikeHandler(backToMapBtn, function(e) {
-            playSoundSafe(sounds.tap);
-            showMapSelection();
-        });
-    }
-    
-    // 7. Setup Win Continue Button
+    // 6. Setup Win Continue Button
     var winContinueBtn = document.getElementById('win-continue-btn');
     if (winContinueBtn) {
         console.log('✓ Setting up win-continue-btn');
@@ -1662,26 +1674,6 @@ function setupAllEventHandlers() {
         console.warn('WARNING: No map items found!');
     }
     
-    // Setup difficulty cards với data-difficulty attribute
-    var difficultyCards = document.querySelectorAll('.difficulty-card');
-    console.log('Found', difficultyCards.length, 'difficulty cards');
-    
-    // Chrome 44: Dùng for loop thay vì forEach
-    if (difficultyCards.length > 0) {
-        for (var i = 0; i < difficultyCards.length; i++) {
-            (function(card, index) {
-                var difficulty = card.getAttribute('data-difficulty');
-                console.log('Setting up difficulty card', index + 1, 'with difficulty:', difficulty);
-                addClickLikeHandler(card, function(e) {
-                    console.log('Difficulty card clicked:', difficulty);
-                    playSoundSafe(sounds.tap);
-                    selectDifficulty(difficulty);
-                });
-            })(difficultyCards[i], i);
-        }
-    } else {
-        console.warn('WARNING: No difficulty cards found!');
-    }
     
     // Setup rating stars
     var stars = document.querySelectorAll('.star');
@@ -1706,10 +1698,8 @@ function setupAllEventHandlers() {
     
     // Setup specific buttons với ID
     var buttonHandlers = {
-        'survey-continue-btn': validateAndShowIntro,
         'help-button': showRulesModal,
         'start-game-btn': showMapSelection,
-        'back-to-map-btn': showMapSelection,
         'win-continue-btn': showRating,
         'lose-continue-btn': showRating,
         'restart-btn': restartGame,

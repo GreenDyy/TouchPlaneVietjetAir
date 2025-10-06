@@ -1519,9 +1519,123 @@ function unlockAudio() {
     console.log('========== UNLOCK AUDIO SUCCESS ==========');
 }
 
-// Setup universal handlers cho tất cả interactive elements
-function setupUniversalHandlers() {
-    console.log('========== SETUP UNIVERSAL HANDLERS START ==========');
+// Setup ALL event handlers (TẤT CẢ handlers được setup ở đây)
+function setupAllEventHandlers() {
+    console.log('========== SETUP ALL EVENT HANDLERS START ==========');
+    
+    // 1. Setup Audio Unlock Overlay
+    var audioUnlock = document.getElementById('audio-unlock');
+    if (audioUnlock) {
+        console.log('✓ Setting up audio-unlock overlay');
+        addClickLikeHandler(audioUnlock, unlockAudio);
+    }
+    
+    // 2. Setup Splash Button (TAP TO START)
+    var splashButton = document.querySelector('.splash-button');
+    if (splashButton) {
+        console.log('✓ Setting up splash-button');
+        addClickLikeHandler(splashButton, function(e) {
+            console.log('Splash button clicked!');
+            playSoundSafe(sounds.tap);
+            showSurvey();
+        });
+    }
+    
+    // 3. Setup Survey Continue Button
+    var surveyContinueBtn = document.getElementById('survey-continue-btn');
+    if (surveyContinueBtn) {
+        console.log('✓ Setting up survey-continue-btn');
+        addClickLikeHandler(surveyContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            validateAndShowIntro();
+        });
+    }
+    
+    // 4. Setup Help Button
+    var helpButton = document.getElementById('help-button');
+    if (helpButton) {
+        console.log('✓ Setting up help-button');
+        addClickLikeHandler(helpButton, function(e) {
+            playSoundSafe(sounds.tap);
+            showRulesModal();
+        });
+    }
+    
+    // 5. Setup Start Game Button
+    var startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        console.log('✓ Setting up start-game-btn');
+        addClickLikeHandler(startGameBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showMapSelection();
+        });
+    }
+    
+    // 6. Setup Back to Map Button
+    var backToMapBtn = document.getElementById('back-to-map-btn');
+    if (backToMapBtn) {
+        console.log('✓ Setting up back-to-map-btn');
+        addClickLikeHandler(backToMapBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showMapSelection();
+        });
+    }
+    
+    // 7. Setup Win Continue Button
+    var winContinueBtn = document.getElementById('win-continue-btn');
+    if (winContinueBtn) {
+        console.log('✓ Setting up win-continue-btn');
+        addClickLikeHandler(winContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showRating();
+        });
+    }
+    
+    // 8. Setup Lose Continue Button
+    var loseContinueBtn = document.getElementById('lose-continue-btn');
+    if (loseContinueBtn) {
+        console.log('✓ Setting up lose-continue-btn');
+        addClickLikeHandler(loseContinueBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            showRating();
+        });
+    }
+    
+    // 9. Setup Restart Button
+    var restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) {
+        console.log('✓ Setting up restart-btn');
+        addClickLikeHandler(restartBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            restartGame();
+        });
+    }
+    
+    // 10. Setup Modal Close Button
+    var modalCloseBtn = document.getElementById('modal-close-btn');
+    if (modalCloseBtn) {
+        console.log('✓ Setting up modal-close-btn');
+        addClickLikeHandler(modalCloseBtn, closeRulesModal);
+    }
+    
+    // 11. Setup Modal Overlay
+    var modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) {
+        console.log('✓ Setting up modal-overlay');
+        addClickLikeHandler(modalOverlay, closeRulesModal);
+    }
+    
+    // 12. Setup Modal OK Button
+    var modalOkBtn = document.getElementById('modal-ok-btn');
+    if (modalOkBtn) {
+        console.log('✓ Setting up modal-ok-btn');
+        addClickLikeHandler(modalOkBtn, function(e) {
+            playSoundSafe(sounds.tap);
+            closeRulesModal();
+        });
+    }
+    
+    console.log('========== SETUP BASIC BUTTONS COMPLETE ==========');
     
     // Setup map items với data-map attribute
     var mapItems = document.querySelectorAll('.map-item');
@@ -1626,7 +1740,7 @@ function setupUniversalHandlers() {
         console.warn('✗ Modal overlay NOT found');
     }
     
-    console.log('========== SETUP UNIVERSAL HANDLERS COMPLETE ==========');
+    console.log('========== SETUP ALL EVENT HANDLERS COMPLETE ==========');
 }
 
 // Setup tap sound cho tất cả buttons (deprecated - moved to setupUniversalHandlers)
@@ -1667,28 +1781,8 @@ window.addEventListener('load', function () {
         // Chờ người dùng click vào overlay "Chạm để bắt đầu" để unlock audio
         console.log('Waiting for user to tap audio-unlock overlay...');
         
-        // Setup splash button (TAP TO START) với universal handler + tap sound
-        var splashButton = document.querySelector('.splash-button');
-        console.log('Splash button element:', splashButton);
-        console.log('Splash button computed style display:', splashButton ? window.getComputedStyle(splashButton).display : 'N/A');
-        
-        if (splashButton) {
-            addClickLikeHandler(splashButton, function(e) {
-                console.log('Splash button clicked!');
-                // Unlock audio nếu chưa
-                if (!audioUnlocked) {
-                    unlockAudio();
-                }
-                playSoundSafe(sounds.tap);
-                showSurvey();
-            });
-            console.log('Added event listeners to splash button');
-        } else {
-            console.error('CRITICAL: Splash button not found!');
-        }
-        
-        // Setup universal handlers cho tất cả các interactive elements
-        setupUniversalHandlers();
+        // Setup TẤT CẢ event handlers
+        setupAllEventHandlers();
         
         console.log('========== INITIALIZATION COMPLETE ==========');
     }, 100); // Đợi 100ms để DOM render

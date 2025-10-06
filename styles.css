@@ -3,7 +3,8 @@
     padding: 0;
     box-sizing: border-box;
     font-family:'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    /* Giữ tap highlight cho Android 6 - giúp thấy được feedback khi touch */
+    -webkit-tap-highlight-color: rgba(202, 22, 28, 0.2);
 }
 
 /* Audio Unlock Overlay */
@@ -27,7 +28,11 @@
 }
 
 .audio-unlock-overlay.hidden {
-    display: none;
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    z-index: -1 !important;
 }
 
 .audio-unlock-content {

@@ -24,9 +24,7 @@
 </head>
 <body>
     <!-- Audio Unlock Overlay -->
-    <div id="audio-unlock" class="audio-unlock-overlay" 
-         onclick="if(typeof unlockAudio === 'function') unlockAudio();"
-         ontouchend="event.preventDefault(); if(typeof unlockAudio === 'function') unlockAudio();">
+    <div id="audio-unlock" class="audio-unlock-overlay" onclick="unlockAudio();">
         <div class="audio-unlock-content">
             <div class="audio-icon">🎮</div>
             <p>Chạm để bắt đầu</p>
@@ -51,9 +49,7 @@
         <div class="splash-cloud cloud-5">
             <img src="assets/cloud.png" alt="Cloud">
         </div>
-        <!-- <div class="splash-cloud cloud-6">
-            <img src="assets/cloud_2.png" alt="Cloud">
-        </div> -->
+
         
         <!-- Animated planes -->
         <div class="splash-plane plane-anim-1">
@@ -68,12 +64,6 @@
         <div class="splash-plane plane-anim-4">
             <img src="assets/player/vj10.png" alt="Plane">
         </div>
-        <!-- <div class="splash-plane plane-anim-5">
-            <img src="assets/player/vj11.png" alt="Plane">
-        </div>
-        <div class="splash-plane plane-anim-6">
-            <img src="assets/player/vj14.png" alt="Plane">
-        </div> -->
         
         <div class="splash-container">
             <div class="splash-logo">
@@ -81,9 +71,7 @@
             </div>
             <h1 class="splash-title">BẮT MÁY BAY VIETJET</h1>
             <p class="splash-subtitle">MASTER THE SKIES</p>
-            <button class="splash-button" 
-                    onclick="if(typeof showSurvey === 'function') showSurvey();"
-                    ontouchend="event.preventDefault(); if(typeof showSurvey === 'function') showSurvey();">
+            <button class="splash-button" onclick="showSurvey(); playSoundSafe(sounds.tap);">
                 <span>TAP TO START</span>
             </button>
         </div>
@@ -169,9 +157,7 @@
             </div>
 
             <div class="question-block" style="margin-top: -30px;">
-                <button class="btn btn-primary" 
-                        onclick="validateAndShowIntro();"
-                        ontouchend="event.preventDefault(); validateAndShowIntro();">
+                <button class="btn btn-primary" id="survey-continue-btn" onclick="validateAndShowIntro(); playSoundSafe(sounds.tap);">
                     Tiếp tục
                 </button>
             </div>
@@ -193,9 +179,7 @@
                 <div class="intro-header-banner">
                     <h2 class="intro-title">🎮 HƯỚNG DẪN CHƠI</h2>
                 </div>
-                <button class="help-button-gaming" 
-                        onclick="showRulesModal();"
-                        ontouchend="event.preventDefault(); showRulesModal();">
+                <button class="help-button-gaming" id="help-button" onclick="showRulesModal(); playSoundSafe(sounds.tap);">
                     <span>?</span>
                 </button>
             </div>
@@ -240,9 +224,7 @@
             </div>
             
             <!-- Play Button -->
-            <button class="btn-play-game" 
-                    onclick="showMapSelection();"
-                    ontouchend="event.preventDefault(); showMapSelection();">
+            <button class="btn-play-game" id="start-game-btn" onclick="showMapSelection(); playSoundSafe(sounds.tap);">
                 <span>BẮT ĐẦU CHƠI</span>
             </button>
         </div>
@@ -254,55 +236,55 @@
             <h2 class="screen-title">Chọn bản đồ</h2>
             <p class="intro-text">Chọn một bản đồ để bắt đầu chơi</p>
             <div class="map-grid">
-                <div class="map-item" onclick="selectMap(1)">
+                <div class="map-item" data-map="1">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_1.jpg" alt="Map 1">
                     </div>
                     <span class="map-label">Bản đồ 1</span>
                 </div>
-                <div class="map-item" onclick="selectMap(2)">
+                <div class="map-item" data-map="2">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_2.jpg" alt="Map 2">
                     </div>
                     <span class="map-label">Bản đồ 2</span>
                 </div>
-                <div class="map-item" onclick="selectMap(3)">
+                <div class="map-item" data-map="3">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_3.jpg" alt="Map 3">
                     </div>
                     <span class="map-label">Bản đồ 3</span>
                 </div>
-                <div class="map-item" onclick="selectMap(4)">
+                <div class="map-item" data-map="4">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_4.jpg" alt="Map 4">
                     </div>
                     <span class="map-label">Bản đồ 4</span>
                 </div>
-                <div class="map-item" onclick="selectMap(5)">
+                <div class="map-item" data-map="5">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_5.jpg" alt="Map 5">
                     </div>
                     <span class="map-label">Bản đồ 5</span>
                 </div>
-                <div class="map-item" onclick="selectMap(6)">
+                <div class="map-item" data-map="6">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_6.jpg" alt="Map 6">
                     </div>
                     <span class="map-label">Bản đồ 6</span>
                 </div>
-                <div class="map-item" onclick="selectMap(7)">
+                <div class="map-item" data-map="7">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_7.jpg" alt="Map 7">
                     </div>
                     <span class="map-label">Bản đồ 7</span>
                 </div>
-                <div class="map-item" onclick="selectMap(8)">
+                <div class="map-item" data-map="8">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_8.jpg" alt="Map 8">
                     </div>
                     <span class="map-label">Bản đồ 8</span>
                 </div>
-                <div class="map-item" onclick="selectMap(9)">
+                <div class="map-item" data-map="9">
                     <div class="map-image-wrapper">
                         <img src="assets/map/map_9.jpg" alt="Map 9">
                     </div>
@@ -329,7 +311,7 @@
         <div class="difficulty-main">
             <!-- Difficulty options -->
             <div class="difficulty-options">
-                <div class="difficulty-card easy" onclick="selectDifficulty('easy')">
+                <div class="difficulty-card easy" data-difficulty="easy">
                     <div class="card-icon">
                         <img src="assets/easy_mode.png" alt="Easy Mode">
                     </div>
@@ -339,7 +321,7 @@
                     </div>
                 </div>
                 
-                <div class="difficulty-card normal" onclick="selectDifficulty('medium')">
+                <div class="difficulty-card normal" data-difficulty="medium">
                     <div class="card-icon">
                         <img src="assets/medium_mode.png" alt="Medium Mode">
                     </div>
@@ -349,7 +331,7 @@
                     </div>
                 </div>
                 
-                <div class="difficulty-card hard" onclick="selectDifficulty('hard')">
+                <div class="difficulty-card hard" data-difficulty="hard">
                     <div class="card-icon">
                         <img src="assets/hard_mode.png" alt="Hard Mode">
                     </div>
@@ -363,9 +345,7 @@
         
         <!-- Return button -->
         <div class="difficulty-footer">
-            <button class="btn btn-secondary" 
-                    onclick="showMapSelection();"
-                    ontouchend="event.preventDefault(); showMapSelection();">
+            <button class="btn btn-secondary" id="back-to-map-btn" onclick="showMapSelection(); playSoundSafe(sounds.tap);">
                 QUAY LẠI
             </button>
         </div>
@@ -495,9 +475,7 @@
                 <p class="qr-label">Quét mã để nhận voucher</p>
                 <a id="voucher-link" href="https://evoucher.vietjetair.com/" target="_blank" class="link">evoucher.vietjetair.com</a>
             </div>
-            <button class="btn btn-primary" 
-                    onclick="showRating();"
-                    ontouchend="event.preventDefault(); showRating();">
+            <button class="btn btn-primary" id="win-continue-btn" onclick="showRating(); playSoundSafe(sounds.tap);">
                 Tiếp tục
             </button>
         </div>
@@ -512,9 +490,7 @@
             <h2 class="screen-title">Bạn suýt bắt được máy bay rồi</h2>
             <p class="result-text">Hãy thử lại vào lần sau nhé!</p>
             <p class="intro-text">Không sao, Vietjet vẫn luôn đồng hành cùng bạn trong mọi hành trình!</p>
-            <button class="btn btn-primary" 
-                    onclick="showRating();"
-                    ontouchend="event.preventDefault(); showRating();">
+            <button class="btn btn-primary" id="lose-continue-btn" onclick="showRating(); playSoundSafe(sounds.tap);">
                 Tiếp tục
             </button>
         </div>
@@ -527,21 +503,11 @@
             <p class="intro-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
             <div id="rating-emoji" class="rating-emoji">🤔</div>
             <div class="star-rating">
-                <span class="star" data-value="1" 
-                      onclick="rateStar(1);"
-                      ontouchend="event.preventDefault(); rateStar(1);">☆</span>
-                <span class="star" data-value="2" 
-                      onclick="rateStar(2);"
-                      ontouchend="event.preventDefault(); rateStar(2);">☆</span>
-                <span class="star" data-value="3" 
-                      onclick="rateStar(3);"
-                      ontouchend="event.preventDefault(); rateStar(3);">☆</span>
-                <span class="star" data-value="4" 
-                      onclick="rateStar(4);"
-                      ontouchend="event.preventDefault(); rateStar(4);">☆</span>
-                <span class="star" data-value="5" 
-                      onclick="rateStar(5);"
-                      ontouchend="event.preventDefault(); rateStar(5);">☆</span>
+                <span class="star" data-value="1">☆</span>
+                <span class="star" data-value="2">☆</span>
+                <span class="star" data-value="3">☆</span>
+                <span class="star" data-value="4">☆</span>
+                <span class="star" data-value="5">☆</span>
             </div>
             <p id="rating-value" class="rating-value"></p>
         </div>
@@ -557,9 +523,7 @@
             <h2 class="screen-title">Cảm ơn bạn!</h2>
             <p class="intro-text">Xin cảm ơn bạn đã sử dụng dịch vụ của Vietjet ngày hôm nay. Chúc bạn có 1 chuyến đi vui vẻ và an toàn nhé.</p>
         
-            <button class="btn btn-primary" 
-                    onclick="restartGame();"
-                    ontouchend="event.preventDefault(); restartGame();">
+            <button class="btn btn-primary" id="restart-btn" onclick="restartGame(); playSoundSafe(sounds.tap);">
                 Chơi lại
             </button>
         </div>
@@ -567,13 +531,9 @@
 
     <!-- Modal điều kiện thắng thua -->
     <div id="rules-modal" class="modal">
-        <div class="modal-overlay" 
-             onclick="closeRulesModal();"
-             ontouchend="event.preventDefault(); closeRulesModal();"></div>
+        <div class="modal-overlay" id="modal-overlay" onclick="closeRulesModal();"></div>
         <div class="modal-content">
-            <button class="modal-close" 
-                    onclick="closeRulesModal();"
-                    ontouchend="event.preventDefault(); closeRulesModal();">×</button>
+            <button class="modal-close" id="modal-close-btn" onclick="closeRulesModal();">×</button>
             <h3 class="modal-title"><span style="filter: none; -webkit-text-fill-color: initial;">📋</span> <span>Điều kiện thắng - thua</span></h3>
             
             <div class="rules-section">
@@ -604,9 +564,7 @@
             </div>
             
             <div style="display: flex; justify-content: center;">
-                <button class="btn btn-primary" 
-                        onclick="closeRulesModal();"
-                        ontouchend="event.preventDefault(); closeRulesModal();">
+                <button class="btn btn-primary" id="modal-ok-btn" onclick="closeRulesModal(); playSoundSafe(sounds.tap);">
                     Đã hiểu
                 </button>
             </div>
@@ -614,6 +572,67 @@
     </div>
 
     <script src="game.js"></script>
+    
+    <!-- Inline setup cho Android 6 / Chrome 44 compatibility -->
+    <script>
+        // Đợi DOM load xong
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded - Setting up inline handlers');
+            
+            // Setup map items với onclick
+            var mapItems = document.querySelectorAll('.map-item');
+            for (var i = 0; i < mapItems.length; i++) {
+                (function(item) {
+                    var mapNumber = parseInt(item.getAttribute('data-map'));
+                    item.onclick = function(e) {
+                        console.log('Map item clicked:', mapNumber);
+                        if (typeof playSoundSafe !== 'undefined' && typeof sounds !== 'undefined') {
+                            playSoundSafe(sounds.tap);
+                        }
+                        if (typeof selectMap !== 'undefined') {
+                            selectMap(mapNumber);
+                        }
+                    };
+                })(mapItems[i]);
+            }
+            
+            // Setup difficulty cards với onclick
+            var difficultyCards = document.querySelectorAll('.difficulty-card');
+            for (var i = 0; i < difficultyCards.length; i++) {
+                (function(card) {
+                    var difficulty = card.getAttribute('data-difficulty');
+                    card.onclick = function(e) {
+                        console.log('Difficulty card clicked:', difficulty);
+                        if (typeof playSoundSafe !== 'undefined' && typeof sounds !== 'undefined') {
+                            playSoundSafe(sounds.tap);
+                        }
+                        if (typeof selectDifficulty !== 'undefined') {
+                            selectDifficulty(difficulty);
+                        }
+                    };
+                })(difficultyCards[i]);
+            }
+            
+            // Setup rating stars với onclick
+            var stars = document.querySelectorAll('.star');
+            for (var i = 0; i < stars.length; i++) {
+                (function(star) {
+                    var value = parseInt(star.getAttribute('data-value'));
+                    star.onclick = function(e) {
+                        console.log('Star clicked:', value);
+                        if (typeof playSoundSafe !== 'undefined' && typeof sounds !== 'undefined') {
+                            playSoundSafe(sounds.tap);
+                        }
+                        if (typeof rateStar !== 'undefined') {
+                            rateStar(value);
+                        }
+                    };
+                })(stars[i]);
+            }
+            
+            console.log('Inline handlers setup complete');
+        });
+    </script>
 </body>
 </html>
 

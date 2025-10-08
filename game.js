@@ -2364,6 +2364,18 @@ function setupAllEventHandlers() {
             playSoundSafe(sounds.tap);
             hidePausePopup();
             restartGame();
+        },
+        'lose-close-btn': function() {
+            playSoundSafe(sounds.tap);
+            showWelcome();
+        },
+        'lose-restart-btn': function() {
+            playSoundSafe(sounds.tap);
+            restartGame();
+        },
+        'lose-continue-btn': function() {
+            playSoundSafe(sounds.tap);
+            showWelcome();
         }
     };
     

@@ -18,11 +18,12 @@
 
     <!-- Preconnect để load ảnh nhanh hơn -->
     <link rel="preconnect" href="." crossorigin>
-    
+
     <!-- Google Fonts - Baloo 2 (giống Candy Crush, hỗ trợ tiếng Việt) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <title>Vietjet - Chơi là có quà</title>
 
@@ -149,7 +150,7 @@
 
                 <!-- Title Bar -->
                 <div class="settings-title-bar">
-                  <img src="assets/ui/default/settings/92.png" alt="Settings">
+                    <img src="assets/ui/default/settings/92.png" alt="Settings">
                 </div>
 
                 <!-- Main Buttons -->
@@ -169,7 +170,7 @@
                             <span>Thông tin</span>
                         </div>
                     </div>
-                    
+
                     <!-- Row 2: 3 nút dọc -->
                     <div class="settings-row settings-row-2">
                         <button class="settings-main-btn">
@@ -194,7 +195,7 @@
 
             <!-- Title Bar -->
             <div class="pause-title-bar">
-              <img src="assets/ui/default/settings/92.png" alt="Pause">
+                <img src="assets/ui/default/settings/92.png" alt="Pause">
             </div>
 
             <div class="pause-row">
@@ -223,7 +224,8 @@
 
         <div class="survey-card">
             <h2 class="screen-title">Khảo sát ngắn</h2>
-            <p class="intro-text" id="survey-intro">Trước khi bắt đầu chơi, xin phép bạn trả lời 2 câu hỏi sau đây nhé</p>
+            <p class="intro-text" id="survey-intro">Trước khi bắt đầu chơi, xin phép bạn trả lời 2 câu hỏi sau đây nhé
+            </p>
 
             <!-- Câu hỏi 1 -->
             <div class="question-block" id="question-1">
@@ -315,14 +317,14 @@
         <div class="gacha-container">
             <!-- Title -->
             <h1 class="gacha-title">ĐANG CHỌN BẢN ĐỒ...</h1>
-            
+
             <!-- Gacha Machine -->
             <div class="gacha-machine">
                 <!-- Slot Machine Frame -->
                 <div class="gacha-frame">
                     <!-- Top Decoration -->
                     <div class="gacha-top"></div>
-                    
+
                     <!-- Slot Window -->
                     <div class="slot-window">
                         <div class="slot-shine"></div>
@@ -330,11 +332,11 @@
                             <!-- Map thumbnails will scroll here -->
                         </div>
                     </div>
-                    
+
                     <!-- Bottom Decoration -->
                     <div class="gacha-bottom"></div>
                 </div>
-                
+
                 <!-- Light Effects -->
                 <div class="gacha-lights">
                     <div class="light light-1"></div>
@@ -343,7 +345,7 @@
                     <div class="light light-4"></div>
                 </div>
             </div>
-            
+
             <!-- Result Text -->
             <div class="gacha-result" id="gacha-result">
                 <p>Đang quay...</p>
@@ -509,7 +511,7 @@
                     <div class="qr-link-text">
                         <a href="https://www.vietjetair.com/rewards" target="_blank">www.vietjetair.com/rewards</a>
                     </div>
-                    
+
                     <!-- Continue Button -->
                     <button class="btn-victory-continue" id="win-continue-btn">
                         <span>TIẾP TỤC</span>
@@ -523,16 +525,47 @@
 
     <!-- Màn hình thua -->
     <div id="lose-screen" class="screen">
-        <div class="container">
-            <div class="result-icon lose">
-                <img src="assets/loser.png" alt="Lose" style="max-width: 120px; height: auto;">
-            </div>
-            <h2 class="screen-title">Bạn suýt bắt được máy bay rồi</h2>
-            <p class="result-text">Hãy thử lại vào lần sau nhé!</p>
-            <p class="intro-text">Không sao, Vietjet vẫn luôn đồng hành cùng bạn trong mọi hành trình!</p>
-            <button class="btn btn-primary" id="lose-continue-btn">
-                Tiếp tục
+        <div class="lose-container">
+            <!-- Close Button - Top Right -->
+            <button class="lose-close-btn" id="lose-close-btn">
+                <img src="assets/ui/default/btn/close.png" alt="Close">
             </button>
+
+            <!-- Lose Panel -->
+            <div class="lose-panel">
+                <!-- Header -->
+                <div class="lose-header">
+                    <img src="assets/ui/default/you_lose/header.png" alt="Thua">
+                </div>
+
+                <!-- Main Content -->
+                <div class="lose-content">
+                    <!-- Result Icon -->
+                    <!-- <div class="lose-icon">
+                        <img src="assets/loser.png" alt="Lose">
+                    </div> -->
+
+                    <!-- Result Text -->
+                    <div class="lose-text">
+                        <h3 class="lose-title">Bạn suýt bắt được máy bay rồi!</h3>
+                        <p class="lose-subtitle">Hãy thử lại vào lần sau nhé!</p>
+                        <!-- dòng dưới là để Robot đọc -->
+                        <!-- <p class="lose-message">Không sao, Vietjet vẫn luôn đồng hành cùng bạn trong mọi hành trình!</p> -->
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="lose-actions">
+                        <button class="lose-btn lose-restart-btn" id="lose-restart-btn">
+                            <img src="assets/ui/default/btn/restart.png" alt="Chơi lại">
+                            <!-- <span>CHƠI LẠI</span> -->
+                        </button>
+                        <button class="lose-btn lose-continue-btn" id="lose-continue-btn">
+                            <img src="assets/ui/default/btn/next.png" alt="Next">
+                            <!-- <span>TIẾP TỤC</span> -->
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -543,7 +576,7 @@
             <button class="rating-close-btn" id="rating-close-btn">
                 <img src="assets/ui/default/btn/close.png" alt="Close">
             </button>
-            
+
             <img src="assets/ui/default/rating/header.png" alt="Đánh giá dịch vụ" class="rating-header">
             <p class="rating-sub-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
             <div id="rating-emoji" class="rating-emoji">🤔</div>
@@ -554,10 +587,11 @@
                 <span class="star" data-value="4">☆</span>
                 <span class="star" data-value="5">☆</span>
             </div>
-            
+
             <!-- Feedback Input Area -->
             <div class="feedback-area">
-                <textarea id="feedback-input" class="feedback-textarea" placeholder="Hãy chia sẻ ý kiến của bạn về dịch vụ..."></textarea>
+                <textarea id="feedback-input" class="feedback-textarea"
+                    placeholder="Hãy chia sẻ ý kiến của bạn về dịch vụ..."></textarea>
                 <button class="feedback-send-btn" id="send-feedback-btn">
                     <img src="assets/ui/default/rating/btn.png" alt="Gửi">
                 </button>

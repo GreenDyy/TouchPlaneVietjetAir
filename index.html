@@ -183,6 +183,37 @@
 
     </div>
 
+    <!-- Pause Popup -->
+    <div id="pause-popup" class="pause-popup">
+        <div class="pause-overlay"></div>
+        <div class="pause-panel">
+            <!-- Close Button -->
+            <button class="pause-close-btn" id="pause-close">
+                <img src="assets/ui/default/pause/header.png" alt="Close">
+            </button>
+
+            <!-- Title Bar -->
+            <div class="pause-title-bar">
+              <img src="assets/ui/default/settings/92.png" alt="Pause">
+            </div>
+
+            <div class="pause-row">
+                <button class="pause-main-btn" id="pause-home-btn">
+                    <img src="assets/ui/default/btn/menu.png" alt="Home">
+                    <span>TRANG CHỦ</span>
+                </button>
+                <button class="pause-main-btn" id="pause-resume-btn">
+                    <img src="assets/ui/default/btn/play.png" alt="Resume">
+                    <span>TIẾP TỤC</span>
+                </button>
+                <button class="pause-main-btn" id="pause-restart-btn">
+                    <img src="assets/ui/default/btn/restart.png" alt="Restart">
+                    <span>CHƠI LẠI</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Màn hình khảo sát - Gộp chung 2 câu hỏi -->
     <div id="survey-screen" class="screen">
         <!-- Flash message cho validation -->
@@ -242,7 +273,7 @@
     <div id="intro-screen" class="screen">
         <div class="intro-container">
             <!-- Title -->
-            <h1 class="game-instructions-title">HƯỚNG DẪN</h1>
+            <img src="assets/ui/default/custom/header_guige.png" alt="HƯỚNG DẪN" class="game-instructions-header">
 
             <!-- Grid 2x3 -->
             <div class="instructions-grid" style="display: flex;">
@@ -371,6 +402,13 @@
         </div>
 
         <div class="game-header">
+            <!-- btn pause -->
+
+            <!-- btn pause -->
+            <button class="btn-pause" id="btn-pause">
+                <img src="assets/ui/default/btn/pause.png" alt="Pause">
+            </button>
+
             <div class="score-board">
                 <div class="score-box">
                     <div class="score-icon">🛫</div>
@@ -501,8 +539,13 @@
     <!-- Màn hình đánh giá -->
     <div id="rating-screen" class="screen">
         <div class="container">
-            <h2 class="screen-title">Đánh giá dịch vụ</h2>
-            <p class="intro-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
+            <!-- Close Button - Top Right -->
+            <button class="rating-close-btn" id="rating-close-btn">
+                <img src="assets/ui/default/btn/close.png" alt="Close">
+            </button>
+            
+            <img src="assets/ui/default/rating/header.png" alt="Đánh giá dịch vụ" class="rating-header">
+            <p class="rating-sub-text">Bạn có hài lòng với dịch vụ hôm nay không?</p>
             <div id="rating-emoji" class="rating-emoji">🤔</div>
             <div class="star-rating">
                 <span class="star" data-value="1">☆</span>
@@ -511,7 +554,14 @@
                 <span class="star" data-value="4">☆</span>
                 <span class="star" data-value="5">☆</span>
             </div>
-            <p id="rating-value" class="rating-value"></p>
+            
+            <!-- Feedback Input Area -->
+            <div class="feedback-area">
+                <textarea id="feedback-input" class="feedback-textarea" placeholder="Hãy chia sẻ ý kiến của bạn về dịch vụ..."></textarea>
+                <button class="feedback-send-btn" id="send-feedback-btn">
+                    <img src="assets/ui/default/rating/btn.png" alt="Gửi">
+                </button>
+            </div>
         </div>
     </div>
 

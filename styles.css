@@ -201,40 +201,29 @@ body {
 }
 
 .container {
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: 30px;
-    padding: 35px 40px;
-    max-width: 90%;
-    width: 450px;
-    box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.4),
-        0 0 0 4px rgba(255, 255, 255, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 1);
-    border: none;
-    /* Prevent overflow */
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* Ensure proper sizing on all devices */
-    max-height: 90vh;
-    max-height: 90dvh;
+    background: url('assets/ui/default/settings/bg.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    padding-top: 80px;
+    padding-bottom: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+
+
+    max-width: 800px;
+    min-width: 450px;
+    max-height: 600px;
     text-align: center;
     position: relative;
-    animation: containerFloat 3s ease-in-out infinite;
-    backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0;
     z-index: 10;
-}
-
-/* Container lớn hơn cho màn chọn map */
-#map-selection-screen .container {
-    max-width: 95%;
-    width: 1000px;
-    padding: 30px 35px;
+    animation: containerFloat 3s ease-in-out infinite;
 }
 
 @keyframes containerFloat {
@@ -253,8 +242,8 @@ body {
     background: url('assets/ui/default/rating/table.png') center/100% 100% no-repeat;
     border-radius: 28px;
     padding: 80px 32px;
-  max-width: 800px;
-  min-width: 500px;
+    max-width: 800px;
+    min-width: 500px;
     max-height: 88vh;
 
     /* Prevent overflow */
@@ -628,61 +617,6 @@ body {
     margin-right: 10px;
 }
 
-/* Map selection */
-.map-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin: 20px 0;
-    width: 100%;
-}
-
-.map-item {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.map-item:hover {
-    transform: translateY(-5px);
-}
-
-.map-item:active {
-    transform: scale(0.98);
-}
-
-.map-image-wrapper {
-    position: relative;
-    border-radius: 15px;
-    overflow: hidden;
-    aspect-ratio: 16/9;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    margin-bottom: 10px;
-}
-
-.map-item:hover .map-image-wrapper {
-    box-shadow: 0 8px 25px rgba(202, 22, 28, 0.4);
-}
-
-.map-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.map-label {
-    color: #333;
-    font-size: 16px;
-    font-weight: 700;
-    display: block;
-    text-align: center;
-    margin-top: 8px;
-    background: linear-gradient(135deg, #ca161c 0%, #e60012 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
 
 /* Màn hình khảo sát và kết quả - Ảnh nền đẹp */
 #survey-screen,
@@ -699,6 +633,111 @@ body {
     overflow-x: hidden;
 }
 
+.rating-header {
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    right: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    max-width: 100%;
+    height: auto;
+    /* Hiển thị trên overlay */
+}
+
+.rating-close-btn {
+    position: absolute;
+    top: -20px;
+    right: -15px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 15;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.rating-close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+}
+
+.rating-close-btn:active {
+    transform: scale(0.95);
+}
+
+.rating-close-btn img {
+    width: 56px;
+    height: 56px;
+}
+
+.rating-sub-text {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 70px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    z-index: 100;
+}
+
+.feedback-area {
+    text-align: center;
+}
+
+.feedback-textarea {
+    width: 100%;
+    max-width: 400px;
+    height: 100px;
+    padding: 15px;
+    border: 2px solid #e74c3c;
+    border-radius: 15px;
+    font-size: 16px;
+    font-family: 'Baloo 2', cursive;
+    resize: none;
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.feedback-textarea:focus {
+    border-color: black;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    transform: translateY(-2px);
+}
+
+.feedback-textarea::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.feedback-send-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.feedback-send-btn:hover {
+    transform: scale(1.05);
+}
+
+.feedback-send-btn:active {
+    transform: scale(0.95);
+}
+
+.feedback-send-btn img {
+    width: 120px;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
 /* Overlay mờ cho các màn kết quả */
 #rating-screen::before,
 #lose-screen::before,
@@ -710,9 +749,8 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    /* Overlay đen mờ 50% */
+    backdrop-filter: blur(5px);
     z-index: 0;
-    pointer-events: none;
 }
 
 /* Màn hướng dẫn - Dùng hình nền giống home với overlay */
@@ -740,40 +778,6 @@ body {
     pointer-events: none;
 }
 
-/* Màn chọn map - Gradient đỏ VietjetAir */
-#map-selection-screen {
-    /* background: radial-gradient(circle at center, #e6374a 0%, #ca161c 50%, #a01218 100%); */
-    position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-image: url('assets/idle_bg.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-#map-selection-screen::after {
-    content: '';
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    bottom: -100px;
-    left: -100px;
-    animation: rotate 25s linear infinite reverse;
-}
-
-@keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* Game screen */
 #game-screen {
     background: #f5f5f5;
@@ -790,6 +794,28 @@ body {
     padding: 15px;
     z-index: 100;
     margin: 0;
+}
+
+.btn-pause {
+    width: 56px;
+    height: 56px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+.btn-pause img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 /* Countdown Overlay */
@@ -1561,16 +1587,8 @@ body {
 
 .star:hover,
 .star.active {
-    color: #ca161c;
+    color: #ffffff;
     transform: scale(1.2);
-}
-
-.rating-value {
-    font-size: 18px;
-    color: #75767a;
-    margin-top: 15px;
-    min-height: 25px;
-    font-weight: 600;
 }
 
 /* Floating decorative planes */
@@ -1814,23 +1832,7 @@ body {
     font-weight: 700;
 }
 
-/* Scrollbar */
-.container::-webkit-scrollbar,
-.modal-content::-webkit-scrollbar {
-    width: 6px;
-}
 
-.container::-webkit-scrollbar-track,
-.modal-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.container::-webkit-scrollbar-thumb,
-.modal-content::-webkit-scrollbar-thumb {
-    background: #ca161c;
-    border-radius: 10px;
-}
 
 /* ========== DIFFICULTY SELECTION ========== */
 #difficulty-screen {
@@ -1917,7 +1919,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    max-width: 100%;
+    max-width: 90%;
     padding: 30px 20px 60px 20px;
     text-align: center;
     position: relative;
@@ -1928,15 +1930,15 @@ body {
     background-repeat: no-repeat;
 }
 
-.game-instructions-title {
-    font-size: 48px;
-    font-weight: 900;
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    margin: 0 0 60px 0;
-    position: relative;
-    z-index: 1;
+.game-instructions-header {
+    position: absolute;
+    top: -110px;
+    left: 50%;
+    right: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    max-width: 85%;
+    height: auto;
     /* Hiển thị trên overlay */
 }
 
@@ -1947,10 +1949,9 @@ body {
     width: 100%;
     max-width: 700px;
     margin: 0 auto 50px auto;
-    padding: 0 20px;
+    padding: 70px 20px;
     position: relative;
-    z-index: 1;
-    /* Hiển thị trên overlay */
+    z-index: 100;
 }
 
 .instruction-item {
@@ -1996,8 +1997,6 @@ body {
 }
 
 .btn-play-game-new {
-    /* background: white;
-    color: #ca161c; */
     color: white;
     background: url('assets/ui/default/shop/btn.png') center center no-repeat;
     background-size: 100% 100%;
@@ -2018,19 +2017,6 @@ body {
     z-index: 10;
 }
 
-.btn-play-game-new::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(202, 22, 28, 0.2);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
 .btn-play-game-new:hover::before {
     width: 400px;
     height: 400px;
@@ -2042,10 +2028,8 @@ body {
 }
 
 .btn-play-game-new:hover {
-    transform: translateY(-5px) scale(1.05);
-    box-shadow:
-        0 15px 50px rgba(0, 0, 0, 0.4),
-        0 0 0 4px rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px) scale(1.02);
+    filter: brightness(0.9);
 }
 
 .btn-play-game-new:active {
@@ -2095,6 +2079,162 @@ body {
 .corner-btn img {
     width: 56px;
     height: 56px;
+}
+
+/* ========== PAUSE POPUP ========== */
+.pause-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.pause-popup.active {
+    display: flex;
+}
+
+.pause-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.pause-panel {
+    position: relative;
+    display: flex;
+    /* Bật chế độ Flexbox */
+    justify-content: center;
+    /* Căn giữa theo chiều ngang */
+    align-items: center;
+    /* Căn giữa theo chiều dọc */
+    background-image: url('assets/ui/default/settings/bg.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-position: center;
+    min-width: 600px;
+    min-height: 400px;
+    max-width: 800px;
+    max-height: 600px;
+    text-align: center;
+    border: none;
+    padding: 0;
+    transform: translateY(0);
+    animation: pauseSlideIn 0.3s ease-out;
+}
+
+@keyframes pauseSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Close Button */
+.pause-close-btn {
+    position: absolute;
+    top: -25px;
+    right: -10px;
+    width: 56px;
+    height: 56px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.pause-close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+}
+
+.pause-close-btn:active {
+    transform: scale(0.95);
+}
+
+.pause-close-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Title Bar */
+.pause-title-bar {
+    text-align: center;
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.pause-title-bar img {
+    max-width: 500px;
+    height: auto;
+}
+
+
+.pause-row {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pause-main-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    border-radius: 15px;
+    min-width: 120px;
+}
+
+.pause-main-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+.pause-main-btn:active {
+    transform: translateY(0);
+}
+
+.pause-main-btn img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.pause-main-btn span {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    text-align: center;
 }
 
 /* ========== SETTINGS POPUP ========== */
@@ -2372,8 +2512,6 @@ body {
 }
 
 .splash-button {
-    /* background: white; */
-    /* color: #ca161c; */
     color: white;
     background: url('assets/ui/default/shop/btn.png') center center no-repeat;
     background-size: 100% 100%;
@@ -2387,26 +2525,9 @@ body {
     animation: buttonPulse 2s ease-in-out infinite;
     position: relative;
     overflow: hidden;
-
-
-
     min-width: 200px;
     min-height: 60px;
-    /* Z-index cao để đảm bảo có thể click */
     z-index: 10;
-}
-
-.splash-button::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
 }
 
 
@@ -2865,144 +2986,6 @@ body {
         transform: translateX(0);
         opacity: 1;
     }
-}
-
-
-/* ========== MAP SELECTION SCREEN - CAROUSEL DESIGN ========== */
-#map-selection-screen {
-    position: relative;
-    overflow: hidden;
-}
-
-.map-container-new {
-    position: relative;
-    z-index: 1;
-    max-width: 100%;
-    width: 100%;
-    margin: 0 auto;
-    padding: 40px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.map-title {
-    font-size: 3rem;
-    font-weight: 900;
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin: 0 0 50px 0;
-    text-shadow:
-        3px 3px 0px rgba(0, 0, 0, 0.3),
-        0 0 20px rgba(255, 255, 255, 0.3);
-}
-
-/* Carousel Container */
-.map-carousel {
-    width: 100%;
-    max-width: 1600px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 40px;
-    position: relative;
-}
-
-/* Carousel Arrows */
-.carousel-arrow {
-    width: 80px;
-    height: 80px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 10;
-    flex-shrink: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.carousel-arrow:hover {
-    transform: scale(1.1);
-}
-
-.carousel-arrow:active {
-    transform: scale(0.95);
-}
-
-.carousel-arrow img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-/* Slider Wrapper */
-.map-slider-wrapper {
-    flex: 1;
-    max-width: 1300px;
-    overflow: hidden;
-    position: relative;
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    touch-action: pan-y pinch-zoom;
-}
-
-.map-slider-wrapper:active {
-    cursor: grabbing;
-}
-
-/* Slider */
-.map-slider {
-    display: flex;
-    gap: 40px;
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* Map Item */
-.map-item {
-    flex: 0 0 calc(33.333% - 27px);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.map-item:hover {
-    transform: translateY(-10px) scale(1.05);
-}
-
-.map-item:active {
-    transform: translateY(-5px) scale(1);
-}
-
-.map-item img {
-    pointer-events: none;
-    -webkit-user-drag: none;
-    user-drag: none;
-}
-
-.map-image-wrapper {
-    width: 100%;
-    aspect-ratio: 16/9;
-    border-radius: 25px;
-    overflow: hidden;
-    border: 6px solid #5D3A1A;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    background: #FFE4C4;
-}
-
-.map-image-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
 }
 
 /* ========== GAME OVER POPUP ========== */
@@ -3651,351 +3634,5 @@ body {
 
     50% {
         transform: scale(1.02);
-    }
-}
-
-/* ============================================
-   GACHA SCREEN - Random Map Animation
-   ============================================ */
-
-#gacha-screen {
-    /* Dùng cùng background với màn home */
-    background-image: url('assets/idle_bg.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    overflow: hidden;
-    position: relative;
-}
-
-/* Overlay mờ cho gacha screen */
-#gacha-screen::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    /* Overlay đen mờ 40% */
-    z-index: 0;
-}
-
-.gacha-container {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    position: relative;
-    z-index: 1;
-}
-
-.gacha-title {
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: #fff;
-    text-align: center;
-    margin-bottom: 40px;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
-        0 0 40px rgba(255, 215, 0, 0.3);
-    animation: gachaTitlePulse 2s ease-in-out infinite;
-    letter-spacing: 3px;
-}
-
-@keyframes gachaTitlePulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
-            0 0 40px rgba(255, 215, 0, 0.3);
-    }
-
-    50% {
-        transform: scale(1.05);
-        text-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
-            0 0 60px rgba(255, 215, 0, 0.5);
-    }
-}
-
-/* Gacha Machine */
-.gacha-machine {
-    position: relative;
-    width: 90%;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.gacha-frame {
-    position: relative;
-    background: linear-gradient(145deg, #2c3e50, #34495e);
-    border-radius: 30px;
-    padding: 40px 30px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-        inset 0 -10px 20px rgba(0, 0, 0, 0.3),
-        inset 0 10px 20px rgba(255, 255, 255, 0.1);
-    border: 5px solid #e74c3c;
-}
-
-.gacha-top {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    height: 30px;
-    background: linear-gradient(90deg, #e74c3c, #c0392b);
-    border-radius: 15px 15px 0 0;
-    box-shadow: 0 -5px 15px rgba(231, 76, 60, 0.5);
-}
-
-.gacha-bottom {
-    position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    height: 30px;
-    background: linear-gradient(90deg, #e74c3c, #c0392b);
-    border-radius: 0 0 15px 15px;
-    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5);
-}
-
-/* Slot Window */
-.slot-window {
-    position: relative;
-    width: 100%;
-    height: 300px;
-    background: #000;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8),
-        0 0 0 5px #e74c3c;
-    border: 3px solid #34495e;
-}
-
-.slot-shine {
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.3),
-            transparent);
-    animation: slotShine 3s ease-in-out infinite;
-    z-index: 2;
-    pointer-events: none;
-}
-
-@keyframes slotShine {
-    0% {
-        left: -100%;
-    }
-
-    50%,
-    100% {
-        left: 200%;
-    }
-}
-
-.slot-content {
-    position: absolute;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 20px 0;
-    transition: transform 0.1s linear;
-}
-
-.slot-item {
-    width: 90%;
-    height: 200px;
-    flex-shrink: 0;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-    border: 3px solid #e74c3c;
-    position: relative;
-}
-
-.slot-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.slot-item::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(180deg,
-            rgba(0, 0, 0, 0) 0%,
-            rgba(0, 0, 0, 0.3) 100%);
-    pointer-events: none;
-}
-
-/* Gacha Lights */
-.gacha-lights {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-}
-
-.light {
-    position: absolute;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background: #ffd700;
-    box-shadow: 0 0 20px #ffd700,
-        0 0 40px #ffd700;
-    animation: lightBlink 1s ease-in-out infinite;
-}
-
-.light-1 {
-    top: 20px;
-    left: 20px;
-    animation-delay: 0s;
-}
-
-.light-2 {
-    top: 20px;
-    right: 20px;
-    animation-delay: 0.25s;
-}
-
-.light-3 {
-    bottom: 20px;
-    left: 20px;
-    animation-delay: 0.5s;
-}
-
-.light-4 {
-    bottom: 20px;
-    right: 20px;
-    animation-delay: 0.75s;
-}
-
-@keyframes lightBlink {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.3;
-        transform: scale(0.8);
-    }
-}
-
-/* Gacha Result */
-.gacha-result {
-    margin-top: 40px;
-    text-align: center;
-}
-
-.gacha-result p {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    animation: resultPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes resultPulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.6;
-    }
-}
-
-.gacha-result.show-result p {
-    font-size: 2.2rem;
-    color: #ffd700;
-    animation: resultReveal 0.5s ease-out;
-}
-
-@keyframes resultReveal {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-
-    50% {
-        transform: scale(1.2);
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* Spinning Animation - Smooth với ease-in-out */
-.slot-content.spinning {}
-
-/* Keyframe cho spinning mượt với tăng/giảm tốc */
-@keyframes slotSpinSmooth {
-    0% {
-        transform: translateY(0);
-    }
-
-    /* Tăng tốc dần trong 20% đầu */
-    20% {
-        transform: translateY(-800px);
-    }
-
-    /* Giữ tốc độ cao trong 60% giữa */
-    80% {
-        transform: translateY(-4400px);
-    }
-
-    /* Giảm tốc dần trong 20% cuối */
-    100% {
-        transform: translateY(-5280px);
-    }
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .gacha-title {
-        font-size: 1.8rem;
-        margin-bottom: 30px;
-    }
-
-    .slot-window {
-        height: 200px;
-    }
-
-    .slot-item {
-        height: 150px;
-    }
-
-    .gacha-result p {
-        font-size: 1.4rem;
-    }
-
-    .gacha-result.show-result p {
-        font-size: 1.8rem;
     }
 }

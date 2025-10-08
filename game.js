@@ -243,6 +243,9 @@ function setMusicMuted(muted) {
     if (audioSettings.isMusicMuted) {
         sounds.menuTheme.pause();
         sounds.bgMusic.pause();
+        sounds.winner.pause();
+        sounds.gameOver.pause();
+        sounds.rating.pause();
     }
     updateAudioButtonsUI();
 }
@@ -367,7 +370,6 @@ function preloadImages() {
                 }
             };
             img.src = src;
-            console.log('img nè: ', img);
             loadedImages[category].push(img);
         });
     });
@@ -1432,7 +1434,7 @@ function endGame(isWin) {
 }
 
 function spawnPlane() {
-    if (!gameState.isGameRunning) {
+    if (!gameState.isGameRunning || isGamePaused) {
         return;
     }
 
@@ -1594,6 +1596,8 @@ function spawnPlane() {
 
 function gameLoop() {
     if (!gameState.isGameRunning) return;
+    
+    // Vẫn vẽ game khi pause, nhưng không cập nhật logic
 
     // Clear canvas - dùng VIRTUAL dimensions
     gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
@@ -1625,35 +1629,39 @@ function gameLoop() {
     for (var i = gameState.planes.length - 1; i >= 0; i--) {
         var plane = gameState.planes[i];
 
-        // Update position
-        plane.x += plane.vx;
-        plane.y += plane.vy;
+        // Update position (chỉ khi không pause)
+        if (!isGamePaused) {
+            plane.x += plane.vx;
+            plane.y += plane.vy;
+        }
 
-        // Update rotation cho player planes (tạo hiệu ứng lắc lư nhẹ)
-        if (plane.type === 'player' || plane.type === 'horizontal' || plane.type === 'vertical') {
+        // Update rotation cho player planes (chỉ khi không pause)
+        if (!isGamePaused && (plane.type === 'player' || plane.type === 'horizontal' || plane.type === 'vertical')) {
             plane.rotationTime += plane.rotationSpeed;
             // Dao động từ -0.15 đến +0.15 radian (~-8° đến +8°)
             plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
         }
 
-        // Remove if out of bounds - dùng VIRTUAL dimensions
-        var margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
-        if (plane.x < -margin || plane.x > gameState.virtualWidth + margin ||
-            plane.y < -margin || plane.y > gameState.virtualHeight + margin) {
+        // Remove if out of bounds (chỉ khi không pause)
+        if (!isGamePaused) {
+            var margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
+            if (plane.x < -margin || plane.x > gameState.virtualWidth + margin ||
+                plane.y < -margin || plane.y > gameState.virtualHeight + margin) {
 
-            // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
-            if (plane.isLastVietjet) {
+                // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
+                if (plane.isLastVietjet) {
+                    gameState.planes.splice(i, 1);
+                    endGame(false); // Thua do để máy bay VietJet thứ 10 bay mất
+                    return;
+                }
+
                 gameState.planes.splice(i, 1);
-                endGame(false); // Thua do để máy bay VietJet thứ 10 bay mất
-                return;
+
+                // Kiểm tra điều kiện kết thúc sau khi xóa máy bay
+                checkGameEnd();
+
+                continue;
             }
-
-            gameState.planes.splice(i, 1);
-
-            // Kiểm tra điều kiện kết thúc sau khi xóa máy bay
-            checkGameEnd();
-
-            continue;
         }
 
         // Draw plane
@@ -1844,9 +1852,7 @@ function rateStar(value) {
     document.getElementById('rating-emoji').textContent = emojiMap[value];
     document.getElementById('rating-value').textContent = '';
 
-    setTimeout(function () {
-        showThankYou();
-    }, 1500);
+    // Không tự động chuyển màn hình nữa - chỉ khi bấm nút gửi
 }
 
 function showRating() {
@@ -1864,6 +1870,70 @@ function showRating() {
     }
     
     document.getElementById('rating-value').textContent = '';
+    
+    // Reset feedback input
+    var feedbackInput = document.getElementById('feedback-input');
+    if (feedbackInput) {
+        feedbackInput.value = '';
+    }
+}
+
+// Hàm lưu feedback và rating vào localStorage
+function saveFeedbackData() {
+    var feedbackInput = document.getElementById('feedback-input');
+    var feedbackText = feedbackInput ? feedbackInput.value.trim() : '';
+    
+    var feedbackData = {
+        rating: selectedRating,
+        feedback: feedbackText,
+        timestamp: new Date().toISOString(),
+        gameData: {
+            caughtPlanes: gameState.caughtPlanes,
+            totalSpawned: gameState.planesSpawned,
+            vietjetSpawned: gameState.vietjetSpawned
+        }
+    };
+    
+    try {
+        // Lấy dữ liệu cũ từ localStorage
+        var existingData = localStorage.getItem('vj_feedback_data');
+        var feedbackHistory = existingData ? JSON.parse(existingData) : [];
+        
+        // Thêm dữ liệu mới
+        feedbackHistory.push(feedbackData);
+        
+        // Lưu lại vào localStorage (giới hạn 50 feedback gần nhất)
+        if (feedbackHistory.length > 50) {
+            feedbackHistory = feedbackHistory.slice(-50);
+        }
+        
+        localStorage.setItem('vj_feedback_data', JSON.stringify(feedbackHistory));
+        console.log('Feedback saved:', feedbackData);
+    } catch (e) {
+        console.error('Error saving feedback:', e);
+    }
+}
+
+// Hàm xử lý khi bấm nút gửi feedback
+function handleSendFeedback() {
+    if (selectedRating === 0) {
+        // Hiển thị thông báo yêu cầu chọn rating
+        var ratingValue = document.getElementById('rating-value');
+        if (ratingValue) {
+            ratingValue.textContent = 'Vui lòng chọn số sao đánh giá!';
+            ratingValue.style.color = '#e74c3c';
+        }
+        return;
+    }
+    
+    // Lưu dữ liệu feedback
+    saveFeedbackData();
+    
+    // Phát âm thanh
+    playSoundSafe(sounds.tap);
+    
+    // Chuyển sang màn hình cảm ơn
+    showThankYou();
 }
 
 function showThankYou() {
@@ -1891,14 +1961,110 @@ function restartGame() {
     // Reset clouds
     clouds = [];
 
-    // Show welcome screen
-    showScreen('welcome-screen');
-    
-    // Phát lại nhạc menu theme nếu không mute nhạc
-    playSoundSafe(sounds.menuTheme);
+    // Sử dụng map hiện tại để chơi lại (không random map mới)
+    if (currentMap) {
+        console.log('Restarting with same map:', currentMap);
+        selectMap(currentMap);
+    } else {
+        // Fallback nếu không có map được lưu (trường hợp hiếm)
+        console.log('No saved map, going to welcome screen');
+        showScreen('welcome-screen');
+        // Phát lại nhạc menu theme nếu không mute nhạc
+        playSoundSafe(sounds.menuTheme);
+    }
 }
 
 // Pause feature removed
+
+// Pause functionality
+var isGamePaused = false;
+
+// Current map storage
+var currentMap = null;
+
+function showPausePopup() {
+    var popup = document.getElementById('pause-popup');
+    if (popup) {
+        popup.classList.add('active');
+        pauseGame();
+    }
+}
+
+function hidePausePopup() {
+    var popup = document.getElementById('pause-popup');
+    if (popup) {
+        popup.classList.remove('active');
+        resumeGame();
+    }
+}
+
+function pauseGame() {
+    isGamePaused = true;
+    
+    // Dừng timer
+    stopTimer();
+    
+    // Dừng tất cả âm thanh
+    Object.keys(sounds).forEach(function(key) {
+        if (sounds[key] && typeof sounds[key].pause === 'function') {
+            sounds[key].pause();
+        }
+    });
+    
+    // Dừng spawn planes nhưng vẫn giữ game loop chạy để vẽ game
+    // gameState.isGameRunning vẫn true để game loop tiếp tục
+    
+    console.log('Game paused');
+}
+
+function resumeGame() {
+    isGamePaused = false;
+    
+    // Tiếp tục game nếu đang trong game
+    var gameScreen = document.getElementById('game-screen');
+    if (gameScreen && gameScreen.classList.contains('active')) {
+        gameState.isGameRunning = true;
+        startTimer();
+        
+        // Phát lại nhạc nền game nếu không mute
+        if (!audioSettings.isMusicMuted) {
+            playSoundSafe(sounds.bgMusic);
+        }
+    }
+    
+    console.log('Game resumed');
+}
+
+function setupPausePopupButtons() {
+    // Sound buttons trong pause popup
+    var pauseSoundBtns = document.querySelectorAll('#pause-popup .sound-btn');
+    if (pauseSoundBtns && pauseSoundBtns.length) {
+        for (var i = 0; i < pauseSoundBtns.length; i++) {
+            (function(btn){
+                addClickLikeHandler(btn, function(e) {
+                    e.stopPropagation();
+                    playSoundSafe(sounds.tap);
+                    setSfxMuted(!audioSettings.isSfxMuted);
+                });
+            })(pauseSoundBtns[i]);
+        }
+    }
+    
+    // Music buttons trong pause popup
+    var pauseMusicBtns = document.querySelectorAll('#pause-popup .music-btn');
+    if (pauseMusicBtns && pauseMusicBtns.length) {
+        for (var j = 0; j < pauseMusicBtns.length; j++) {
+            (function(btn){
+                addClickLikeHandler(btn, function(e) {
+                    e.stopPropagation();
+                    playSoundSafe(sounds.tap);
+                    var willMute = !audioSettings.isMusicMuted;
+                    setMusicMuted(willMute);
+                });
+            })(pauseMusicBtns[j]);
+        }
+    }
+}
 
 // Game Over Popup
 var gameOverTimeout = null;
@@ -2051,6 +2217,10 @@ function setupAllEventHandlers() {
             // Random map nhưng không hiện gacha animation
             var randomIndex = Math.floor(Math.random() * MAPS_CONFIG.length);
             var randomMapId = MAPS_CONFIG[randomIndex].id;
+            
+            // Lưu map hiện tại để dùng khi restart
+            currentMap = randomMapId;
+            
             selectMap(randomMapId);
         });
     }
@@ -2118,6 +2288,9 @@ function setupAllEventHandlers() {
     // NOTE: Đã xóa setup cho map carousel (không dùng nữa - thay bằng gacha)
     // Gacha animation tự động chạy khi gọi showGachaAnimation()
     
+    // Setup pause popup buttons
+    setupPausePopupButtons();
+    
     // Setup rating stars
     var stars = document.querySelectorAll('.star');
     
@@ -2142,7 +2315,34 @@ function setupAllEventHandlers() {
         'lose-continue-btn': showRating,
         'restart-btn': restartGame,
         'modal-close-btn': closeRulesModal,
-        'modal-ok-btn': closeRulesModal
+        'modal-ok-btn': closeRulesModal,
+        'send-feedback-btn': handleSendFeedback,
+        'rating-close-btn': function() {
+            playSoundSafe(sounds.tap);
+            showWelcome();
+        },
+        'btn-pause': function() {
+            playSoundSafe(sounds.tap);
+            showPausePopup();
+        },
+        'pause-close': function() {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+        },
+        'pause-resume-btn': function() {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+        },
+        'pause-home-btn': function() {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+            showWelcome();
+        },
+        'pause-restart-btn': function() {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+            restartGame();
+        }
     };
     
     Object.keys(buttonHandlers).forEach(function(btnId) {

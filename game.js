@@ -114,7 +114,6 @@ var MAPS_CONFIG = [
 
 // Hệ thống âm thanh
 var sounds = {
-var sounds = {
     menuTheme: new Audio('assets/sounds/menu_theme.mp3'),
     bgMusic: new Audio('assets/sounds/bg_song.mp3'),
     touchRight: new Audio('assets/sounds/touch_right.mp3'),
@@ -250,7 +249,6 @@ function setMusicMuted(muted) {
 
 // Danh sách hình ảnh theo loại
 var imageCategories = {
-var imageCategories = {
     player: [
         'assets/player/vj1.png',
         'assets/player/vj2.png',
@@ -310,7 +308,6 @@ var imageCategories = {
 
 // Preload images
 var loadedImages = {
-var loadedImages = {
     player: [],
     horizontal: [],
     vertical: [],
@@ -318,16 +315,12 @@ var loadedImages = {
     map: []  // Cache cho map images
 };
 var imagesLoaded = false;
-var imagesLoaded = false;
 
 function preloadImages() {
     var totalImages = 0;
     var loadCount = 0;
-    var totalImages = 0;
-    var loadCount = 0;
 
     // Đếm tổng số ảnh
-    Object.keys(imageCategories).forEach(function(category) {
     Object.keys(imageCategories).forEach(function(category) {
         totalImages += imageCategories[category].length;
     });
@@ -339,9 +332,6 @@ function preloadImages() {
     }
 
     // Load từng category
-    Object.keys(imageCategories).forEach(function(category) {
-        imageCategories[category].forEach(function(src, index) {
-            var img = new Image();
     Object.keys(imageCategories).forEach(function(category) {
         imageCategories[category].forEach(function(src, index) {
             var img = new Image();
@@ -385,7 +375,6 @@ function preloadImages() {
 
 // Game state
 var gameState = {
-var gameState = {
     caughtPlanes: 0,
     totalPlanes: CAMPAIGN_SETTINGS.totalVietjetPlanes,     // Dùng từ campaign settings
     vietjetSpawned: 0,    // Số máy bay VietJet đã xuất hiện
@@ -414,14 +403,6 @@ var gameState = {
 
 // Chuyển màn hình
 function showScreen(screenId) {
-    var screens = document.querySelectorAll('.screen');
-    
-    // QUAN TRỌNG: Chrome 44 KHÔNG hỗ trợ forEach() cho NodeList!
-    // Phải dùng vòng lặp for truyền thống
-    for (var i = 0; i < screens.length; i++) {
-        screens[i].classList.remove('active');
-    }
-    
     var screens = document.querySelectorAll('.screen');
     
     // QUAN TRỌNG: Chrome 44 KHÔNG hỗ trợ forEach() cho NodeList!
@@ -904,20 +885,16 @@ function startGame() {
 function showCountdown() {
     var overlay = document.getElementById('countdown-overlay');
     var numberElement = document.getElementById('countdown-number');
-    var overlay = document.getElementById('countdown-overlay');
-    var numberElement = document.getElementById('countdown-number');
     
     // Hiển thị overlay
     overlay.classList.add('active');
     
-    var count = 3;
     var count = 3;
     numberElement.textContent = count;
     
     // Phát âm thanh beep cho số 3
     playSoundSafe(sounds.timerBeep);
     
-    var countdownInterval = setInterval(function() {
     var countdownInterval = setInterval(function() {
         count--;
         
@@ -961,7 +938,6 @@ function showCountdown() {
 // Giờ sau countdown 3-2-1 sẽ vào game luôn
 /*
 function showCutinAnimation() {
-    var cutinOverlay = document.getElementById('cutin-overlay');
     var cutinOverlay = document.getElementById('cutin-overlay');
     
     // Dừng nhạc menu theme
@@ -1027,9 +1003,6 @@ function initGame() {
     // Start game loop
     gameLoop();
 
-    // Add touch/click event - dùng touchstart cho Android cũ
-    gameState.canvas.addEventListener('touchstart', handleCanvasTouch, false);
-    gameState.canvas.addEventListener('click', handleCanvasClick, false);
     // Add touch/click event - dùng touchstart cho Android cũ
     gameState.canvas.addEventListener('touchstart', handleCanvasTouch, false);
     gameState.canvas.addEventListener('click', handleCanvasClick, false);
@@ -1165,11 +1138,7 @@ function handleCanvasTouch(e) {
 
 function checkHit(x, y) {
     var hit = false;
-    var hit = false;
 
-    for (var i = gameState.planes.length - 1; i >= 0; i--) {
-        var plane = gameState.planes[i];
-        var distance = Math.sqrt(
     for (var i = gameState.planes.length - 1; i >= 0; i--) {
         var plane = gameState.planes[i];
         var distance = Math.sqrt(
@@ -1177,7 +1146,6 @@ function checkHit(x, y) {
         );
 
         // Tăng hitbox bằng HITBOX_MULTIPLIER để dễ click hơn
-        var hitRadius = (plane.size / 2) * GAME_CONFIG.HITBOX_MULTIPLIER;
         var hitRadius = (plane.size / 2) * GAME_CONFIG.HITBOX_MULTIPLIER;
 
         if (distance < hitRadius) {
@@ -1215,7 +1183,6 @@ function checkHit(x, y) {
 function showHitEffect(x, y, isHit) {
     // Tạo vòng tròn lan tỏa (ripple)
     var ripple = {
-    var ripple = {
         x: x,
         y: y,
         radius: 0,
@@ -1225,10 +1192,6 @@ function showHitEffect(x, y, isHit) {
     };
 
     // Tạo particles bay tứ tung
-    var particles = [];
-    var particleCount = isHit ? 8 : 6;
-    for (var i = 0; i < particleCount; i++) {
-        var angle = (Math.PI * 2 / particleCount) * i;
     var particles = [];
     var particleCount = isHit ? 8 : 6;
     for (var i = 0; i < particleCount; i++) {
@@ -1247,8 +1210,6 @@ function showHitEffect(x, y, isHit) {
     // Text effect
     var text = isHit ? '+1' : 'X';
     var textEffect = {
-    var text = isHit ? '+1' : 'X';
-    var textEffect = {
         x: x,
         y: y,
         text: text,
@@ -1258,8 +1219,6 @@ function showHitEffect(x, y, isHit) {
         scale: 0.5
     };
 
-    var frame = 0;
-    var animate = function () {
     var frame = 0;
     var animate = function () {
         if (frame < 40) {
@@ -1279,7 +1238,6 @@ function showHitEffect(x, y, isHit) {
             }
 
             // Vẽ particles
-            particles.forEach(function(p) {
             particles.forEach(function(p) {
                 if (p.alpha > 0) {
                     gameState.ctx.globalAlpha = p.alpha;
@@ -1350,7 +1308,6 @@ function startTimer() {
 
     gameState.timerInterval = setInterval(function () {
         if (gameState.isGameRunning) {
-        if (gameState.isGameRunning) {
             gameState.timeLeft--;
             updateTimer();
 
@@ -1370,7 +1327,6 @@ function startTimer() {
 
 function updateTimer() {
     var timerElement = document.getElementById('time-left');
-    var timerElement = document.getElementById('time-left');
     timerElement.textContent = gameState.timeLeft + 's';
 
     // Thêm class warning/danger dựa vào thời gian còn lại
@@ -1385,16 +1341,13 @@ function updateTimer() {
 
 function showTimeBonusEffect() {
     var timerElement = document.getElementById('time-left');
-    var timerElement = document.getElementById('time-left');
 
     // Tạo element hiển thị "+2s"
-    var bonusText = document.createElement('div');
     var bonusText = document.createElement('div');
     bonusText.className = 'time-bonus-effect';
     bonusText.textContent = '+' + CAMPAIGN_SETTINGS.timeBonus + 's';
 
     // Thêm vào vị trí timer
-    var scoreBox = timerElement.closest('.score-box');
     var scoreBox = timerElement.closest('.score-box');
     scoreBox.appendChild(bonusText);
 
@@ -1431,13 +1384,6 @@ function checkGameEnd() {
             endGame(true); // Thắng khi đủ số máy bay yêu cầu
         } else {
             // Kiểm tra xem còn VietJet nào trên màn hình không
-            var hasVietjetOnScreen = false;
-            for (var i = 0; i < gameState.planes.length; i++) {
-                if (gameState.planes[i].type === 'player') {
-                    hasVietjetOnScreen = true;
-                    break;
-                }
-            }
             var hasVietjetOnScreen = false;
             for (var i = 0; i < gameState.planes.length; i++) {
                 if (gameState.planes[i].type === 'player') {
@@ -1492,7 +1438,6 @@ function spawnPlane() {
 
     // Random chọn loại đối tượng
     var type;
-    var type;
 
     // Nếu đã spawn đủ 10 VietJet thì chỉ spawn horizontal/vertical
     if (gameState.vietjetSpawned >= gameState.maxVietjet) {
@@ -1500,7 +1445,6 @@ function spawnPlane() {
         type = Math.random() < 0.5 ? 'horizontal' : 'vertical';
     } else {
         // Còn VietJet thì random như bình thường
-        var rand = Math.random();
         var rand = Math.random();
         if (rand < GAME_CONFIG.SPAWN_RATE.PLAYER) {
             type = 'player';
@@ -1512,11 +1456,8 @@ function spawnPlane() {
     }
 
     var x, y, vx, vy;
-    var x, y, vx, vy;
 
     // Random tạo máy bay siêu nhanh
-    var isFastPlane = Math.random() < GAME_CONFIG.FAST_PLANE_CHANCE;
-    var baseSpeed = isFastPlane
     var isFastPlane = Math.random() < GAME_CONFIG.FAST_PLANE_CHANCE;
     var baseSpeed = isFastPlane
         ? GAME_CONFIG.SPEED_FAST + Math.random() * GAME_CONFIG.SPEED_FAST_RANGE
@@ -1538,7 +1479,6 @@ function spawnPlane() {
 
         if (fromTop) {
             y = -spawnOffset; // Spawn ngoài biên trên
-            y = -spawnOffset; // Spawn ngoài biên trên
             vx = 0;
             vy = speed;
         } else {
@@ -1555,7 +1495,6 @@ function spawnPlane() {
 
         if (fromLeft) {
             x = -spawnOffset; // Spawn ngoài biên trái
-            x = -spawnOffset; // Spawn ngoài biên trái
             vx = speed;
             vy = 0;
         } else {
@@ -1564,8 +1503,6 @@ function spawnPlane() {
             vy = 0;
         }
     } else {
-        // Player: bay từ 4 hướng random
-        var side = Math.floor(Math.random() * 4);
         // Player: bay từ 4 hướng random
         var side = Math.floor(Math.random() * 4);
 
@@ -1607,10 +1544,8 @@ function spawnPlane() {
 
     // Random chọn ảnh từ category tương ứng
     var imageIndex = Math.floor(Math.random() * imageCategories[type].length);
-    var imageIndex = Math.floor(Math.random() * imageCategories[type].length);
 
     // Tính rotation
-    var rotation;
     var rotation;
     if (type === 'vertical') {
         // Vertical: xoay theo hướng dọc
@@ -1626,9 +1561,7 @@ function spawnPlane() {
 
     // Đánh dấu nếu là VietJet thứ 10
     var isLastVietjet = (type === 'player' && gameState.vietjetSpawned === gameState.maxVietjet - 1);
-    var isLastVietjet = (type === 'player' && gameState.vietjetSpawned === gameState.maxVietjet - 1);
 
-    var plane = {
     var plane = {
         x: x,
         y: y,
@@ -1691,8 +1624,6 @@ function gameLoop() {
     // Update and draw planes
     for (var i = gameState.planes.length - 1; i >= 0; i--) {
         var plane = gameState.planes[i];
-    for (var i = gameState.planes.length - 1; i >= 0; i--) {
-        var plane = gameState.planes[i];
 
         // Update position
         plane.x += plane.vx;
@@ -1733,12 +1664,10 @@ function gameLoop() {
 }
 
 var clouds = [];
-var clouds = [];
 
 function drawClouds() {
     // Initialize clouds if empty - dùng VIRTUAL dimensions
     if (clouds.length === 0) {
-        for (var i = 0; i < 5; i++) {
         for (var i = 0; i < 5; i++) {
             clouds.push({
                 x: Math.random() * gameState.virtualWidth,
@@ -1754,8 +1683,6 @@ function drawClouds() {
     // Draw and update clouds với ảnh
     for (var i = 0; i < clouds.length; i++) {
         var cloud = clouds[i];
-    for (var i = 0; i < clouds.length; i++) {
-        var cloud = clouds[i];
         // Kiểm tra xem ảnh đã load chưa
         if (imagesLoaded && loadedImages.cloud && loadedImages.cloud[cloud.imageIndex]) {
             gameState.ctx.save();
@@ -1768,9 +1695,6 @@ function drawClouds() {
 
             gameState.ctx.globalAlpha = cloud.opacity;
 
-            var img = loadedImages.cloud[cloud.imageIndex];
-            var width = cloud.size;
-            var height = cloud.size * 0.6; // Tỉ lệ chiều cao/rộng của mây
             var img = loadedImages.cloud[cloud.imageIndex];
             var width = cloud.size;
             var height = cloud.size * 0.6; // Tỉ lệ chiều cao/rộng của mây
@@ -1819,7 +1743,6 @@ function drawPlane(plane) {
         gameState.ctx.strokeStyle = plane.type === 'player' ? '#00FF00' : '#FF0000';
         gameState.ctx.lineWidth = 2;
         gameState.ctx.beginPath();
-        var debugRadius = (plane.size / 2) * GAME_CONFIG.HITBOX_MULTIPLIER;
         var debugRadius = (plane.size / 2) * GAME_CONFIG.HITBOX_MULTIPLIER;
         gameState.ctx.arc(plane.x, plane.y, debugRadius, 0, Math.PI * 2);
         gameState.ctx.stroke();
@@ -1881,9 +1804,6 @@ function drawPlane(plane) {
     var img = loadedImages[plane.type][plane.imageIndex];
     var width = plane.size * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
     var height = plane.size * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
-    var img = loadedImages[plane.type][plane.imageIndex];
-    var width = plane.size * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
-    var height = plane.size * GAME_CONFIG.PLANE_SIZE_MULTIPLIER;
 
     gameState.ctx.drawImage(img, -width / 2, -height / 2, width, height);
 
@@ -1891,7 +1811,6 @@ function drawPlane(plane) {
 }
 
 // Rating system
-var selectedRating = 0;
 var selectedRating = 0;
 
 function rateStar(value) {
@@ -1901,13 +1820,7 @@ function rateStar(value) {
     playSoundSafe(sounds.rating);
     
     var stars = document.querySelectorAll('.star');
-    var stars = document.querySelectorAll('.star');
 
-    // Chrome 44: Dùng for loop thay vì forEach
-    for (var i = 0; i < stars.length; i++) {
-        if (i < value) {
-            stars[i].classList.add('active');
-            stars[i].textContent = '★';
     // Chrome 44: Dùng for loop thay vì forEach
     for (var i = 0; i < stars.length; i++) {
         if (i < value) {
@@ -1916,14 +1829,10 @@ function rateStar(value) {
         } else {
             stars[i].classList.remove('active');
             stars[i].textContent = '☆';
-            stars[i].classList.remove('active');
-            stars[i].textContent = '☆';
         }
-    }
     }
 
     // Emoji tương ứng với từng mức đánh giá
-    var emojiMap = {
     var emojiMap = {
         1: '😢',  // Rất tệ
         2: '🙁',  // Không hài lòng
@@ -1954,14 +1863,6 @@ function showRating() {
         stars[i].textContent = '☆';
     }
     
-    var stars = document.querySelectorAll('.star');
-    
-    // Chrome 44: Dùng for loop thay vì forEach
-    for (var i = 0; i < stars.length; i++) {
-        stars[i].classList.remove('active');
-        stars[i].textContent = '☆';
-    }
-    
     document.getElementById('rating-value').textContent = '';
 }
 
@@ -1980,12 +1881,6 @@ function restartGame() {
     sounds.gameOver.pause();
 
     // Reset survey
-    var radios = document.querySelectorAll('input[type="radio"]');
-    
-    // Chrome 44: Dùng for loop thay vì forEach
-    for (var i = 0; i < radios.length; i++) {
-        radios[i].checked = false;
-    }
     var radios = document.querySelectorAll('input[type="radio"]');
     
     // Chrome 44: Dùng for loop thay vì forEach

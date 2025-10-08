@@ -1944,6 +1944,12 @@ function restartGame() {
     // Dừng timer
     stopTimer();
 
+    // Clear game over timeout nếu có
+    if (gameOverTimeout) {
+        clearTimeout(gameOverTimeout);
+        gameOverTimeout = null;
+    }
+
     // Dừng tất cả âm thanh
     sounds.bgMusic.pause();
     sounds.bgMusic.currentTime = 0;
@@ -1960,6 +1966,22 @@ function restartGame() {
 
     // Reset clouds
     clouds = [];
+
+    // Clear canvas ngay lập tức để xóa hết planes đang bay
+    if (gameState.ctx) {
+        gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
+    }
+
+    // Clear planes array để xóa hết planes đang bay
+    gameState.planes = [];
+
+    // Reset game state hoàn toàn
+    gameState.caughtPlanes = 0;
+    gameState.planesSpawned = 0;
+    gameState.vietjetSpawned = 0;
+    gameState.chances = CAMPAIGN_SETTINGS.maxChances;
+    gameState.timeLeft = CAMPAIGN_SETTINGS.gameTime;
+    gameState.isGameRunning = false;
 
     // Sử dụng map hiện tại để chơi lại (không random map mới)
     if (currentMap) {

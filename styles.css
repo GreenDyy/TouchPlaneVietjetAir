@@ -48,9 +48,18 @@ body {
     touch-action: manipulation;
     -webkit-user-select: none;
     user-select: none;
+    /* Hỗ trợ touch events trên Android cũ */
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .audio-unlock-overlay.hidden {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    z-index: -1 !important;
     display: none !important;
     pointer-events: none !important;
     visibility: hidden !important;
@@ -1026,6 +1035,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: cutinSlideIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     animation: cutinSlideIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 

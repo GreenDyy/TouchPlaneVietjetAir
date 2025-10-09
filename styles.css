@@ -2715,27 +2715,6 @@ body {
     transform: translateY(-2px) scale(0.95);
 }
 
-/* Graphic Button - Visual feedback cho LOW/HIGH mode */
-.graphic-btn.active .graphic-quality-text {
-    color: #4CAF50 !important;
-    text-shadow: 0 0 8px rgba(76, 175, 80, 0.8), 
-                 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.graphic-btn:not(.active) .graphic-quality-text {
-    color: #FFC107 !important;
-    text-shadow: 0 0 8px rgba(255, 193, 7, 0.8), 
-                 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.graphic-btn .graphic-quality-text {
-    font-size: 10px !important;
-    font-weight: 700;
-    transition: all 0.3s ease;
-}
-
-
-
 .splash-container {
     position: relative;
     z-index: 10;

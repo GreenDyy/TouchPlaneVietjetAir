@@ -6,6 +6,7 @@ var GAME_CONFIG = {
 	VIRTUAL_HEIGHT: 720,     // Chiều cao ảo chuẩn (16:9 ratio)
 
 	// Performance - Hiệu suất
+	// HIGHT_QUALITY: true,
 	TARGET_FPS: 60,          // FPS mục tiêu (24 = mượt + tiết kiệm pin)
 	// Giới hạn số object trên màn hình (cho thiết bị yếu)
 	MAX_OBJECTS_ON_SCREEN: 4,
@@ -18,8 +19,8 @@ var GAME_CONFIG = {
 	PLANE_SIZE_MULTIPLIER: 2, // Hệ số nhân khi vẽ ảnh (1.5 = gấp 1.5 lần)
 
 	// Tốc độ bay của máy bay
-	SPEED_DEFAULT: 1,        // Tốc độ mặc định
-	SPEED_RANGE: 1,          // Khoản sacle tốc độ ra
+	SPEED_DEFAULT: 2,        // Tốc độ mặc định
+	SPEED_RANGE: 2,          // Khoản sacle tốc độ ra
 
 	// Máy bay siêu nhanh (Fast Planes)
 	FAST_PLANE_CHANCE: 0.2,  // 20% cơ hội xuất hiện máy bay siêu nhanh
@@ -43,16 +44,15 @@ var GAME_CONFIG = {
 
 };
 
-// 🎮 CAMPAIGN_SETTINGS - Campaign Configuration (Business Settings)
 // ADMIN CÓ THỂ THAY ĐỔI - Theo từng campaign/event
 var CAMPAIGN_SETTINGS = {
 	// Gameplay Settings
-	gameTime: 300,               // Thời gian chơi (giây)
+	gameTime: 3000,               // Thời gian chơi (giây)
 	timeBonus: 2,               // Thời gian thưởng khi bắt đúng máy bay (giây)
-	speedMultiplier: 1.5,       // Độ khó: 1 = Dễ, 1.5 = Trung bình, 2 = Khó
+	speedMultiplier: 1,       // Tốc độ bay nè, hệ số nhân nên chỉnh cái này là dc
 	maxLives: 3,                // Số mạng/cơ hội
 	requiredPlanes: 6,          // Số máy bay VietJet cần bắt để thắng
-	totalVietjetPlanes: 10,     // Tổng số máy bay VietJet sẽ xuất hiện
+	totalVietjetPlanes: 2000,     // Tổng số máy bay VietJet sẽ xuất hiện
 
 	// Business Settings
 	qrCode: 'assets/qr_code_level_2.png',

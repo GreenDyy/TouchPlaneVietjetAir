@@ -13,7 +13,6 @@
  * 5. Context scale = scale (KHÔNG nhân DPR)
  * 6. Tất cả game objects sử dụng virtual coordinates
  * 7. Context tự động convert virtual → screen khi vẽ
- * 8. Image smoothing = TẮT (tăng hiệu suất)
  * 
  * Lợi ích:
  * - Game logic luôn dùng tọa độ cố định (1280×720) - dễ code
@@ -26,72 +25,7 @@
 // ============================================
 // GAME CONFIGURATION - TẤT CẢ CẤU HÌNH Ở ĐÂY
 // ============================================
-
-
-
-// ============================================
-// GRAPHIC SETTINGS - Cài đặt đồ họa
-// ============================================
-var graphicSettings = {
-    quality: 'low'  // 'low' hoặc 'high'
-};
-
-// Load cài đặt đồ họa từ localStorage
-try {
-    var savedQuality = localStorage.getItem('vj_graphic_quality');
-    if (savedQuality) {
-        graphicSettings.quality = savedQuality;
-    }
-} catch (e) {
-    // Storage not available
-}
-
-// Hàm set graphic quality
-function setGraphicQuality(quality) {
-    graphicSettings.quality = quality;
-    try {
-        localStorage.setItem('vj_graphic_quality', quality);
-    } catch (e) {
-        // Storage not available
-    }
-
-    // Update UI
-    updateGraphicButtonUI();
-
-    // Nếu đang trong game, resize lại canvas để áp dụng ngay
-    if (gameState.canvas) {
-        resizeCanvas();
-    }
-}
-
-// Hàm toggle graphic quality
-function toggleGraphicQuality() {
-    var newQuality = graphicSettings.quality === 'low' ? 'high' : 'low';
-    setGraphicQuality(newQuality);
-    playSoundSafe(sounds.tap);
-
-    // Hiển thị thông báo
-    console.log('Graphic Quality changed to: ' + newQuality.toUpperCase());
-}
-
-// Cập nhật UI của nút graphic quality
-function updateGraphicButtonUI() {
-    var graphicBtns = document.querySelectorAll('.graphic-btn');
-    for (var i = 0; i < graphicBtns.length; i++) {
-        var btn = graphicBtns[i];
-        var textSpan = btn.querySelector('.graphic-quality-text');
-
-        if (textSpan) {
-            if (graphicSettings.quality === 'low') {
-                textSpan.textContent = 'ĐỒ HỌA: LOW';
-                btn.classList.remove('active');
-            } else {
-                textSpan.textContent = 'ĐỒ HỌA: HIGH';
-                btn.classList.add('active');
-            }
-        }
-    }
-}
+//đã chuyển qua file config
 
 // Trạng thái âm thanh/nhạc (tách riêng)
 var audioSettings = {
@@ -362,9 +296,9 @@ function preloadImages() {
 // Game state
 var gameState = {
     caughtPlanes: 0,
-    totalPlanes: CAMPAIGN_SETTINGS.totalVietjetPlanes,     // Dùng từ campaign settings
+    requiredPlanes: CAMPAIGN_SETTINGS.requiredPlanes,      // Số máy bay cần bắt để thắng (6)
     vietjetSpawned: 0,    // Số máy bay VietJet đã xuất hiện
-    maxVietjet: CAMPAIGN_SETTINGS.totalVietjetPlanes,      // Dùng từ campaign settings
+    maxPlaneVietjet: CAMPAIGN_SETTINGS.totalVietjetPlanes,      // Tổng số VietJet sẽ spawn (10)
     chances: CAMPAIGN_SETTINGS.maxLives,                   // Dùng từ campaign settings
     planesSpawned: 0,
     isGameRunning: false,
@@ -382,7 +316,6 @@ var gameState = {
     canvasWidth: 0,       // Canvas display width (viewport)
     canvasHeight: 0,      // Canvas display height (viewport)
     scale: 1,             // Tỷ lệ scale từ virtual → screen
-    devicePixelRatio: 0.5,  // Device pixel ratio được sử dụng
     resizeTimeout: null   // Timeout cho debounce resize
 };
 
@@ -759,8 +692,8 @@ function initGame() {
     // Áp dụng campaign settings
     gameState.timeLeft = CAMPAIGN_SETTINGS.gameTime;
     gameState.chances = CAMPAIGN_SETTINGS.maxLives;
-    gameState.totalPlanes = CAMPAIGN_SETTINGS.totalVietjetPlanes;
-    gameState.maxVietjet = CAMPAIGN_SETTINGS.totalVietjetPlanes;
+    gameState.requiredPlanes = CAMPAIGN_SETTINGS.requiredPlanes;
+    gameState.maxPlaneVietjet = CAMPAIGN_SETTINGS.totalVietjetPlanes;
 
     gameState.canvas = document.getElementById('game-canvas');
     gameState.ctx = gameState.canvas.getContext('2d');
@@ -816,9 +749,6 @@ function resizeCanvas() {
     // Bước 6: Scale context = scale (KHÔNG nhân DPR)
     var contextScale = scale;
     gameState.ctx.setTransform(contextScale, 0, 0, contextScale, 0, 0);
-
-    // Bước 7: TẮT image smoothing - Tăng hiệu suất tối đa
-    gameState.ctx.imageSmoothingEnabled = false;
 
     // Bước 8: Lưu state
     gameState.canvasWidth = viewportWidth;
@@ -1093,10 +1023,10 @@ function doUpdateScore() {
 
     // Update DOM (comment để dùng canvas UI)
     // document.getElementById('caught-count').textContent =
-    //     gameState.caughtPlanes + '/' + gameState.totalPlanes;
+    //     gameState.caughtPlanes + '/' + gameState.requiredPlanes;
     // document.getElementById('chances-left').textContent = gameState.chances;
     // document.getElementById('vietjet-spawned').textContent =
-    //     gameState.vietjetSpawned + '/' + gameState.maxVietjet;
+    //     gameState.vietjetSpawned + '/' + gameState.maxPlaneVietjet;
 
     // Debug: kiểm tra game state
     console.log('Game State:', {
@@ -1108,7 +1038,6 @@ function doUpdateScore() {
     });
 }
 
-// Vẽ UI bằng Canvas - mượt mà hơn DOM
 function drawCanvasUI() {
     var ctx = gameState.ctx;
     var virtualWidth = gameState.virtualWidth;
@@ -1138,11 +1067,11 @@ function drawCanvasUI() {
     var uiData = [
         {
             label: 'VIETJET:',
-            value: gameState.vietjetSpawned + '/' + gameState.maxVietjet
+            value: gameState.vietjetSpawned + '/' + gameState.maxPlaneVietjet
         },
         {
             label: 'BẮT ĐƯỢC:',
-            value: gameState.caughtPlanes + '/' + gameState.totalPlanes
+            value: gameState.caughtPlanes + '/' + gameState.requiredPlanes
         },
         {
             label: 'THỜI GIAN:',
@@ -1256,7 +1185,7 @@ function checkGameEnd() {
     if (gameState.chances <= 0) {
         // Thua khi hết mạng
         endGame(false);
-    } else if (gameState.vietjetSpawned >= gameState.maxVietjet) {
+    } else if (gameState.vietjetSpawned >= gameState.maxPlaneVietjet) {
         // Đã spawn đủ VietJet
         if (gameState.caughtPlanes >= CAMPAIGN_SETTINGS.requiredPlanes) {
             endGame(true); // Thắng khi đủ số máy bay yêu cầu
@@ -1328,7 +1257,7 @@ function spawnPlane() {
     var type;
 
     // Nếu đã spawn đủ 10 VietJet thì chỉ spawn horizontal/vertical
-    if (gameState.vietjetSpawned >= gameState.maxVietjet) {
+    if (gameState.vietjetSpawned >= gameState.maxPlaneVietjet) {
         // Chỉ spawn horizontal hoặc vertical để tăng độ khó
         type = Math.random() < 0.5 ? 'horizontal' : 'vertical';
     } else {
@@ -1448,7 +1377,7 @@ function spawnPlane() {
     }
 
     // Đánh dấu nếu là VietJet thứ 10
-    var isLastVietjet = (type === 'player' && gameState.vietjetSpawned === gameState.maxVietjet - 1);
+    var isLastVietjet = (type === 'player' && gameState.vietjetSpawned === gameState.maxPlaneVietjet - 1);
 
     var plane = {
         x: x,
@@ -1492,40 +1421,6 @@ window.requestAnimFrame = (function () {
         };
 })();
 
-// Performance detection cho thiết bị yếu
-function detectLowEndDevice() {
-    // Kiểm tra các dấu hiệu thiết bị yếu
-    var isLowEnd = false;
-
-    // 1. Kiểm tra user agent cho Android cũ
-    var userAgent = navigator.userAgent.toLowerCase();
-    if (userAgent.includes('android 6') || userAgent.includes('android 5')) {
-        isLowEnd = true;
-    }
-
-    // 2. Kiểm tra viewport size nhỏ
-    if (window.innerWidth < 800 || window.innerHeight < 600) {
-        isLowEnd = true;
-    }
-
-    // 3. Kiểm tra RAM (nếu có)
-    if (navigator.deviceMemory && navigator.deviceMemory <= 2) {
-        isLowEnd = true;
-    }
-
-    // 4. Kiểm tra hardware concurrency (CPU cores)
-    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
-        isLowEnd = true;
-    }
-
-    return isLowEnd;
-}
-
-// Áp dụng settings cho thiết bị yếu
-var isLowEndDevice = detectLowEndDevice();
-if (isLowEndDevice) {
-    console.log('Low-end device detected. Using optimized game loop.');
-}
 
 function update(deltaSeconds) {
     if (!gameState.isGameRunning || isGamePaused) return;
@@ -1586,28 +1481,11 @@ function draw() {
     // Clear canvas - dùng VIRTUAL dimensions
     gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
 
-    // Draw map background - dùng VIRTUAL dimensions
-    // if (gameState.mapBackground && gameState.mapBackground.complete) {
-    //     gameState.ctx.save();
-
-    //     // Cải thiện chất lượng ảnh background cho thiết bị yếu
-    //     gameState.ctx.imageSmoothingEnabled = !isLowEndDevice; // Tắt smoothing cho thiết bị yếu
-    //     if (gameState.ctx.imageSmoothingQuality) {
-    //         gameState.ctx.imageSmoothingQuality = isLowEndDevice ? 'low' : 'high';
-    //     }
-
-    //     gameState.ctx.drawImage(
-    //         gameState.mapBackground,
-    //         0, 0,
-    //         gameState.virtualWidth,
-    //         gameState.virtualHeight
-    //     );
-    //     gameState.ctx.restore();
-    // }
-
     // Draw clouds
-    //lag quá k vẽ mây đâu
-    // drawClouds();
+
+    if (GAME_CONFIG.HIGHT_QUALITY) {
+        drawClouds();
+    }
 
     // Draw planes
     for (var i = 0; i < gameState.planes.length; i++) {
@@ -1687,13 +1565,6 @@ function drawClouds() {
         // Kiểm tra xem ảnh đã load chưa
         if (imagesLoaded && loadedImages.cloud && loadedImages.cloud[cloud.imageIndex]) {
             gameState.ctx.save();
-
-            // Cải thiện chất lượng ảnh mây (tối ưu cho thiết bị yếu)
-            gameState.ctx.imageSmoothingEnabled = !isLowEndDevice; // Tắt smoothing cho thiết bị yếu
-            if (gameState.ctx.imageSmoothingQuality) {
-                gameState.ctx.imageSmoothingQuality = isLowEndDevice ? 'low' : 'high';
-            }
-
             gameState.ctx.globalAlpha = cloud.opacity;
 
             var img = loadedImages.cloud[cloud.imageIndex];
@@ -1748,10 +1619,7 @@ function drawPlane(plane) {
     gameState.ctx.save();
 
     // Cải thiện chất lượng ảnh khi scale (tối ưu cho thiết bị yếu)
-    gameState.ctx.imageSmoothingEnabled = !isLowEndDevice; // Tắt smoothing cho thiết bị yếu
-    if (gameState.ctx.imageSmoothingQuality) {
-        gameState.ctx.imageSmoothingQuality = isLowEndDevice ? 'low' : 'high';
-    }
+    gameState.ctx.imageSmoothingEnabled = GAME_CONFIG.HIGHT_QUALITY
     gameState.ctx.translate(plane.x, plane.y);
 
     // Xử lý rotation và flip
@@ -2232,7 +2100,7 @@ function setupAllEventHandlers() {
         addClickLikeHandler(prizeBtn, function (e) {
             playSoundSafe(sounds.tap);
             // alert('Pixel ngang: ' + window.innerWidth + '\nPixel dọc: ' + window.innerHeight);
-            showScreen('game-screen');
+            startGame(); // Chạy thẳng game luôn
         });
     }
 
@@ -2530,9 +2398,6 @@ function setupAllEventHandlers() {
 
     // Cập nhật UI âm thanh/nhạc lúc khởi tạo
     updateAudioButtonsUI();
-
-    // Cập nhật UI graphic quality lúc khởi tạo
-    updateGraphicButtonUI();
 }
 
 // Initialize game when page loads

@@ -1,31 +1,7 @@
-/*
- * ==============================================
- * VIRTUAL RESOLUTION SYSTEM (PERFORMANCE MODE)
- * ==============================================
- * 
- * Hệ thống này đảm bảo game hiển thị đồng nhất trên mọi thiết bị với độ phân giải khác nhau.
- * 
- * Cách hoạt động:
- * 1. Định nghĩa Virtual Resolution cố định (1280×720)
- * 2. Tính scale = min(viewportWidth/virtualWidth, viewportHeight/virtualHeight)
- * 3. Canvas buffer = viewport (DPR = 1 cố định - BỎ HẲN DPR scaling)
- * 4. Canvas CSS = viewport (phủ full màn hình)
- * 5. Context scale = scale (KHÔNG nhân DPR)
- * 6. Tất cả game objects sử dụng virtual coordinates
- * 7. Context tự động convert virtual → screen khi vẽ
- * 
- * Lợi ích:
- * - Game logic luôn dùng tọa độ cố định (1280×720) - dễ code
- * - Tự động scale phù hợp với mọi màn hình
- * - HIỆU SUẤT TỐI ĐA - DPR=1, tắt smoothing (ưu tiên mượt mà hơn sắc nét)
- * - Maintain aspect ratio (không bị méo)
- * - Chạy mượt trên máy yếu (Android 6, 2GB RAM)
- */
-
 // ============================================
 // GAME CONFIGURATION - TẤT CẢ CẤU HÌNH Ở ĐÂY
 // ============================================
-//đã chuyển qua file config
+// Đã chuyển qua file gameConfig.js
 
 // Trạng thái âm thanh/nhạc (tách riêng)
 var audioSettings = {
@@ -310,13 +286,11 @@ var gameState = {
     timerInterval: null,
     selectedMap: 1,       // Map mặc định
     mapBackground: null,  // Image object của map
-    // Virtual Resolution System
-    virtualWidth: GAME_CONFIG.VIRTUAL_WIDTH,   // Chiều rộng ảo
-    virtualHeight: GAME_CONFIG.VIRTUAL_HEIGHT, // Chiều cao ảo
-    canvasWidth: 0,       // Canvas display width (viewport)
-    canvasHeight: 0,      // Canvas display height (viewport)
-    scale: 1,             // Tỷ lệ scale từ virtual → screen
-    resizeTimeout: null   // Timeout cho debounce resize
+    // Canvas dimensions
+    canvasWidth: 0,       // Canvas width (viewport)
+    canvasHeight: 0,      // Canvas height (viewport)
+    resizeTimeout: null,  // Timeout cho debounce resize
+    pauseButton: null     // Vùng click của nút pause
 };
 
 // Chuyển màn hình
@@ -601,7 +575,7 @@ function showCountdown() {
     // Hiển thị overlay
     overlay.classList.add('active');
 
-    var count = 3;
+    var count = 0;
     numberElement.textContent = count;
 
     // Phát âm thanh beep cho số 3
@@ -724,8 +698,7 @@ function initGame() {
 function resizeCanvas() {
     if (!gameState.canvas) return;
 
-
-    // Bước 1: Lấy kích thước viewport thực tế
+    // Lấy kích thước viewport thực tế
     var viewportWidth = window.innerWidth;
     var viewportHeight = window.innerHeight;
 
@@ -733,30 +706,23 @@ function resizeCanvas() {
     viewportWidth = Math.max(viewportWidth, 320);
     viewportHeight = Math.max(viewportHeight, 480);
 
-    // Bước 3: Tính scale để fit virtual resolution vào viewport
-    var scaleX = viewportWidth / gameState.virtualWidth;
-    var scaleY = viewportHeight / gameState.virtualHeight;
-    var scale = Math.max(scaleX, scaleY);
-
-    // Bước 4: Set canvas buffer size = viewport (KHÔNG nhân DPR)
+    // Set canvas buffer size = viewport
     gameState.canvas.width = viewportWidth;
     gameState.canvas.height = viewportHeight;
 
-    // Bước 5: Set canvas CSS size = viewport (phủ full màn)
+    // Set canvas CSS size = viewport (phủ full màn)
     gameState.canvas.style.width = viewportWidth + 'px';
     gameState.canvas.style.height = viewportHeight + 'px';
 
-    // Bước 6: Scale context = scale (KHÔNG nhân DPR)
-    var contextScale = scale;
-    gameState.ctx.setTransform(contextScale, 0, 0, contextScale, 0, 0);
+    // Reset context transform về identity (không scale)
+    gameState.ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    // Bước 8: Lưu state
+    // Lưu state
     gameState.canvasWidth = viewportWidth;
     gameState.canvasHeight = viewportHeight;
-    gameState.scale = scale;
 
     // Log để debug
-    console.log('Canvas resized - Performance Mode (DPR=1) - Buffer: ' +
+    console.log('Canvas resized - Buffer: ' +
         gameState.canvas.width + 'x' + gameState.canvas.height);
 }
 
@@ -793,15 +759,11 @@ function handleOrientationChange() {
 function handleCanvasClick(e) {
     if (!gameState.isGameRunning) return;
     var rect = gameState.canvas.getBoundingClientRect();
-    // Screen coordinates
-    var screenX = e.clientX - rect.left;
-    var screenY = e.clientY - rect.top;
+    // Canvas coordinates (đã scale theo canvas size)
+    var canvasX = (e.clientX - rect.left) * (gameState.canvas.width / rect.width);
+    var canvasY = (e.clientY - rect.top) * (gameState.canvas.height / rect.height);
 
-    // Convert screen coords → virtual coords
-    var virtualX = screenX / gameState.scale;
-    var virtualY = screenY / gameState.scale;
-
-    checkHit(virtualX, virtualY);
+    checkHit(canvasX, canvasY);
 }
 
 function handleCanvasTouch(e) {
@@ -823,20 +785,28 @@ function handleCanvasTouch(e) {
     }
 
     var rect = gameState.canvas.getBoundingClientRect();
-    // Screen coordinates
-    var screenX = touch.clientX - rect.left;
-    var screenY = touch.clientY - rect.top;
+    // Canvas coordinates (đã scale theo canvas size)
+    var canvasX = (touch.clientX - rect.left) * (gameState.canvas.width / rect.width);
+    var canvasY = (touch.clientY - rect.top) * (gameState.canvas.height / rect.height);
 
-    // Convert screen coords → virtual coords
-    var virtualX = screenX / gameState.scale;
-    var virtualY = screenY / gameState.scale;
-
-    checkHit(virtualX, virtualY);
+    checkHit(canvasX, canvasY);
 }
 
 function checkHit(x, y) {
-    var hit = false;
+    // Kiểm tra click vào nút pause trước
+    if (gameState.pauseButton) {
+        var pauseBtn = gameState.pauseButton;
+        // check va chạm vào các vùng biên của nút pause
+        if (x >= pauseBtn.x && x <= pauseBtn.x + pauseBtn.width &&
+            y >= pauseBtn.y && y <= pauseBtn.y + pauseBtn.height) {
+            // Click vào nút pause
+            playSoundSafe(sounds.tap);
+            showPausePopup();
+            return;
+        }
+    }
 
+    // Kiểm tra click vào máy bay
     for (var i = gameState.planes.length - 1; i >= 0; i--) {
         var plane = gameState.planes[i];
         var distance = Math.sqrt(
@@ -847,18 +817,13 @@ function checkHit(x, y) {
         var hitRadius = (plane.size / 2) * GAME_CONFIG.HITBOX_MULTIPLIER;
 
         if (distance < hitRadius) {
-            // Hit!
-            hit = true;
             gameState.planes.splice(i, 1);
 
             if (plane.type === 'player') {
                 // Chạm vào máy bay VietJet -> +1 điểm
                 gameState.caughtPlanes++;
-
                 // Thưởng thêm thời gian
                 gameState.timeLeft += CAMPAIGN_SETTINGS.timeBonus;
-                // updateTimer(); // Comment vì dùng canvas UI
-                // showTimeBonusEffect(); // Comment vì dùng canvas UI
 
                 showHitEffect(x, y, true);
                 playSoundSafe(sounds.touchRight);
@@ -1038,70 +1003,336 @@ function doUpdateScore() {
     });
 }
 
+// Preload UI assets
+var uiAssets = {
+    heart: null,
+    clock: null,
+    star: null,
+    gem: null,
+    pause: null
+};
+
+// Load UI assets
+function loadUIAssets() {
+    uiAssets.heart = new Image();
+    uiAssets.heart.src = 'assets/icon_512/HeartFull.png';
+    
+    uiAssets.clock = new Image();
+    uiAssets.clock.src = 'assets/clock.png';
+    
+    uiAssets.star = new Image();
+    uiAssets.star.src = 'assets/ui/default/bubble/star_1.png';
+    
+    uiAssets.gem = new Image();
+    uiAssets.gem.src = 'assets/icon_512/GemRed.png';
+    
+    uiAssets.pause = new Image();
+    uiAssets.pause.src = 'assets/ui/default/btn/pause.png';
+}
+
+// Call loadUIAssets when game starts
+loadUIAssets();
+
 function drawCanvasUI() {
     var ctx = gameState.ctx;
-    var virtualWidth = gameState.virtualWidth;
-    var virtualHeight = gameState.virtualHeight;
+    var canvasWidth = gameState.canvas.width;
+    var canvasHeight = gameState.canvas.height;
 
     // Lưu trạng thái canvas
     ctx.save();
 
-    // Thiết lập style cho UI
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Nền đen trong suốt
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Viền trắng
-    ctx.lineWidth = 2;
-    ctx.font = 'bold 14px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // ===========================================
+    // TOP LEFT: Hearts (Lives) - 3 Cục Máu
+    // ===========================================
+    drawTopLeftUI(ctx, canvasWidth, canvasHeight);
 
-    // Tính toán vị trí và kích thước UI boxes (nằm trên cùng giữa)
-    var boxWidth = 180;
-    var boxHeight = 35;
-    var padding = 8;
-    var startY = 25; // Khoảng cách từ top
-    var spacing = boxWidth + 10; // Khoảng cách giữa các box
-    var totalWidth = (boxWidth * 4) + (spacing * 3); // Tổng chiều rộng
-    var startX = (virtualWidth - totalWidth) / 2; // Căn giữa
+    // ===========================================
+    // TOP CENTER: Timer - Thời Gian
+    // ===========================================
+    drawTopCenterUI(ctx, canvasWidth, canvasHeight);
 
-    // Vẽ 4 boxes cho thông tin game
-    var uiData = [
-        {
-            label: 'VIETJET:',
-            value: gameState.vietjetSpawned + '/' + gameState.maxPlaneVietjet
-        },
-        {
-            label: 'BẮT ĐƯỢC:',
-            value: gameState.caughtPlanes + '/' + gameState.requiredPlanes
-        },
-        {
-            label: 'THỜI GIAN:',
-            value: Math.ceil(gameState.timeLeft) + 'S'
-        },
-        {
-            label: 'CƠ HỘI:',
-            value: gameState.chances.toString()
-        }
-    ];
+    // ===========================================
+    // TOP RIGHT: Pause Button - Nút Pause
+    // ===========================================
+    drawTopRightUI(ctx, canvasWidth, canvasHeight);
 
-    // Vẽ từng box theo chiều ngang
-    for (var i = 0; i < uiData.length; i++) {
-        var x = startX + (i * spacing);
+    // ===========================================
+    // BOTTOM LEFT: Vietjet Spawned Count - Số máy bay đã xuất hiện
+    // ===========================================
+    drawBottomLeftUI(ctx, canvasWidth, canvasHeight);
 
-        // Vẽ background box
-        ctx.fillRect(x, startY - boxHeight / 2, boxWidth, boxHeight);
-        ctx.strokeRect(x, startY - boxHeight / 2, boxWidth, boxHeight);
-
-        // Vẽ text
-        ctx.fillStyle = 'white';
-        ctx.fillText(uiData[i].label, x + boxWidth / 2, startY - 6);
-        ctx.fillText(uiData[i].value, x + boxWidth / 2, startY + 6);
-
-        // Reset màu cho box tiếp theo
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    }
+    // ===========================================
+    // BOTTOM RIGHT: Target Score - Điểm số mục tiêu
+    // ===========================================
+    drawBottomRightUI(ctx, canvasWidth, canvasHeight);
 
     // Khôi phục trạng thái canvas
     ctx.restore();
+}
+
+function drawTopLeftUI(ctx, canvasWidth, canvasHeight) {
+    // TOP LEFT: 3 Cục Máu (Hearts/Lives)
+    var isMobile = canvasWidth < 800;
+    
+    var startX = 20;
+    var startY = 20;
+    var heartSize = 35;
+    var spacing = 40;
+    
+    // Save context state
+    ctx.save();
+    
+    // Draw hearts (lives)
+    for (var i = 0; i < gameState.chances; i++) {
+        var heartX = startX + (i * spacing);
+        var heartY = startY;
+        
+        // Heart shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        // Draw heart icon if loaded
+        if (uiAssets.heart && uiAssets.heart.complete) {
+            ctx.drawImage(uiAssets.heart, heartX, heartY, heartSize, heartSize);
+        } else {
+            // Fallback: draw heart shape
+            drawHeart(ctx, heartX + heartSize/2, heartY + heartSize/2, heartSize/2);
+        }
+        
+        // Reset shadow for next iteration
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+    }
+    
+    // Restore context state
+    ctx.restore();
+}
+
+function drawTopCenterUI(ctx, canvasWidth, canvasHeight) {
+    // TOP CENTER: Thời Gian (Timer)
+    var timerWidth = 120;
+    var timerHeight = 40;
+    var timerX = (canvasWidth - timerWidth) / 2; // Center horizontally
+    var timerY = 20;
+    
+    // Save context state
+    ctx.save();
+    
+    // Timer background (white rounded rect with shadow)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    drawRoundedRect(ctx, timerX, timerY, timerWidth, timerHeight, 10);
+    ctx.fill();
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Timer icon (clock)
+    var clockSize = 28;
+    if (uiAssets.clock && uiAssets.clock.complete) {
+        ctx.drawImage(uiAssets.clock, timerX + 8, timerY + 6, clockSize, clockSize);
+    }
+    
+    // Timer text
+    var minutes = Math.floor(gameState.timeLeft / 60);
+    var seconds = Math.floor(gameState.timeLeft % 60);
+    var timeText = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    
+    ctx.fillStyle = '#00BCD4';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(timeText, timerX + timerWidth/2 + 10, timerY + timerHeight/2);
+    
+    // Restore context state
+    ctx.restore();
+}
+
+function drawTopRightUI(ctx, canvasWidth, canvasHeight) {
+    // TOP RIGHT: Nút Pause
+    var pauseSize = 56;
+    var pauseX = canvasWidth - pauseSize - 20;
+    var pauseY = 20;
+    
+    // Lưu vùng click của nút pause để xử lý click
+    gameState.pauseButton = {
+        x: pauseX,
+        y: pauseY,
+        width: pauseSize,
+        height: pauseSize
+    };
+    
+    // Vẽ ảnh pause
+    if (uiAssets.pause && uiAssets.pause.complete) {
+        ctx.drawImage(uiAssets.pause, pauseX, pauseY, pauseSize, pauseSize);
+    }
+}
+
+function drawBottomLeftUI(ctx, canvasWidth, canvasHeight) {
+    // BOTTOM LEFT: Số máy bay đã xuất hiện / Tổng 10
+    var boxWidth = 150;
+    var boxHeight = 50;
+    var boxX = 20;
+    var boxY = canvasHeight - boxHeight - 20;
+    
+    // Save context state
+    ctx.save();
+    
+    // Background (white rounded rect with shadow)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, 10);
+    ctx.fill();
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Border for emphasis
+    ctx.strokeStyle = '#FF5722';
+    ctx.lineWidth = 2;
+    drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, 10);
+    ctx.stroke();
+    
+    // Plane icon (circle with plane symbol)
+    var iconSize = 32;
+    ctx.fillStyle = '#FF5722';
+    ctx.beginPath();
+    ctx.arc(boxX + 25, boxY + boxHeight/2, iconSize/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Plane text in circle
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Tổng', boxX + 25, boxY + boxHeight/2);
+    
+    // Counter text
+    var counterText = gameState.vietjetSpawned + '/' + gameState.maxPlaneVietjet;
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(counterText, boxX + boxWidth/2 + 25, boxY + boxHeight/2);
+    
+    // Restore context state
+    ctx.restore();
+}
+
+function drawBottomRightUI(ctx, canvasWidth, canvasHeight) {
+    // BOTTOM RIGHT: Target 6 (Điểm số mục tiêu)
+    var boxWidth = 150;
+    var boxHeight = 50;
+    var boxX = canvasWidth - boxWidth - 20;
+    var boxY = canvasHeight - boxHeight - 20;
+    
+    // Save context state
+    ctx.save();
+    
+    // Background (white rounded rect with shadow)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, 10);
+    ctx.fill();
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Border for emphasis
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 2;
+    drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, 10);
+    ctx.stroke();
+    
+    // Target icon
+    var iconSize = 32;
+    ctx.fillStyle = '#4CAF50';
+    ctx.beginPath();
+    ctx.arc(boxX + 25, boxY + boxHeight/2, iconSize/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Target symbol in circle
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Target', boxX + 25, boxY + boxHeight/2);
+    
+    // Score text
+    var scoreText = gameState.caughtPlanes + '/' + gameState.requiredPlanes;
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(scoreText, boxX + boxWidth/2 + 25, boxY + boxHeight/2);
+    
+    // Restore context state
+    ctx.restore();
+}
+
+// Helper functions for drawing shapes
+function drawStar(ctx, x, y, radius, points) {
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    for (var i = 0; i < points * 2; i++) {
+        var angle = (i * Math.PI) / points;
+        var r = i % 2 === 0 ? radius : radius * 0.5;
+        var px = x + Math.cos(angle) * r;
+        var py = y + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawHeart(ctx, x, y, size) {
+    ctx.fillStyle = '#E91E63';
+    ctx.beginPath();
+    ctx.moveTo(x, y + size/4);
+    ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
+    ctx.bezierCurveTo(x - size/2, y + size/2, x, y + size, x, y + size);
+    ctx.bezierCurveTo(x, y + size, x + size/2, y + size/2, x + size/2, y + size/4);
+    ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
 }
 
 // Timer functions
@@ -1128,44 +1359,6 @@ function startTimer() {
             }
         }
     }, 1000);
-}
-
-function updateTimer() {
-    // Comment vì đã xóa DOM timer, giờ dùng canvas UI
-    // var timerElement = document.getElementById('time-left');
-    // timerElement.textContent = gameState.timeLeft + 's';
-
-    // // Thêm class warning/danger dựa vào thời gian còn lại
-    // timerElement.classList.remove('warning', 'danger');
-
-    // if (gameState.timeLeft <= 3) {
-    //     timerElement.classList.add('danger');
-    // } else if (gameState.timeLeft <= 5) {
-    //     timerElement.classList.add('warning');
-    // }
-}
-
-function showTimeBonusEffect() {
-    // Comment vì đã xóa DOM timer, giờ dùng canvas UI
-    // var timerElement = document.getElementById('time-left');
-
-    // // Tạo element hiển thị "+2s"
-    // var bonusText = document.createElement('div');
-    // bonusText.className = 'time-bonus-effect';
-    // bonusText.textContent = '+' + CAMPAIGN_SETTINGS.timeBonus + 's';
-
-    // // Thêm vào vị trí timer
-    // var scoreBox = timerElement.closest('.score-box');
-    // scoreBox.appendChild(bonusText);
-
-    // // Flash effect cho timer
-    // timerElement.classList.add('time-bonus-flash');
-
-    // // Xóa sau 1 giây
-    // setTimeout(function () {
-    //     bonusText.remove();
-    //     timerElement.classList.remove('time-bonus-flash');
-    // }, 1000);
 }
 
 function stopTimer() {
@@ -1291,15 +1484,14 @@ function spawnPlane() {
         // Vertical = Bay theo chiều dọc (từ trên xuống hoặc dưới lên)
         var fromTop = Math.random() < 0.5;
         // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền trái/phải)
-        // Dùng VIRTUAL coordinates
-        x = gameState.virtualWidth * 0.1 + Math.random() * (gameState.virtualWidth * 0.8);
+        x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
 
         if (fromTop) {
             y = -spawnOffset; // Spawn ngoài biên trên
             vx = 0;
             vy = speed;
         } else {
-            y = gameState.virtualHeight + spawnOffset; // Spawn ngoài biên dưới
+            y = gameState.canvas.height + spawnOffset; // Spawn ngoài biên dưới
             vx = 0;
             vy = -speed;
         }
@@ -1307,15 +1499,14 @@ function spawnPlane() {
         // Horizontal = Bay theo chiều ngang (từ trái qua phải hoặc ngược lại)
         var fromLeft = Math.random() < 0.5;
         // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền trên/dưới)
-        // Dùng VIRTUAL coordinates
-        y = gameState.virtualHeight * 0.2 + Math.random() * (gameState.virtualHeight * 0.6);
+        y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
 
         if (fromLeft) {
             x = -spawnOffset; // Spawn ngoài biên trái
             vx = speed;
             vy = 0;
         } else {
-            x = gameState.virtualWidth + spawnOffset; // Spawn ngoài biên phải
+            x = gameState.canvas.width + spawnOffset; // Spawn ngoài biên phải
             vx = -speed;
             vy = 0;
         }
@@ -1326,33 +1517,29 @@ function spawnPlane() {
         switch (side) {
             case 0: // top
                 // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
-                // Dùng VIRTUAL coordinates
-                x = gameState.virtualWidth * 0.1 + Math.random() * (gameState.virtualWidth * 0.8);
+                x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
                 y = -spawnOffset; // Spawn ngoài biên trên
                 vx = (Math.random() - 0.5) * speed;
                 vy = speed;
                 break;
             case 1: // right
-                x = gameState.virtualWidth + spawnOffset; // Spawn ngoài biên phải
+                x = gameState.canvas.width + spawnOffset; // Spawn ngoài biên phải
                 // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
-                // Dùng VIRTUAL coordinates
-                y = gameState.virtualHeight * 0.2 + Math.random() * (gameState.virtualHeight * 0.6);
+                y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = -speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
             case 2: // bottom
                 // Giới hạn X: spawn từ 10% đến 90% chiều rộng (tránh quá sát viền)
-                // Dùng VIRTUAL coordinates
-                x = gameState.virtualWidth * 0.1 + Math.random() * (gameState.virtualWidth * 0.8);
-                y = gameState.virtualHeight + spawnOffset; // Spawn ngoài biên dưới
+                x = gameState.canvas.width * 0.1 + Math.random() * (gameState.canvas.width * 0.8);
+                y = gameState.canvas.height + spawnOffset; // Spawn ngoài biên dưới
                 vx = (Math.random() - 0.5) * speed;
                 vy = -speed;
                 break;
             case 3: // left
                 x = -spawnOffset; // Spawn ngoài biên trái
                 // Giới hạn Y: spawn từ 20% đến 80% chiều cao (tránh quá sát viền)
-                // Dùng VIRTUAL coordinates
-                y = gameState.virtualHeight * 0.2 + Math.random() * (gameState.virtualHeight * 0.6);
+                y = gameState.canvas.height * 0.2 + Math.random() * (gameState.canvas.height * 0.6);
                 vx = speed;
                 vy = (Math.random() - 0.5) * speed;
                 break;
@@ -1455,13 +1642,13 @@ function update(deltaSeconds) {
 
         // Remove if out of bounds
         var margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
-        if (plane.x < -margin || plane.x > gameState.virtualWidth + margin ||
-            plane.y < -margin || plane.y > gameState.virtualHeight + margin) {
+        if (plane.x < -margin || plane.x > gameState.canvas.width + margin ||
+            plane.y < -margin || plane.y > gameState.canvas.height + margin) {
 
-            // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
+            // Nếu là máy bay VietJet cuối cùng bay mất thì thua ngay
             if (plane.isLastVietjet) {
                 gameState.planes.splice(i, 1);
-                endGame(false); // Thua do để máy bay VietJet thứ 10 bay mất
+                endGame(false); 
                 return;
             }
 
@@ -1478,8 +1665,8 @@ function update(deltaSeconds) {
 function draw() {
     if (!gameState.isGameRunning) return;
 
-    // Clear canvas - dùng VIRTUAL dimensions
-    gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
+    // Clear canvas - dùng canvas dimensions thực tế
+    gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
 
     // Draw clouds
 
@@ -1545,12 +1732,12 @@ function gameLoop(currentTime) {
 var clouds = [];
 
 function drawClouds() {
-    // Initialize clouds if empty - dùng VIRTUAL dimensions
+    // Initialize clouds if empty
     if (clouds.length === 0) {
         for (var i = 0; i < 5; i++) {
             clouds.push({
-                x: Math.random() * gameState.virtualWidth,
-                y: Math.random() * gameState.virtualHeight,
+                x: Math.random() * gameState.canvas.width,
+                y: Math.random() * gameState.canvas.height,
                 size: 80 + Math.random() * 100,
                 speed: 0.2 + Math.random() * 0.3,
                 imageIndex: Math.floor(Math.random() * 2), // Random chọn cloud.png hoặc cloud_2.png
@@ -1578,10 +1765,10 @@ function drawClouds() {
         // Di chuyển mây - SỬ DỤNG delta time để tốc độ độc lập với FPS
         var cloudSpeedFactor = (deltaTime / 1000) * 60; // 60 FPS baseline
         cloud.x += cloud.speed * cloudSpeedFactor;
-        // Reset từ biên trái khi ra khỏi biên phải - dùng VIRTUAL dimensions
-        if (cloud.x > gameState.virtualWidth) {
+        // Reset từ biên trái khi ra khỏi biên phải
+        if (cloud.x > gameState.canvas.width) {
             cloud.x = 0; // Spawn từ biên trái
-            cloud.y = Math.random() * gameState.virtualHeight;
+            cloud.y = Math.random() * gameState.canvas.height;
         }
     }
 }
@@ -1831,8 +2018,8 @@ function restartGame() {
     clouds = [];
 
     // Clear canvas ngay lập tức để xóa hết planes đang bay
-    if (gameState.ctx) {
-        gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
+    if (gameState.ctx && gameState.canvas) {
+        gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
     }
 
     // Clear planes array để xóa hết planes đang bay

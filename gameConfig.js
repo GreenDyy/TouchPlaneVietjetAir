@@ -1,12 +1,8 @@
 // ⚙️ GAME_CONFIG - Dev Configuration (Technical Settings)
 // KHÔNG ĐƯỢC SỬA BỪA - Ảnh hưởng đến game mechanics
 var GAME_CONFIG = {
-	// Virtual Resolution - Độ phân giải ảo cố định
-	VIRTUAL_WIDTH: 1280,     // Chiều rộng ảo chuẩn
-	VIRTUAL_HEIGHT: 720,     // Chiều cao ảo chuẩn (16:9 ratio)
-
 	// Performance - Hiệu suất
-	// HIGHT_QUALITY: true,
+	HIGHT_QUALITY: false,
 	TARGET_FPS: 60,          // FPS mục tiêu (24 = mượt + tiết kiệm pin)
 	// Giới hạn số object trên màn hình (cho thiết bị yếu)
 	MAX_OBJECTS_ON_SCREEN: 4,
@@ -31,8 +27,8 @@ var GAME_CONFIG = {
 	HITBOX_MULTIPLIER: 1.8,  // Tăng vùng click lên 1.5 lần để dễ bấm hơn
 
 	// Spawn timing
-	SPAWN_DELAY_MIN: 400,       // Delay tối thiểu giữa các lần spawn (ms)
-	SPAWN_DELAY_RANGE: 400,     // Khoảng random delay (ms) - spawn mỗi 0.5-1 giây
+	SPAWN_DELAY_MIN: 500,       // Delay tối thiểu giữa các lần spawn (ms)
+	SPAWN_DELAY_RANGE: 500,     // Khoảng random delay (ms) - spawn mỗi 0.5-1 giây
 
 	// Tỷ lệ spawn các loại máy bay
 	SPAWN_RATE: {

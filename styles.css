@@ -50,6 +50,42 @@ body {
     user-select: none;
 }
 
+/* Trạng thái đang load - vẫn cho phép click để hiển thị shake feedback */
+.audio-unlock-overlay.loading {
+    cursor: wait;
+}
+
+.audio-unlock-overlay.loading .audio-unlock-content {
+    opacity: 0.7;
+    animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+.audio-unlock-overlay.loading .audio-icon {
+    animation: loadingRotate 2s linear infinite;
+}
+
+/* Trạng thái đã load xong - CHO PHÉP chạm để bắt đầu */
+.audio-unlock-overlay.loaded {
+    cursor: pointer;
+}
+
+.audio-unlock-overlay.loaded .audio-unlock-content {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.audio-unlock-overlay.loaded .audio-icon {
+    animation: bounce 1s ease-in-out infinite;
+}
+
+/* Animation shake khi user cố chạm trước khi load xong */
+.audio-unlock-overlay.shake .audio-unlock-content {
+    animation: shake 0.5s ease-in-out !important;
+}
+
+.audio-unlock-overlay.shake .audio-icon {
+    animation: shake 0.5s ease-in-out !important;
+}
+
 .audio-unlock-overlay.hidden {
     display: none !important;
     pointer-events: none !important;
@@ -84,6 +120,40 @@ body {
     font-weight: 600;
     color: #fff;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Animation cho loading state */
+@keyframes loadingPulse {
+    0%, 100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+}
+
+@keyframes loadingRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Animation shake */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-10px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(10px);
+    }
 }
 
 @keyframes buttonPulse {
@@ -239,16 +309,15 @@ body {
 }
 
 .survey-card {
+    transform: scale(0.8);
+    margin-top: 8%;
     background: url('assets/ui/default/rating/table.png') center/100% 100% no-repeat;
     border-radius: 28px;
-    padding: 80px 32px;
+    padding: 120px 70px 60px 70px;
     max-width: 800px;
     min-width: 500px;
-    max-height: 88vh;
-
-    /* Prevent overflow */
-    overflow-x: hidden;
-    overflow-y: hidden;
+    max-height: 600px;
+    overflow: visible;
     text-align: center;
     position: relative;
     display: flex;
@@ -259,24 +328,30 @@ body {
     z-index: 10;
 }
 
+.survey-header {
+   max-height: 300px;
+    max-width: 90%;
+    object-fit: contain;
+    position: absolute;
+    top: -170px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 .logo {
-    width: 100%;
-    margin-bottom: 35px;
-    animation: logoGlow 2s ease-in-out infinite;
-    filter: drop-shadow(0 5px 15px rgba(202, 22, 28, 0.3));
-    order: -1;
+    width: 300px;
 }
 
 .logo img {
-    max-width: 200px;
+    width: 100%;
     height: auto;
     display: block;
-    margin: 0 auto;
+    margin: -50px auto;
     transition: transform 0.3s ease;
 }
 
 .logo img:hover {
-    transform: scale(1.05) rotate(2deg);
+    transform: scale(1.05);
 }
 
 @keyframes logoGlow {
@@ -366,20 +441,24 @@ body {
 
 .screen-title {
     color: #509121;
-    font-size: 32px;
+    /* color: #ddd; */
+    font-size: 40px;
     margin: 0 0 8px 0;
     font-weight: 900;
-    letter-spacing: 1px;
 }
 
 .intro-text {
-    color: #75767a;
-    font-size: 16px;
+    color: #509121;
+    font-size: 22px;
     font-weight: 600;
-    line-height: 1.4;
     margin-left: 40px;
     margin-right: 40px;
-    margin-bottom: 10px;
+}
+
+#survey-screen .intro-text {
+    margin-left: 0px;
+    margin-right: 0px;
+    font-size: 36px;
 }
 
 .btn {
@@ -462,7 +541,7 @@ body {
 }
 
 .survey-btn-continue img {
-    width: 80px;
+    width: 90px;
     height: auto;
     transition: all 0.3s ease;
 }
@@ -497,14 +576,13 @@ body {
 
 /* Survey styles */
 .question-block {
-    margin-bottom: 22px;
     text-align: left;
 }
 
 
 .question-number {
     color: #509121;
-    font-size: 14px;
+    font-size:48px;
     font-weight: 800;
     margin-bottom: 8px;
     text-transform: uppercase;
@@ -513,7 +591,7 @@ body {
 
 .question {
     color: #222;
-    font-size: 16px;
+    font-size: 28px;
     font-weight: 700;
     margin-bottom: 14px;
     line-height: 1.3;
@@ -533,8 +611,8 @@ body {
 }
 
 .option:hover {
-    border-color: rgba(202, 22, 28, 0.45);
-    box-shadow: 0 8px 22px rgba(202, 22, 28, 0.12);
+    border-color: rgba(80, 145, 33, 0.45);
+    box-shadow: 0 8px 22px rgba(80, 145, 33, 0.12);
 }
 
 .option:active {
@@ -552,6 +630,12 @@ body {
     position: relative;
     margin-right: 12px;
     background: #fff;
+    transition: all 0.3s ease;
+}
+
+.option input[type="radio"]:hover {
+    border-color: #509121;
+    box-shadow: 0 0 0 2px rgba(80, 145, 33, 0.2);
 }
 
 .option input[type="radio"]:checked {
@@ -573,7 +657,7 @@ body {
 
 .option span {
     color: #222;
-    font-size: 15px;
+    font-size: 26px;
     font-weight: 600;
     line-height: 1.2;
 }
@@ -643,6 +727,47 @@ body {
     max-width: 100%;
     height: auto;
     /* Hiển thị trên overlay */
+}
+
+.thank-header {
+    position: absolute;
+    top: -150px;
+    left: 50%;
+    right: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    max-width: 90%;
+    height: auto;
+    /* Hiển thị trên overlay */
+}
+
+.thank-home-btn {
+    width: 90px;
+    height: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+}
+
+.thank-home-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4)) brightness(1.1);
+}
+
+.thank-home-btn:active {
+    transform: translateY(-1px) scale(0.98);
+    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.2));
+}
+
+/* Override màu text cho thank-screen */
+#thank-screen .screen-title {
+    color: #fff;
+}
+
+#thank-screen .intro-text {
+    color: #fff;
 }
 
 .rating-close-btn {
@@ -754,7 +879,7 @@ body {
 }
 
 /* Màn hướng dẫn - Dùng hình nền giống home với overlay */
-#intro-screen {
+#instruction-screen {
     background-image: url('assets/idle_bg.png');
     background-size: cover;
     background-position: center;
@@ -765,7 +890,7 @@ body {
 }
 
 /* Overlay mờ cho màn hướng dẫn */
-#intro-screen::before {
+#instruction-screen::before {
     content: '';
     position: absolute;
     top: 0;
@@ -780,43 +905,13 @@ body {
 
 /* Game screen */
 #game-screen {
-    background: #f5f5f5;
+    /* background: #f5f5f5; */
+    background: #75767a;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
 
-.game-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 15px;
-    z-index: 100;
-    margin: 0;
-}
-
-.btn-pause {
-    width: 56px;
-    height: 56px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 100;
-}
-
-.btn-pause img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
 
 /* Countdown Overlay */
 .countdown-overlay {
@@ -1287,96 +1382,6 @@ body {
     }
 }
 
-.score-board {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    max-width: 100%;
-    padding: 0 15px;
-    flex-wrap: wrap;
-}
-
-.score-box {
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    border-radius: 15px;
-    padding: 8px 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    backdrop-filter: blur(10px);
-    flex: 1;
-    min-width: 140px;
-    max-width: 200px;
-    position: relative;
-}
-
-.score-icon {
-    font-size: 30px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-.score-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.score-label {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    margin-bottom: 2px;
-    white-space: nowrap;
-}
-
-.score-value {
-    font-size: 24px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    line-height: 1;
-}
-
-.score-value.timer {
-    transition: all 0.3s ease;
-}
-
-.score-value.timer.warning {
-    color: #FFD700;
-    animation: timerWarning 1s ease-in-out infinite;
-}
-
-.score-value.timer.danger {
-    color: #FF4444;
-    animation: timerDanger 0.5s ease-in-out infinite;
-}
-
-@keyframes timerWarning {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-}
-
-@keyframes timerDanger {
-
-    0%,
-    100% {
-        transform: scale(1);
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    50% {
-        transform: scale(1.15);
-        text-shadow: 0 0 20px rgba(255, 68, 68, 0.8);
-    }
-}
 
 /* Time bonus effect */
 .time-bonus-effect {
@@ -1914,12 +1919,14 @@ body {
 }
 
 /* container hướng dẫn */
-.intro-container {
+.instruction-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin-top: 8%;
     max-width: 90%;
+    max-height: 75%;
     padding: 30px 20px 60px 20px;
     text-align: center;
     position: relative;
@@ -1928,6 +1935,34 @@ body {
     background-size: 100% 100%;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+.instruction-close-btn {
+    position: absolute;
+    top: -24px;
+    right: -8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 100;
+    width: 56px;
+    height: 56px;
+}
+
+.instruction-close-btn img {
+    width: 56px;
+    height: 56px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s ease;
+}
+
+.instruction-close-btn:hover img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.instruction-close-btn:active img {
+    transform: scale(0.95);
 }
 
 .game-instructions-header {
@@ -1948,8 +1983,8 @@ body {
     gap: 40px;
     width: 100%;
     max-width: 700px;
-    margin: 0 auto 50px auto;
-    padding: 70px 20px;
+    margin: 90px auto 0px auto;
+    padding: 30px 30px;
     position: relative;
     z-index: 100;
 }
@@ -1965,7 +2000,7 @@ body {
 }
 
 .instruction-label {
-    font-size: 18px;
+    font-size: 26px;
     font-weight: 800;
     color: white;
     text-transform: uppercase;
@@ -1974,8 +2009,8 @@ body {
 }
 
 .instruction-icon {
-    width: 140px;
-    height: 140px;
+    width: 100px;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1989,7 +2024,7 @@ body {
 }
 
 .instruction-text {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: white;
     margin: 0;
@@ -2012,9 +2047,14 @@ body {
     animation: buttonPulse 2s ease-in-out infinite;
     position: relative;
     overflow: hidden;
-    min-width: 200px;
-    min-height: 60px;
+    min-width: 180px;
+    min-height: 80px;
     z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 30px;
 }
 
 .btn-play-game-new:hover::before {
@@ -2034,6 +2074,49 @@ body {
 
 .btn-play-game-new:active {
     transform: translateY(-2px) scale(1);
+}
+
+/* Button Start Animation - Hiệu ứng khi bấm nút Start */
+.btn-play-game-new.btn-start-animation {
+    animation: buttonStartFeedback 1.2s ease-out forwards !important;
+    pointer-events: none;
+    /* Ngăn click lại trong lúc animation */
+}
+
+@keyframes buttonStartFeedback {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+        filter: brightness(1) drop-shadow(0 0 0px rgba(255, 255, 255, 0));
+    }
+
+    /* Scale up + Glow */
+    30% {
+        transform: scale(1.15);
+        opacity: 1;
+        filter: brightness(1.4) drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+    }
+
+    /* Giữ phát sáng một chút */
+    50% {
+        transform: scale(1.12);
+        opacity: 1;
+        filter: brightness(1.5) drop-shadow(0 0 25px rgba(255, 255, 255, 1));
+    }
+
+    /* Bắt đầu fade out */
+    70% {
+        transform: scale(1.08);
+        opacity: 0.7;
+        filter: brightness(1.3) drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+    }
+
+    /* Hoàn toàn biến mất */
+    100% {
+        transform: scale(0.95);
+        opacity: 0;
+        filter: brightness(0.8) drop-shadow(0 0 0px rgba(255, 255, 255, 0));
+    }
 }
 
 /* ========== SPLASH SCREEN ========== */
@@ -2266,14 +2349,13 @@ body {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    position: relative;
     z-index: 1;
 }
 
 .lose-close-btn {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: -20px;
+    right: -20px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -2293,13 +2375,13 @@ body {
 }
 
 .lose-close-btn img {
-    width: 24px;
-    height: 24px;
-    display: block;
+    width: 56px;
+    height: 56px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .lose-panel {
+    margin-top: 8%;
     position: relative;
     background-image: url('assets/ui/default/you_lose/bg.png');
     background-repeat: no-repeat;
@@ -2420,8 +2502,7 @@ body {
 
 
 .lose-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-3px);
+    transform: translateY(-3px) scale(1.05);
 }
 
 .lose-btn:active {
@@ -2634,6 +2715,25 @@ body {
     transform: translateY(-2px) scale(0.95);
 }
 
+/* Graphic Button - Visual feedback cho LOW/HIGH mode */
+.graphic-btn.active .graphic-quality-text {
+    color: #4CAF50 !important;
+    text-shadow: 0 0 8px rgba(76, 175, 80, 0.8), 
+                 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.graphic-btn:not(.active) .graphic-quality-text {
+    color: #FFC107 !important;
+    text-shadow: 0 0 8px rgba(255, 193, 7, 0.8), 
+                 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.graphic-btn .graphic-quality-text {
+    font-size: 10px !important;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
 
 
 .splash-container {
@@ -2754,12 +2854,14 @@ body {
 
 /* Splash Row Button - 2 nút ngang */
 .splash-row-button {
-    padding: 20px 20px;
+    margin-top: 10px;
+    padding: 10px 20px;
     background: transparent;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 20px;
     position: relative;
     z-index: 10;
@@ -2779,6 +2881,25 @@ body {
 }
 
 .splash-row-button img:active {
+    transform: translateY(-1px) scale(0.95);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Icon buttons - IMG clickable */
+.splash-icon-btn {
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.splash-icon-btn:hover {
+    transform: translateY(-3px) scale(1.1);
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4)) brightness(1.1);
+}
+
+.splash-icon-btn:active {
     transform: translateY(-1px) scale(0.95);
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
 }

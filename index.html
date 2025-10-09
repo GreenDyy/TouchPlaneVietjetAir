@@ -92,10 +92,10 @@
             <button class="splash-button">
                 <span>TAP TO START</span>
             </button>
-            <button class="splash-row-button">
-                <img src="assets/ui/default/btn/prize.png" alt="Shop">
-                <img src="assets/ui/default/btn/faq.png" alt="Shop">
-            </button>
+            <div class="splash-row-button">
+                <img id="prize-btn" src="assets/ui/default/btn/prize.png" alt="Prize" class="splash-icon-btn">
+                <img id="faq-btn" src="assets/ui/default/btn/faq.png" alt="FAQ" class="splash-icon-btn">
+            </div>
         </div>
 
         <!-- Main Menu Layers -->
@@ -155,7 +155,7 @@
 
                 <!-- Main Buttons -->
                 <div class="settings-main-buttons">
-                    <!-- Row 1: 3 nút ngang -->
+                    <!-- Row 1: 2 nút ngang (bỏ Graphic Quality vì đã fix DPR=1) -->
                     <div class="settings-row settings-row-1">
                         <div class="settings-main-btn sound-btn">
                             <img src="assets/ui/default/btn/sound.png" alt="Sound">
@@ -165,13 +165,9 @@
                             <img src="assets/ui/default/btn/music.png" alt="Music">
                             <span>NHẠC</span>
                         </div>
-                        <div class="settings-main-btn">
-                            <img src="assets/ui/default/btn/about.png" alt="Info">
-                            <span>Thông tin</span>
-                        </div>
                     </div>
 
-                    <!-- Row 2: 3 nút dọc -->
+                    <!-- Row 2: 1 nút -->
                     <div class="settings-row settings-row-2">
                         <button class="settings-main-btn">
                             <img src="assets/ui/default/btn/close_2.png" alt="Exit">
@@ -223,13 +219,14 @@
         </div>
 
         <div class="survey-card">
-            <h2 class="screen-title">Khảo sát ngắn</h2>
-            <p class="intro-text" id="survey-intro">Trước khi bắt đầu chơi, xin phép bạn trả lời 2 câu hỏi sau đây nhé
-            </p>
+            <!-- <h2 class="screen-title">Khảo sát ngắn</h2> -->
+            <img class="survey-header" src="assets/ui/default/custom/header_vote.png" alt="Close">
+
+            <p class="intro-text" id="survey-intro">Trước khi bắt đầu chơi, xin phép bạn trả lời 2 câu hỏi sau đây nhé</p>
 
             <!-- Câu hỏi 1 -->
             <div class="question-block" id="question-1">
-                <p class="question-number">Câu 1/2</p>
+                <Cp class="question-number">Câu 1/2</Cp>
                 <p class="question">Đây có phải là lần đầu bạn di chuyển bằng máy bay không?</p>
                 <div class="options">
                     <label class="option">
@@ -263,17 +260,22 @@
                 </div>
             </div>
 
-            <div class="question-block">
+            <!-- <div class="question-block">
                 <button class="survey-btn-continue" id="survey-continue-btn">
                     <img src="assets/ui/default/btn/next.png" alt="Continue">
                 </button>
-            </div>
+            </div> -->
         </div>
     </div>
 
-    <!-- Màn hình giới thiệu game -->
-    <div id="intro-screen" class="screen">
-        <div class="intro-container">
+    <!-- Màn hình giới Hướng dẫn -->
+    <div id="instruction-screen" class="screen">
+        <div class="instruction-container">
+            <!-- Close Button - Top Right (chỉ hiện khi ở FAQ mode) -->
+            <button class="instruction-close-btn" id="instruction-close-btn" style="display: none;">
+                <img src="assets/ui/default/btn/close.png" alt="Close">
+            </button>
+
             <!-- Title -->
             <img src="assets/ui/default/custom/header_guige.png" alt="HƯỚNG DẪN" class="game-instructions-header">
 
@@ -283,7 +285,7 @@
                 <div class="instruction-item">
                     <h3 class="instruction-label">MỤC TIÊU</h3>
                     <div class="instruction-icon">
-                        <img src="assets/target.png" alt="Target">
+                        <img src="assets/ui/default/upgrade/luck.png" alt="Target">
                     </div>
                     <p class="instruction-text">BẮT 6/10 MÁY BAY</p>
                 </div>
@@ -291,7 +293,7 @@
                 <div class="instruction-item">
                     <h3 class="instruction-label">THỜI GIAN</h3>
                     <div class="instruction-icon">
-                        <img src="assets/clock.png" alt="Clock">
+                        <img src="assets/ui/default/upgrade/time.png" alt="Clock">
                     </div>
                     <p class="instruction-text">MỖI LẦN BẮT +2S</p>
                 </div>
@@ -299,7 +301,7 @@
                 <div class="instruction-item">
                     <h3 class="instruction-label">MẠNG</h3>
                     <div class="instruction-icon">
-                        <img src="assets/heart.png" alt="Heart">
+                        <img src="assets/ui/default/upgrade/heart.png" alt="Heart">
                     </div>
                     <p class="instruction-text">BẠN CÓ 3 MẠNG</p>
                 </div>
@@ -309,47 +311,6 @@
             <button class="btn-play-game-new" id="start-game-btn">
                 <span>BẮT ĐẦU CHƠI</span>
             </button>
-        </div>
-    </div>
-
-    <!-- Màn hình Gacha - Random Map -->
-    <div id="gacha-screen" class="screen">
-        <div class="gacha-container">
-            <!-- Title -->
-            <h1 class="gacha-title">ĐANG CHỌN BẢN ĐỒ...</h1>
-
-            <!-- Gacha Machine -->
-            <div class="gacha-machine">
-                <!-- Slot Machine Frame -->
-                <div class="gacha-frame">
-                    <!-- Top Decoration -->
-                    <div class="gacha-top"></div>
-
-                    <!-- Slot Window -->
-                    <div class="slot-window">
-                        <div class="slot-shine"></div>
-                        <div class="slot-content" id="slot-content">
-                            <!-- Map thumbnails will scroll here -->
-                        </div>
-                    </div>
-
-                    <!-- Bottom Decoration -->
-                    <div class="gacha-bottom"></div>
-                </div>
-
-                <!-- Light Effects -->
-                <div class="gacha-lights">
-                    <div class="light light-1"></div>
-                    <div class="light light-2"></div>
-                    <div class="light light-3"></div>
-                    <div class="light light-4"></div>
-                </div>
-            </div>
-
-            <!-- Result Text -->
-            <div class="gacha-result" id="gacha-result">
-                <p>Đang quay...</p>
-            </div>
         </div>
     </div>
 
@@ -403,45 +364,6 @@
             <div class="cutin-text">CẤT CÁNH!</div>
         </div>
 
-        <div class="game-header">
-            <!-- btn pause -->
-
-            <!-- btn pause -->
-            <button class="btn-pause" id="btn-pause">
-                <img src="assets/ui/default/btn/pause.png" alt="Pause">
-            </button>
-
-            <div class="score-board">
-                <div class="score-box">
-                    <div class="score-icon">🛫</div>
-                    <div class="score-info">
-                        <span class="score-label">VietJet đã xuất hiện:</span>
-                        <span class="score-value" id="vietjet-spawned">0/10</span>
-                    </div>
-                </div>
-                <div class="score-box">
-                    <div class="score-icon">✈️</div>
-                    <div class="score-info">
-                        <span class="score-label">Máy bay bắt được:</span>
-                        <span class="score-value" id="caught-count">0/10</span>
-                    </div>
-                </div>
-                <div class="score-box">
-                    <div class="score-icon">⏱️</div>
-                    <div class="score-info">
-                        <span class="score-label">Thời gian còn lại:</span>
-                        <span class="score-value timer" id="time-left">20s</span>
-                    </div>
-                </div>
-                <div class="score-box">
-                    <div class="score-icon">💖</div>
-                    <div class="score-info">
-                        <span class="score-label">Mạng còn lại:</span>
-                        <span class="score-value" id="chances-left">3</span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Main game canvas -->
         <canvas id="game-canvas"></canvas>
@@ -526,13 +448,14 @@
     <!-- Màn hình thua -->
     <div id="lose-screen" class="screen">
         <div class="lose-container">
-            <!-- Close Button - Top Right -->
-            <button class="lose-close-btn" id="lose-close-btn">
-                <img src="assets/ui/default/btn/close.png" alt="Close">
-            </button>
+
 
             <!-- Lose Panel -->
             <div class="lose-panel">
+                <!-- Close Button - Top Right -->
+                <button class="lose-close-btn" id="lose-close-btn">
+                    <img src="assets/ui/default/btn/close.png" alt="Close">
+                </button>
                 <!-- Header -->
                 <div class="lose-header">
                     <img src="assets/ui/default/you_lose/header.png" alt="Thua">
@@ -602,17 +525,22 @@
     <!-- Màn hình cảm ơn -->
     <div id="thank-screen" class="screen">
         <div class="container">
+            <!-- Close Button - Top Right -->
+            <!-- <button class="rating-close-btn">
+                <img src="assets/ui/default/btn/next.png" alt="Close">
+            </button> -->
+
+            <img src="assets/ui/default/custom/header_thank.png" alt="Đánh giá dịch vụ" class="thank-header">
+
             <div class="logo">
                 <img src="assets/logo_white.png" alt="Vietjet Logo" width="200">
             </div>
 
-            <h2 class="screen-title">Cảm ơn bạn!</h2>
+            <!-- <h2 class="screen-title">Cảm ơn bạn!</h2> -->
             <p class="intro-text">Xin cảm ơn bạn đã sử dụng dịch vụ của Vietjet ngày hôm nay. Chúc bạn có 1 chuyến đi
                 vui vẻ và an toàn nhé.</p>
 
-            <button class="btn btn-primary" id="restart-btn">
-                Chơi lại
-            </button>
+            <img src="assets/ui/default/btn/menu.png" alt="Quay về trang chủ" id="home-btn" class="thank-home-btn">
         </div>
     </div>
 

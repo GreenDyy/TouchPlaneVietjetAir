@@ -1,6 +1,6 @@
 /*
  * ==============================================
- * VIRTUAL RESOLUTION SYSTEM
+ * VIRTUAL RESOLUTION SYSTEM (PERFORMANCE MODE)
  * ==============================================
  * 
  * Hệ thống này đảm bảo game hiển thị đồng nhất trên mọi thiết bị với độ phân giải khác nhau.
@@ -8,154 +8,90 @@
  * Cách hoạt động:
  * 1. Định nghĩa Virtual Resolution cố định (1280×720)
  * 2. Tính scale = min(viewportWidth/virtualWidth, viewportHeight/virtualHeight)
- * 3. Canvas buffer = viewport × DPR (để render sắc nét trên màn hình Retina)
+ * 3. Canvas buffer = viewport (DPR = 1 cố định - BỎ HẲN DPR scaling)
  * 4. Canvas CSS = viewport (phủ full màn hình)
- * 5. Context scale = scale × DPR
+ * 5. Context scale = scale (KHÔNG nhân DPR)
  * 6. Tất cả game objects sử dụng virtual coordinates
  * 7. Context tự động convert virtual → screen khi vẽ
+ * 8. Image smoothing = TẮT (tăng hiệu suất)
  * 
- * Lợi ích~
+ * Lợi ích:
  * - Game logic luôn dùng tọa độ cố định (1280×720) - dễ code
  * - Tự động scale phù hợp với mọi màn hình
- * - Tận dụng DPR để render sắc nét (test với DPR=3)
+ * - HIỆU SUẤT TỐI ĐA - DPR=1, tắt smoothing (ưu tiên mượt mà hơn sắc nét)
  * - Maintain aspect ratio (không bị méo)
+ * - Chạy mượt trên máy yếu (Android 6, 2GB RAM)
  */
 
 // ============================================
 // GAME CONFIGURATION - TẤT CẢ CẤU HÌNH Ở ĐÂY
 // ============================================
 
-// ⚙️ GAME_CONFIG - Dev Configuration (Technical Settings)
-// KHÔNG ĐƯỢC SỬA BỪA - Ảnh hưởng đến game mechanics
-var GAME_CONFIG = {
-    // Virtual Resolution - Độ phân giải ảo cố định
-    VIRTUAL_WIDTH: 1280,     // Chiều rộng ảo chuẩn
-    VIRTUAL_HEIGHT: 720,     // Chiều cao ảo chuẩn (16:9 ratio)
-    
-    // Debug
-    SHOW_HITBOX: false,       // Bật/tắt hiển thị vòng tròn hitbox (true = hiện, false = ẩn)
 
-    // Kích thước máy bay
-    PLANE_SIZE: 50,          // Kích thước cơ bản của máy bay (px)
-    PLANE_SIZE_MULTIPLIER: 2, // Hệ số nhân khi vẽ ảnh (1.5 = gấp 1.5 lần)
 
-    // Tốc độ bay của máy bay
-    SPEED_DEFAULT: 1,        // Tốc độ mặc định
-    SPEED_RANGE: 2,          // Khoảng random tốc độ thường
+// ============================================
+// GRAPHIC SETTINGS - Cài đặt đồ họa
+// ============================================
+var graphicSettings = {
+    quality: 'low'  // 'low' hoặc 'high'
+};
 
-    // Máy bay siêu nhanh (Fast Planes)
-    FAST_PLANE_CHANCE: 0.2,  // 20% cơ hội xuất hiện máy bay siêu nhanh
-    SPEED_FAST: 4,          // Tốc độ của máy bay siêu nhanh
-    SPEED_FAST_RANGE: 2,     // Khoảng random cho máy bay siêu nhanh (10-13)
-
-    // Hit detection - Vùng click
-    HITBOX_MULTIPLIER: 1.8,  // Tăng vùng click lên 1.5 lần để dễ bấm hơn
-
-    // Spawn timing
-    SPAWN_DELAY_MIN: 400,       // Delay tối thiểu giữa các lần spawn (ms)
-    SPAWN_DELAY_RANGE: 400,     // Khoảng random delay (ms) - spawn mỗi 0.5-1 giây
-
-    // Tỷ lệ spawn các loại máy bay
-    SPAWN_RATE: {
-        PLAYER: 0.5,      // 50% là máy bay VietJet
-        HORIZONTAL: 0.25, // 25% bay ngang
-        VERTICAL: 0.25    // 25% bay dọc
+// Load cài đặt đồ họa từ localStorage
+try {
+    var savedQuality = localStorage.getItem('vj_graphic_quality');
+    if (savedQuality) {
+        graphicSettings.quality = savedQuality;
     }
-};
+} catch (e) {
+    // Storage not available
+}
 
-// 🎮 CAMPAIGN_SETTINGS - Campaign Configuration (Business Settings)
-// ADMIN CÓ THỂ THAY ĐỔI - Theo từng campaign/event
-var CAMPAIGN_SETTINGS = {
-    // Gameplay Settings
-    gameTime: 20,               // Thời gian chơi (giây)
-    timeBonus: 2,               // Thời gian thưởng khi bắt đúng máy bay (giây)
-    speedMultiplier: 1.5,       // Độ khó: 1 = Dễ, 1.5 = Trung bình, 2 = Khó
-    maxLives: 3,                // Số mạng/cơ hội
-    requiredPlanes: 6,          // Số máy bay VietJet cần bắt để thắng
-    totalVietjetPlanes: 10,     // Tổng số máy bay VietJet sẽ xuất hiện
-    
-    // Business Settings
-    qrCode: 'assets/qr_code_level_2.png',
-    voucherLink: 'https://evoucher.vietjetair.com/Vouchers/Details?AwardCampaign=454',
-    campaignId: 'vietjet-holiday-2024',
-    campaignName: 'VietJet Holiday Campaign'
-};
+// Hàm set graphic quality
+function setGraphicQuality(quality) {
+    graphicSettings.quality = quality;
+    try {
+        localStorage.setItem('vj_graphic_quality', quality);
+    } catch (e) {
+        // Storage not available
+    }
 
-// Cấu hình timing cho Gacha Animation
-var GACHA_CONFIG = {
-    // Thời gian quay nhanh (spinning) trước khi bắt đầu dừng
-    SPIN_DURATION: 5000,        
-    
-    // Thời gian chuyển động chậm lại (easing) khi dừng
-    STOP_TRANSITION_DURATION: 1000,  // 1000ms = 1 giây để dừng mượt
-    
-    // Thời gian phát âm thanh kết quả (sau khi bắt đầu dừng)
-    SOUND_DELAY: 800,           // 800ms
-    
-    // Thời gian hiển thị tên map (sau khi dừng hoàn toàn)
-    RESULT_DISPLAY_DELAY: 1000, // 1000ms = 1 giây
-    
-    // Thời gian chờ trước khi chuyển sang game (sau khi hiện tên map)
-    GO_TO_GAME_DELAY: 2000,     // 2000ms = 2 giây
-};
+    // Update UI
+    updateGraphicButtonUI();
 
-// Cấu hình danh sách maps
-var MAPS_CONFIG = [
-    { id: 1, image: 'assets/map/map_1.jpg', name: 'Map 1' },
-    { id: 2, image: 'assets/map/map_2.jpg', name: 'Map 2' },
-    { id: 3, image: 'assets/map/map_3.jpg', name: 'Map 3' },
-    { id: 4, image: 'assets/map/map_4.jpg', name: 'Map 4' },
-    { id: 5, image: 'assets/map/map_5.jpg', name: 'Map 5' },
-    { id: 6, image: 'assets/map/map_6.jpg', name: 'Map 6' },
-    { id: 7, image: 'assets/map/map_7.jpg', name: 'Map 7' },
-    { id: 8, image: 'assets/map/map_8.jpg', name: 'Map 8' },
-    { id: 9, image: 'assets/map/map_9.jpg', name: 'Map 9' }
-];
+    // Nếu đang trong game, resize lại canvas để áp dụng ngay
+    if (gameState.canvas) {
+        resizeCanvas();
+    }
+}
 
-// Hệ thống âm thanh
-var sounds = {
-    menuTheme: new Audio('assets/sounds/menu_theme.mp3'),
-    bgMusic: new Audio('assets/sounds/bg_song.mp3'),
-    touchRight: new Audio('assets/sounds/touch_right.mp3'),
-    bruh: new Audio('assets/sounds/bruh.mp3'),
-    gameOver: new Audio('assets/sounds/sfx_game_over.mp3'),
-    winner: new Audio('assets/sounds/sfx_winner.mp3'),
-    cutIn: new Audio('assets/sounds/cut_in.mp3'),
-    timerBeep: new Audio('assets/sounds/timer_beep.mp3'),
-    rating: new Audio('assets/sounds/rating.mp3'),
-    tap: new Audio('assets/sounds/tap_1.mp3'),
-    wheel: new Audio('assets/sounds/wheel.mp3')  // Âm thanh gacha wheel
-};
+// Hàm toggle graphic quality
+function toggleGraphicQuality() {
+    var newQuality = graphicSettings.quality === 'low' ? 'high' : 'low';
+    setGraphicQuality(newQuality);
+    playSoundSafe(sounds.tap);
 
-// Cấu hình âm thanh
-sounds.menuTheme.loop = true; // Nhạc menu lặp lại
-sounds.menuTheme.volume = 1;
+    // Hiển thị thông báo
+    console.log('Graphic Quality changed to: ' + newQuality.toUpperCase());
+}
 
-sounds.bgMusic.loop = true; // Nhạc nền lặp lại
-sounds.bgMusic.volume = 0.5; // Giảm âm lượng nhạc nền
+// Cập nhật UI của nút graphic quality
+function updateGraphicButtonUI() {
+    var graphicBtns = document.querySelectorAll('.graphic-btn');
+    for (var i = 0; i < graphicBtns.length; i++) {
+        var btn = graphicBtns[i];
+        var textSpan = btn.querySelector('.graphic-quality-text');
 
-sounds.touchRight.volume = 0.5;
-sounds.bruh.volume = 0.5;
-sounds.gameOver.volume = 0.5;
-sounds.winner.volume = 0.5;
-sounds.cutIn.volume = 0.7;
-sounds.timerBeep.volume = 0.6;
-sounds.rating.volume = 0.5;
-sounds.tap.volume = 0.6;
-sounds.wheel.volume = 1;  // Âm lượng wheel gacha
-
-// Preload audio cho Android WebView
-sounds.menuTheme.preload = 'auto';
-sounds.bgMusic.preload = 'auto';
-sounds.touchRight.preload = 'auto';
-sounds.bruh.preload = 'auto';
-sounds.gameOver.preload = 'auto';
-sounds.winner.preload = 'auto';
-sounds.cutIn.preload = 'auto';
-sounds.timerBeep.preload = 'auto';
-sounds.rating.preload = 'auto';
-sounds.tap.preload = 'auto';
-sounds.wheel.preload = 'auto';
+        if (textSpan) {
+            if (graphicSettings.quality === 'low') {
+                textSpan.textContent = 'ĐỒ HỌA: LOW';
+                btn.classList.remove('active');
+            } else {
+                textSpan.textContent = 'ĐỒ HỌA: HIGH';
+                btn.classList.add('active');
+            }
+        }
+    }
+}
 
 // Trạng thái âm thanh/nhạc (tách riêng)
 var audioSettings = {
@@ -184,7 +120,7 @@ function playSoundSafe(sound) {
 
         if (sound.readyState >= 2) { // HAVE_CURRENT_DATA
             sound.currentTime = 0;
-            sound.play().catch(function(e) {
+            sound.play().catch(function (e) {
                 // Audio play blocked
             });
         }
@@ -232,13 +168,13 @@ function updateAudioButtonsUI() {
 
 function setSfxMuted(muted) {
     audioSettings.isSfxMuted = !!muted;
-    try { localStorage.setItem('vj_sfx_muted', audioSettings.isSfxMuted ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem('vj_sfx_muted', audioSettings.isSfxMuted ? '1' : '0'); } catch (e) { }
     updateAudioButtonsUI();
 }
 
 function setMusicMuted(muted) {
     audioSettings.isMusicMuted = !!muted;
-    try { localStorage.setItem('vj_music_muted', audioSettings.isMusicMuted ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem('vj_music_muted', audioSettings.isMusicMuted ? '1' : '0'); } catch (e) { }
     // Khi tắt nhạc: dừng mọi track nhạc hiện tại
     if (audioSettings.isMusicMuted) {
         sounds.menuTheme.pause();
@@ -318,61 +254,109 @@ var loadedImages = {
     map: []  // Cache cho map images
 };
 var imagesLoaded = false;
+var audiosLoaded = false;
+var allResourcesLoaded = false;
 
-function preloadImages() {
-    var totalImages = 0;
-    var loadCount = 0;
+function preloadAllResources() {
+    var totalResources = 0;
+    var loadedCount = 0;
 
-    // Đếm tổng số ảnh
-    Object.keys(imageCategories).forEach(function(category) {
-        totalImages += imageCategories[category].length;
+    // Đếm tổng số resources (images + audio)
+    Object.keys(imageCategories).forEach(function (category) {
+        totalResources += imageCategories[category].length;
     });
 
-    // Hiển thị progress indicator (optional)
+    // Đếm số audio files
+    var audioCount = Object.keys(sounds).length;
+    totalResources += audioCount;
+
+    // Hiển thị progress indicator
+    var audioUnlockOverlay = document.getElementById('audio-unlock');
     var audioUnlockText = document.querySelector('.audio-unlock-content p');
+
     if (audioUnlockText) {
-        audioUnlockText.textContent = 'Đang tải... 0%';
+        audioUnlockText.textContent = 'Đang tải tài nguyên... 0%';
     }
 
-    // Load từng category
-    Object.keys(imageCategories).forEach(function(category) {
-        imageCategories[category].forEach(function(src, index) {
+    // Thêm class loading
+    if (audioUnlockOverlay) {
+        audioUnlockOverlay.classList.add('loading');
+    }
+
+    // Hàm cập nhật progress
+    function updateProgress() {
+        loadedCount++;
+        var progress = Math.round((loadedCount / totalResources) * 100);
+
+        if (audioUnlockText) {
+            audioUnlockText.textContent = 'Đang tải tài nguyên... ' + progress + '%';
+        }
+
+        // Kiểm tra nếu tất cả resources đã load xong
+        if (loadedCount >= totalResources) {
+            allResourcesLoaded = true;
+            imagesLoaded = true;
+            audiosLoaded = true;
+
+            if (audioUnlockText) {
+                audioUnlockText.textContent = 'Chạm để bắt đầu';
+            }
+
+            if (audioUnlockOverlay) {
+                audioUnlockOverlay.classList.remove('loading');
+                audioUnlockOverlay.classList.add('loaded');
+            }
+        }
+    }
+
+    // Load images
+    Object.keys(imageCategories).forEach(function (category) {
+        imageCategories[category].forEach(function (src, index) {
             var img = new Image();
-            img.onload = function () {
-                loadCount++;
-                
-                // Cập nhật progress
-                var progress = Math.round((loadCount / totalImages) * 100);
-                if (audioUnlockText) {
-                    audioUnlockText.textContent = 'Đang tải... ' + progress + '%';
-                }
-                
-                if (loadCount === totalImages) {
-                    imagesLoaded = true;
-                    // Đổi text khi load xong
-                    if (audioUnlockText) {
-                        audioUnlockText.textContent = 'Chạm để bắt đầu';
-                    }
-                }
-            };
-            img.onerror = function() {
-                // Xử lý lỗi load ảnh (vẫn tính là đã "load")
-                loadCount++;
-                var progress = Math.round((loadCount / totalImages) * 100);
-                if (audioUnlockText) {
-                    audioUnlockText.textContent = 'Đang tải... ' + progress + '%';
-                }
-                if (loadCount === totalImages) {
-                    imagesLoaded = true;
-                    if (audioUnlockText) {
-                        audioUnlockText.textContent = 'Chạm để bắt đầu';
-                    }
-                }
-            };
+            img.onload = updateProgress;
+            img.onerror = updateProgress; // Vẫn tính là "loaded" dù có lỗi
             img.src = src;
             loadedImages[category].push(img);
         });
     });
+
+    // Load audio files
+    var audioKeys = Object.keys(sounds);
+    var audioTracker = {}; // Track để tránh đếm 2 lần
+
+    audioKeys.forEach(function (key) {
+        var audio = sounds[key];
+        audioTracker[key] = false;
+
+        function markAudioLoaded() {
+            if (!audioTracker[key]) {
+                audioTracker[key] = true;
+                updateProgress();
+            }
+        }
+
+        // Event khi audio sẵn sàng phát
+        audio.addEventListener('canplaythrough', markAudioLoaded, false);
+
+        // Event khi có đủ data để bắt đầu phát
+        audio.addEventListener('loadeddata', markAudioLoaded, false);
+
+        // Event khi có lỗi - vẫn tính là "loaded"
+        audio.addEventListener('error', markAudioLoaded, false);
+
+        // Force load
+        audio.load();
+
+        // Timeout fallback (nếu audio không trigger event sau 8 giây)
+        setTimeout(function () {
+            markAudioLoaded();
+        }, 8000);
+    });
+}
+
+// Legacy function name for backward compatibility
+function preloadImages() {
+    preloadAllResources();
 }
 
 // Game state
@@ -392,27 +376,24 @@ var gameState = {
     timerInterval: null,
     selectedMap: 1,       // Map mặc định
     mapBackground: null,  // Image object của map
-    headerHeight: 0,      // Chiều cao header (sẽ được tính động)
     // Virtual Resolution System
     virtualWidth: GAME_CONFIG.VIRTUAL_WIDTH,   // Chiều rộng ảo
     virtualHeight: GAME_CONFIG.VIRTUAL_HEIGHT, // Chiều cao ảo
     canvasWidth: 0,       // Canvas display width (viewport)
     canvasHeight: 0,      // Canvas display height (viewport)
     scale: 1,             // Tỷ lệ scale từ virtual → screen
-    devicePixelRatio: 1,  // Device pixel ratio được sử dụng
+    devicePixelRatio: 0.5,  // Device pixel ratio được sử dụng
     resizeTimeout: null   // Timeout cho debounce resize
 };
 
 // Chuyển màn hình
 function showScreen(screenId) {
     var screens = document.querySelectorAll('.screen');
-    
-    // QUAN TRỌNG: Chrome 44 KHÔNG hỗ trợ forEach() cho NodeList!
-    // Phải dùng vòng lặp for truyền thống
+
     for (var i = 0; i < screens.length; i++) {
         screens[i].classList.remove('active');
     }
-    
+
     document.getElementById(screenId).classList.add('active');
 }
 
@@ -454,23 +435,23 @@ function setupSettingsPopupEvents() {
     if (overlay) {
         addClickLikeHandler(overlay, hideSettingsPopup);
     }
-    
+
     // Close button
     var closeBtn = document.getElementById('settings-close');
     if (closeBtn) {
-        addClickLikeHandler(closeBtn, function(e) {
+        addClickLikeHandler(closeBtn, function (e) {
             e.stopPropagation();
             playSoundSafe(sounds.tap);
             hideSettingsPopup();
         });
     }
-    
+
     // Sound buttons (có thể có nhiều nơi)
     var soundBtns = document.querySelectorAll('.sound-btn');
     if (soundBtns && soundBtns.length) {
         for (var i = 0; i < soundBtns.length; i++) {
-            (function(btn){
-                addClickLikeHandler(btn, function(e) {
+            (function (btn) {
+                addClickLikeHandler(btn, function (e) {
                     e.stopPropagation();
                     playSoundSafe(sounds.tap);
                     setSfxMuted(!audioSettings.isSfxMuted);
@@ -478,13 +459,13 @@ function setupSettingsPopupEvents() {
             })(soundBtns[i]);
         }
     }
-    
+
     // Music buttons (có thể có nhiều nơi)
     var musicBtns = document.querySelectorAll('.music-btn');
     if (musicBtns && musicBtns.length) {
         for (var j = 0; j < musicBtns.length; j++) {
-            (function(btn){
-                addClickLikeHandler(btn, function(e) {
+            (function (btn) {
+                addClickLikeHandler(btn, function (e) {
                     e.stopPropagation();
                     playSoundSafe(sounds.tap);
                     var willMute = !audioSettings.isMusicMuted;
@@ -502,22 +483,35 @@ function setupSettingsPopupEvents() {
             })(musicBtns[j]);
         }
     }
-    
+
+    // Graphic Quality buttons
+    var graphicBtns = document.querySelectorAll('.graphic-btn');
+    if (graphicBtns && graphicBtns.length) {
+        for (var k = 0; k < graphicBtns.length; k++) {
+            (function (btn) {
+                addClickLikeHandler(btn, function (e) {
+                    e.stopPropagation();
+                    toggleGraphicQuality();
+                });
+            })(graphicBtns[k]);
+        }
+    }
+
     // Info button
     var infoBtn = document.querySelector('.info-btn');
     if (infoBtn) {
-        addClickLikeHandler(infoBtn, function(e) {
+        addClickLikeHandler(infoBtn, function (e) {
             e.stopPropagation();
             playSoundSafe(sounds.tap);
             console.log('Info clicked - Show game info');
             // Show info modal here
         });
     }
-    
+
     // Exit button
     var exitBtn = document.querySelector('.exit-btn');
     if (exitBtn) {
-        addClickLikeHandler(exitBtn, function(e) {
+        addClickLikeHandler(exitBtn, function (e) {
             e.stopPropagation();
             playSoundSafe(sounds.tap);
             console.log('Exit game clicked');
@@ -527,21 +521,21 @@ function setupSettingsPopupEvents() {
             }
         });
     }
-    
+
     // Themes button
     var themesBtn = document.querySelector('.themes-btn');
     if (themesBtn) {
-        addClickLikeHandler(themesBtn, function(e) {
+        addClickLikeHandler(themesBtn, function (e) {
             e.stopPropagation();
             playSoundSafe(sounds.tap);
             console.log('Themes clicked');
         });
     }
-    
+
     // Help button
     var helpBtn = document.querySelector('.help-btn');
     if (helpBtn) {
-        addClickLikeHandler(helpBtn, function(e) {
+        addClickLikeHandler(helpBtn, function (e) {
             e.stopPropagation();
             playSoundSafe(sounds.tap);
             console.log('Help clicked');
@@ -564,44 +558,21 @@ function showQuestion(questionNumber) {
     // Ẩn tất cả câu hỏi
     document.getElementById('question-1').style.display = 'none';
     document.getElementById('question-2').style.display = 'none';
-    
+
     // Hiển thị câu hỏi được chọn
     document.getElementById('question-' + questionNumber).style.display = 'block';
-    
+
     // Cập nhật text intro và button
     var introText = document.getElementById('survey-intro');
     var button = document.getElementById('survey-continue-btn');
-    
+
     if (questionNumber === 1) {
         introText.textContent = 'Trước khi bắt đầu chơi, xin phép bạn trả lời 2 câu hỏi sau đây nhé';
     } else {
     }
 }
 
-// Xử lý nút tiếp tục trong khảo sát
-function nextQuestion() {
-    var currentQuestion = document.getElementById('question-1').style.display !== 'none' ? 1 : 2;
-    
-    if (currentQuestion === 1) {
-        // Validate câu hỏi 1
-        var q1 = document.querySelector('input[name="q1"]:checked');
-        if (!q1) {
-            showFlashMessage('flash-message');
-            return;
-        }
-        // Chuyển sang câu hỏi 2
-        showQuestion(2);
-    } else {
-        // Validate câu hỏi 2
-        var q2 = document.querySelector('input[name="q2"]:checked');
-        if (!q2) {
-            showFlashMessage('flash-message');
-            return;
-        }
-        // Chuyển sang màn giới thiệu
-        showScreen('intro-screen');
-    }
-}
+// Function nextQuestion() đã được thay thế bằng auto-next khi chọn radio button
 
 // Hiển thị flash message khi thiếu câu trả lời
 function showFlashMessage(messageId) {
@@ -616,205 +587,10 @@ function showFlashMessage(messageId) {
     }, 3000);
 }
 
-// ============================================
-// GACHA ANIMATION - Random Map Selection (ĐÃ BỎ - KHÔNG DÙNG NỮA)
-// ============================================
-// Giờ game sẽ vào chơi trực tiếp khi bấm "Bắt đầu", không random map nữa
-
-/*
-var gachaState = {
-    isSpinning: false,
-    selectedMapId: null
-};
-
-// Hiển thị màn hình gacha và bắt đầu animation
-function showGachaAnimation() {
-    showScreen('gacha-screen');
-    
-    // Tắt nhạc menu theme để nghe rõ wheel sound
-    sounds.menuTheme.pause();
-    
-    // Tạo slot items
-    renderSlotItems();
-    
-    // Bắt đầu spin sau 500ms
-    setTimeout(function() {
-        startGachaSpin();
-    }, 500);
-}
-*/
-
-/*
-// Render các map items vào slot
-function renderSlotItems() {
-    var slotContent = document.getElementById('slot-content');
-    if (!slotContent) return;
-    
-    slotContent.innerHTML = '';
-    
-    // Tạo nhiều lần lặp để có hiệu ứng xoay dài (3 vòng)
-    var loops = 3;
-    for (var loop = 0; loop < loops; loop++) {
-        MAPS_CONFIG.forEach(function(map, index) {
-            var slotItem = document.createElement('div');
-            slotItem.className = 'slot-item';
-            slotItem.setAttribute('data-map-id', map.id);
-            
-            // Tạo mới image element và LUÔN set src
-            var img = document.createElement('img');
-            img.src = map.image; // QUAN TRỌNG: Set src từ MAPS_CONFIG
-            img.alt = map.name;
-            
-            // Nếu đã có cached image thì dùng để tránh load lại
-            if (imagesLoaded && loadedImages.map && loadedImages.map[index]) {
-                // Copy src từ cached image
-                img.src = loadedImages.map[index].src;
-            }
-            
-            slotItem.appendChild(img);
-            slotContent.appendChild(slotItem);
-        });
-    }
-}
-
-// Bắt đầu animation quay gacha
-function startGachaSpin() {
-    if (gachaState.isSpinning) return;
-    
-    gachaState.isSpinning = true;
-    
-    var slotContent = document.getElementById('slot-content');
-    
-    // Random chọn map
-    var randomIndex = Math.floor(Math.random() * MAPS_CONFIG.length);
-    gachaState.selectedMapId = MAPS_CONFIG[randomIndex].id;
-    
-    sounds.wheel.play();
-    
-    // Tính toán vị trí cuối cùng ngay từ đầu
-    var selectedIndex = MAPS_CONFIG.findIndex(function(m) {
-        return m.id === gachaState.selectedMapId;
-    });
-    var targetIndex = MAPS_CONFIG.length * 2 + selectedIndex; // Vòng 3 + vị trí
-    var itemHeight = 220;
-    
-    // Tính khoảng cách cần scroll (scroll nhiều vòng để có hiệu ứng đẹp)
-    var totalDistance = targetIndex * itemHeight;
-    
-    // Animation quay mượt với easing function tùy chỉnh
-    animateGachaSpin(slotContent, totalDistance, GACHA_CONFIG.SPIN_DURATION);
-}
-
-// Easing function: chậm → nhanh → chậm (ease-in-out)
-function easeInOutCubic(t) {
-    return t < 0.5
-        ? 4 * t * t * t
-        : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
-
-// Animation gacha với easing mượt mà
-function animateGachaSpin(element, targetDistance, duration) {
-    var startTime = Date.now();
-    var startPosition = 0;
-    
-    function animate() {
-        var currentTime = Date.now();
-        var elapsed = currentTime - startTime;
-        var progress = Math.min(elapsed / duration, 1); // 0 → 1
-        
-        // Áp dụng easing function
-        var easedProgress = easeInOutCubic(progress);
-        
-        // Tính vị trí hiện tại
-        var currentPosition = startPosition - (targetDistance * easedProgress);
-        
-        // Cập nhật transform
-        element.style.transform = 'translateY(' + currentPosition + 'px)';
-        
-        // Tiếp tục animation nếu chưa xong
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            // Animation xong, gọi stopGachaSpin
-            stopGachaSpin();
-        }
-    }
-    
-    // Bắt đầu animation
-    animate();
-}
-
-// Dừng animation và hiển thị kết quả
-function stopGachaSpin() {
-    var slotContent = document.getElementById('slot-content');
-    var resultText = document.getElementById('gacha-result');
-    
-    // Dừng âm thanh wheel
-    sounds.wheel.pause();
-    sounds.wheel.currentTime = 0;
-    
-    // Tính vị trí cuối cùng để hiển thị map đã chọn ở giữa chính xác
-    var selectedMap = MAPS_CONFIG.find(function(m) {
-        return m.id === gachaState.selectedMapId;
-    });
-    
-    var itemHeight = 220;
-    var selectedIndex = MAPS_CONFIG.findIndex(function(m) {
-        return m.id === gachaState.selectedMapId;
-    });
-    
-    // Vị trí ở vòng thứ 2 (middle loop) + center offset
-    var targetIndex = MAPS_CONFIG.length + selectedIndex;
-    var finalOffset = -(targetIndex * itemHeight) + 40; // +40 để center chính xác
-    
-    // Smooth transition nhẹ để điều chỉnh vị trí cuối (bounce effect)
-    var transitionDuration = GACHA_CONFIG.STOP_TRANSITION_DURATION / 1000;
-    slotContent.style.transition = 'transform ' + transitionDuration + 's cubic-bezier(0.175, 0.885, 0.32, 1.275)'; // Ease-out-back (có bounce nhẹ)
-    slotContent.style.transform = 'translateY(' + finalOffset + 'px)';
-    
-    // Phát âm thanh kết quả ngay lập tức
-    playSoundSafe(sounds.touchRight);
-    
-    // Hiển thị tên map sau một chút
-    setTimeout(function() {
-        resultText.classList.add('show-result');
-        resultText.innerHTML = `
-        <p>🌏 Hành trình mới bắt đầu tại <b>${selectedMap.name}</b>!<br>Sẵn sàng bắt máy bay VietJet chưa? ✈️</p>
-      `;
-              
-        gachaState.isSpinning = false;
-        
-        // Chuyển sang game sau thời gian delay
-        setTimeout(function() {
-            selectMap(gachaState.selectedMapId);
-        }, GACHA_CONFIG.GO_TO_GAME_DELAY);
-    }, 2000); // 500ms để animation bounce xong
-}
-*/
-
-// ============================================
-// OLD MAP CAROUSEL CODE (COMMENTED OUT - KHÔNG DÙNG NỮA)
-// ============================================
-// Map carousel functions đã được thay thế bởi Gacha Animation
-/*
-function updateMapSlider() { ... }
-function updateCarouselButtons() { ... }
-function slideMapPrev() { ... }
-function slideMapNext() { ... }
-function initCarouselSwipe() { ... }
-... (tất cả carousel code đã bị xóa)
-*/
-
-// Function để lấy đường dẫn map với extension phù hợp (jpg hoặc png)
+// Function để lấy đường dẫn map mặc định (dùng làm fallback)
 function getMapPath(mapId) {
-    var basePath = 'assets/map/map_' + mapId;
-    
-    // Ưu tiên các extension theo thứ tự: jpg, png, jpeg, webp
-    var extensions = ['jpg', 'png', 'jpeg', 'webp'];
-    
-    // Trả về đường dẫn với extension đầu tiên (jpg mặc định)
-    // Nếu file không tồn tại, browser sẽ tự động fallback hoặc hiển thị lỗi
-    return basePath + '.jpg';
+    // Return đường dẫn mặc định với extension .jpg
+    return 'assets/map/map_' + mapId + '.jpg';
 }
 
 // Function để thử load image với fallback extension
@@ -822,24 +598,24 @@ function loadMapImage(mapId, callback) {
     var basePath = 'assets/map/map_' + mapId;
     var extensions = ['jpg', 'png', 'jpeg', 'webp'];
     var currentIndex = 0;
-    
+
     function tryLoadImage() {
         if (currentIndex >= extensions.length) {
             callback(null);
             return;
         }
-        
+
         var img = new Image();
-        img.onload = function() {
+        img.onload = function () {
             callback(basePath + '.' + extensions[currentIndex]);
         };
-        img.onerror = function() {
+        img.onerror = function () {
             currentIndex++;
             tryLoadImage();
         };
         img.src = basePath + '.' + extensions[currentIndex];
     }
-    
+
     tryLoadImage();
 }
 
@@ -848,7 +624,7 @@ function selectMap(mapId) {
     gameState.selectedMap = mapId;
 
     // Load ảnh map với fallback extension
-    loadMapImage(mapId, function(mapPath) {
+    loadMapImage(mapId, function (mapPath) {
         if (mapPath) {
             gameState.mapBackground = new Image();
             gameState.mapBackground.src = mapPath;
@@ -857,7 +633,7 @@ function selectMap(mapId) {
             gameState.mapBackground = new Image();
             gameState.mapBackground.src = getMapPath(mapId);
         }
-        
+
         // Bắt đầu game luôn (không cần chọn độ khó)
         startGame();
     });
@@ -865,21 +641,21 @@ function selectMap(mapId) {
 
 function startGame() {
     showScreen('game-screen');
-    
+
     // Set background map cho game screen với fallback extension
     var gameScreen = document.getElementById('game-screen');
-    loadMapImage(gameState.selectedMap, function(mapPath) {
+    loadMapImage(gameState.selectedMap, function (mapPath) {
         if (mapPath) {
             gameScreen.style.backgroundImage = 'url(\'' + mapPath + '\')';
         } else {
             // Fallback về jpg nếu không tìm thấy file nào
-            var fallbackPath = getMapPath(gameState.selectedMap);
+            var fallbackPath = getMapPath3(gameState.selectedMap);
             gameScreen.style.backgroundImage = 'url(\'' + fallbackPath + '\')';
         }
         gameScreen.style.backgroundSize = 'cover';
         gameScreen.style.backgroundPosition = 'center';
     });
-    
+
     // Hiển thị countdown trước khi bắt đầu game
     showCountdown();
 }
@@ -887,49 +663,51 @@ function startGame() {
 function showCountdown() {
     var overlay = document.getElementById('countdown-overlay');
     var numberElement = document.getElementById('countdown-number');
-    
+
+
     // Hiển thị overlay
     overlay.classList.add('active');
-    
+
     var count = 3;
     numberElement.textContent = count;
-    
+
     // Phát âm thanh beep cho số 3
     playSoundSafe(sounds.timerBeep);
-    
-    var countdownInterval = setInterval(function() {
+
+    var countdownInterval = setInterval(function () {
         count--;
-        
+
         if (count > 0) {
             // Hiển thị số 2, 1
             numberElement.textContent = count;
-            
+
             // Phát âm thanh beep
             playSoundSafe(sounds.timerBeep);
-            
+
             // Reset animation bằng cách xóa và thêm lại class
             numberElement.style.animation = 'none';
-            setTimeout(function() {
+            setTimeout(function () {
                 numberElement.style.animation = 'countdownPulse 1s ease-out';
             }, 10);
         } else {
             // Ẩn countdown overlay
             overlay.classList.remove('active');
-            
+
+
             // Dừng nhạc menu theme (tôn trọng trạng thái nhạc)
             sounds.menuTheme.pause();
             sounds.menuTheme.currentTime = 0;
-            
+
             // Bắt đầu game luôn (bỏ cut-in animation)
             initGame();
-            
+
             // Phát nhạc nền game nếu không mute nhạc
             playSoundSafe(sounds.bgMusic);
-            
+
             clearInterval(countdownInterval);
-            
+
             // Reset về 3 cho lần sau (sau khi overlay đã ẩn)
-            setTimeout(function() {
+            setTimeout(function () {
                 numberElement.textContent = '3';
             }, 500);
         }
@@ -977,7 +755,7 @@ function initGame() {
     gameState.vietjetSpawned = 0;
     gameState.planes = [];
     gameState.isGameRunning = true;
-    
+
     // Áp dụng campaign settings
     gameState.timeLeft = CAMPAIGN_SETTINGS.gameTime;
     gameState.chances = CAMPAIGN_SETTINGS.maxLives;
@@ -992,9 +770,9 @@ function initGame() {
     window.addEventListener('resize', handleWindowResize);
     window.addEventListener('orientationchange', handleOrientationChange);
 
-    // Update UI
-    updateScore();
-    updateTimer();
+    // Update UI - Force update lúc init
+    updateScore(true);
+    // updateTimer(); // Comment vì dùng canvas UI
 
     // Start countdown timer
     startTimer();
@@ -1013,55 +791,43 @@ function initGame() {
 function resizeCanvas() {
     if (!gameState.canvas) return;
 
-    // Tính chiều cao header động
-    var header = document.querySelector('.game-header');
-    gameState.headerHeight = header ? header.offsetHeight : 80;
 
     // Bước 1: Lấy kích thước viewport thực tế
     var viewportWidth = window.innerWidth;
     var viewportHeight = window.innerHeight;
-    
+
     // Đảm bảo kích thước tối thiểu
     viewportWidth = Math.max(viewportWidth, 320);
     viewportHeight = Math.max(viewportHeight, 480);
-    
-    // Bước 2: Lấy và tối ưu Device Pixel Ratio
-    var dpr = window.devicePixelRatio || 1;
-    
-    // Giới hạn DPR để tránh lag (tối đa = 3)
-    if (dpr > 3) {
-        dpr = 3;
-    }
-    
+
     // Bước 3: Tính scale để fit virtual resolution vào viewport
-    // Dùng MAX để fill full màn hình (có thể crop một chút nhưng không có khoảng trống)
     var scaleX = viewportWidth / gameState.virtualWidth;
     var scaleY = viewportHeight / gameState.virtualHeight;
     var scale = Math.max(scaleX, scaleY);
-    
-    // Bước 4: Set canvas buffer size = viewport × DPR (cho sắc nét)
-    gameState.canvas.width = viewportWidth * dpr;
-    gameState.canvas.height = viewportHeight * dpr;
-    
+
+    // Bước 4: Set canvas buffer size = viewport (KHÔNG nhân DPR)
+    gameState.canvas.width = viewportWidth;
+    gameState.canvas.height = viewportHeight;
+
     // Bước 5: Set canvas CSS size = viewport (phủ full màn)
     gameState.canvas.style.width = viewportWidth + 'px';
     gameState.canvas.style.height = viewportHeight + 'px';
-    
-    // Bước 6: Scale context = scale × DPR
-    var contextScale = scale * dpr;
+
+    // Bước 6: Scale context = scale (KHÔNG nhân DPR)
+    var contextScale = scale;
     gameState.ctx.setTransform(contextScale, 0, 0, contextScale, 0, 0);
-    
-    // Bước 7: Cải thiện chất lượng render
-    gameState.ctx.imageSmoothingEnabled = true;
-    if (gameState.ctx.imageSmoothingQuality) {
-        gameState.ctx.imageSmoothingQuality = dpr >= 2 ? 'high' : 'medium';
-    }
-    
+
+    // Bước 7: TẮT image smoothing - Tăng hiệu suất tối đa
+    gameState.ctx.imageSmoothingEnabled = false;
+
     // Bước 8: Lưu state
     gameState.canvasWidth = viewportWidth;
     gameState.canvasHeight = viewportHeight;
     gameState.scale = scale;
-    gameState.devicePixelRatio = dpr;
+
+    // Log để debug
+    console.log('Canvas resized - Performance Mode (DPR=1) - Buffer: ' +
+        gameState.canvas.width + 'x' + gameState.canvas.height);
 }
 
 
@@ -1069,7 +835,7 @@ function resizeCanvas() {
 function handleWindowResize() {
     // Debounce resize để tránh gọi quá nhiều lần
     clearTimeout(gameState.resizeTimeout);
-    gameState.resizeTimeout = setTimeout(function() {
+    gameState.resizeTimeout = setTimeout(function () {
         if (gameState.canvas) {
             resizeCanvas();
             // Redraw game nếu đang chạy
@@ -1083,7 +849,7 @@ function handleWindowResize() {
 // Function để xử lý orientation change
 function handleOrientationChange() {
     // Delay để đảm bảo window đã resize xong
-    setTimeout(function() {
+    setTimeout(function () {
         if (gameState.canvas) {
             resizeCanvas();
             // Redraw game nếu đang chạy
@@ -1100,41 +866,41 @@ function handleCanvasClick(e) {
     // Screen coordinates
     var screenX = e.clientX - rect.left;
     var screenY = e.clientY - rect.top;
-    
+
     // Convert screen coords → virtual coords
     var virtualX = screenX / gameState.scale;
     var virtualY = screenY / gameState.scale;
-    
+
     checkHit(virtualX, virtualY);
 }
 
 function handleCanvasTouch(e) {
     if (!gameState.isGameRunning) return;
-    
+
     // Lấy tọa độ từ touch hoặc changedTouches (cho touchend)
-    var touch = e.touches && e.touches[0] ? e.touches[0] : 
-                (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : null);
-    
+    var touch = e.touches && e.touches[0] ? e.touches[0] :
+        (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : null);
+
     if (!touch) {
         return;
     }
-    
+
     // QUAN TRỌNG: preventDefault() PHẢI được gọi để tránh double-tap zoom trên Android cũ
     try {
         e.preventDefault();
     } catch (err) {
         // preventDefault failed
     }
-    
+
     var rect = gameState.canvas.getBoundingClientRect();
     // Screen coordinates
     var screenX = touch.clientX - rect.left;
     var screenY = touch.clientY - rect.top;
-    
+
     // Convert screen coords → virtual coords
     var virtualX = screenX / gameState.scale;
     var virtualY = screenY / gameState.scale;
-    
+
     checkHit(virtualX, virtualY);
 }
 
@@ -1161,8 +927,8 @@ function checkHit(x, y) {
 
                 // Thưởng thêm thời gian
                 gameState.timeLeft += CAMPAIGN_SETTINGS.timeBonus;
-                updateTimer();
-                showTimeBonusEffect();
+                // updateTimer(); // Comment vì dùng canvas UI
+                // showTimeBonusEffect(); // Comment vì dùng canvas UI
 
                 showHitEffect(x, y, true);
                 playSoundSafe(sounds.touchRight);
@@ -1240,7 +1006,7 @@ function showHitEffect(x, y, isHit) {
             }
 
             // Vẽ particles
-            particles.forEach(function(p) {
+            particles.forEach(function (p) {
                 if (p.alpha > 0) {
                     gameState.ctx.globalAlpha = p.alpha;
                     gameState.ctx.fillStyle = p.color;
@@ -1292,14 +1058,122 @@ function showHitEffect(x, y, isHit) {
     animate();
 }
 
-function updateScore() {
-    document.getElementById('caught-count').textContent =
-        gameState.caughtPlanes + '/' + gameState.totalPlanes;
-    document.getElementById('chances-left').textContent = gameState.chances;
-    document.getElementById('vietjet-spawned').textContent =
-        gameState.vietjetSpawned + '/' + gameState.maxVietjet;
+// Throttle update UI để tránh lag trên Android yếu
+var lastScoreUpdate = 0;
+var scoreUpdateThrottle = 100; // ms - chỉ update tối đa mỗi 100ms
+var scoreUpdatePending = false;
+
+function updateScore(force) {
+    var now = Date.now();
+
+    // Force update (khi init game hoặc game end)
+    if (force) {
+        doUpdateScore();
+        return;
+    }
+
+    // Throttle: chỉ update nếu đã qua đủ thời gian
+    if (now - lastScoreUpdate < scoreUpdateThrottle) {
+        // Đánh dấu cần update sau
+        if (!scoreUpdatePending) {
+            scoreUpdatePending = true;
+            setTimeout(function () {
+                scoreUpdatePending = false;
+                doUpdateScore();
+            }, scoreUpdateThrottle);
+        }
+        return;
+    }
+
+    doUpdateScore();
 }
 
+function doUpdateScore() {
+    lastScoreUpdate = Date.now();
+
+    // Update DOM (comment để dùng canvas UI)
+    // document.getElementById('caught-count').textContent =
+    //     gameState.caughtPlanes + '/' + gameState.totalPlanes;
+    // document.getElementById('chances-left').textContent = gameState.chances;
+    // document.getElementById('vietjet-spawned').textContent =
+    //     gameState.vietjetSpawned + '/' + gameState.maxVietjet;
+
+    // Debug: kiểm tra game state
+    console.log('Game State:', {
+        isGameRunning: gameState.isGameRunning,
+        caughtPlanes: gameState.caughtPlanes,
+        vietjetSpawned: gameState.vietjetSpawned,
+        chances: gameState.chances,
+        timeLeft: gameState.timeLeft
+    });
+}
+
+// Vẽ UI bằng Canvas - mượt mà hơn DOM
+function drawCanvasUI() {
+    var ctx = gameState.ctx;
+    var virtualWidth = gameState.virtualWidth;
+    var virtualHeight = gameState.virtualHeight;
+
+    // Lưu trạng thái canvas
+    ctx.save();
+
+    // Thiết lập style cho UI
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Nền đen trong suốt
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Viền trắng
+    ctx.lineWidth = 2;
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Tính toán vị trí và kích thước UI boxes (nằm trên cùng giữa)
+    var boxWidth = 180;
+    var boxHeight = 35;
+    var padding = 8;
+    var startY = 25; // Khoảng cách từ top
+    var spacing = boxWidth + 10; // Khoảng cách giữa các box
+    var totalWidth = (boxWidth * 4) + (spacing * 3); // Tổng chiều rộng
+    var startX = (virtualWidth - totalWidth) / 2; // Căn giữa
+
+    // Vẽ 4 boxes cho thông tin game
+    var uiData = [
+        {
+            label: 'VIETJET:',
+            value: gameState.vietjetSpawned + '/' + gameState.maxVietjet
+        },
+        {
+            label: 'BẮT ĐƯỢC:',
+            value: gameState.caughtPlanes + '/' + gameState.totalPlanes
+        },
+        {
+            label: 'THỜI GIAN:',
+            value: Math.ceil(gameState.timeLeft) + 'S'
+        },
+        {
+            label: 'CƠ HỘI:',
+            value: gameState.chances.toString()
+        }
+    ];
+
+    // Vẽ từng box theo chiều ngang
+    for (var i = 0; i < uiData.length; i++) {
+        var x = startX + (i * spacing);
+
+        // Vẽ background box
+        ctx.fillRect(x, startY - boxHeight / 2, boxWidth, boxHeight);
+        ctx.strokeRect(x, startY - boxHeight / 2, boxWidth, boxHeight);
+
+        // Vẽ text
+        ctx.fillStyle = 'white';
+        ctx.fillText(uiData[i].label, x + boxWidth / 2, startY - 6);
+        ctx.fillText(uiData[i].value, x + boxWidth / 2, startY + 6);
+
+        // Reset màu cho box tiếp theo
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    }
+
+    // Khôi phục trạng thái canvas
+    ctx.restore();
+}
 
 // Timer functions
 function startTimer() {
@@ -1311,7 +1185,7 @@ function startTimer() {
     gameState.timerInterval = setInterval(function () {
         if (gameState.isGameRunning) {
             gameState.timeLeft--;
-            updateTimer();
+            // updateTimer(); // Comment vì dùng canvas UI
 
             // Kiểm tra hết giờ
             if (gameState.timeLeft <= 0) {
@@ -1328,39 +1202,41 @@ function startTimer() {
 }
 
 function updateTimer() {
-    var timerElement = document.getElementById('time-left');
-    timerElement.textContent = gameState.timeLeft + 's';
+    // Comment vì đã xóa DOM timer, giờ dùng canvas UI
+    // var timerElement = document.getElementById('time-left');
+    // timerElement.textContent = gameState.timeLeft + 's';
 
-    // Thêm class warning/danger dựa vào thời gian còn lại
-    timerElement.classList.remove('warning', 'danger');
+    // // Thêm class warning/danger dựa vào thời gian còn lại
+    // timerElement.classList.remove('warning', 'danger');
 
-    if (gameState.timeLeft <= 3) {
-        timerElement.classList.add('danger');
-    } else if (gameState.timeLeft <= 5) {
-        timerElement.classList.add('warning');
-    }
+    // if (gameState.timeLeft <= 3) {
+    //     timerElement.classList.add('danger');
+    // } else if (gameState.timeLeft <= 5) {
+    //     timerElement.classList.add('warning');
+    // }
 }
 
 function showTimeBonusEffect() {
-    var timerElement = document.getElementById('time-left');
+    // Comment vì đã xóa DOM timer, giờ dùng canvas UI
+    // var timerElement = document.getElementById('time-left');
 
-    // Tạo element hiển thị "+2s"
-    var bonusText = document.createElement('div');
-    bonusText.className = 'time-bonus-effect';
-    bonusText.textContent = '+' + CAMPAIGN_SETTINGS.timeBonus + 's';
+    // // Tạo element hiển thị "+2s"
+    // var bonusText = document.createElement('div');
+    // bonusText.className = 'time-bonus-effect';
+    // bonusText.textContent = '+' + CAMPAIGN_SETTINGS.timeBonus + 's';
 
-    // Thêm vào vị trí timer
-    var scoreBox = timerElement.closest('.score-box');
-    scoreBox.appendChild(bonusText);
+    // // Thêm vào vị trí timer
+    // var scoreBox = timerElement.closest('.score-box');
+    // scoreBox.appendChild(bonusText);
 
-    // Flash effect cho timer
-    timerElement.classList.add('time-bonus-flash');
+    // // Flash effect cho timer
+    // timerElement.classList.add('time-bonus-flash');
 
-    // Xóa sau 1 giây
-    setTimeout(function () {
-        bonusText.remove();
-        timerElement.classList.remove('time-bonus-flash');
-    }, 1000);
+    // // Xóa sau 1 giây
+    // setTimeout(function () {
+    //     bonusText.remove();
+    //     timerElement.classList.remove('time-bonus-flash');
+    // }, 1000);
 }
 
 function stopTimer() {
@@ -1411,19 +1287,22 @@ function endGame(isWin) {
     // Dừng timer
     stopTimer();
 
+    // Force update UI cuối cùng
+    updateScore(true);
+
     // Dừng nhạc nền
     sounds.bgMusic.pause();
     sounds.bgMusic.currentTime = 0;
-    
+
     setTimeout(function () {
         if (isWin) {
             // Cập nhật QR code
             var qrImage = document.getElementById('qr-image');
-            
+
             if (qrImage) {
                 qrImage.src = CAMPAIGN_SETTINGS.qrCode;
             }
-            
+
             showScreen('win-screen');
             playSoundSafe(sounds.winner);
         } else {
@@ -1435,6 +1314,13 @@ function endGame(isWin) {
 
 function spawnPlane() {
     if (!gameState.isGameRunning || isGamePaused) {
+        return;
+    }
+
+    // Kiểm tra giới hạn số object trên màn hình (cho thiết bị yếu)
+    if (gameState.planes.length >= GAME_CONFIG.MAX_OBJECTS_ON_SCREEN) {
+        // Nếu đã đạt giới hạn, delay ngắn rồi thử lại
+        setTimeout(spawnPlane, 200);
         return;
     }
 
@@ -1464,7 +1350,7 @@ function spawnPlane() {
     var baseSpeed = isFastPlane
         ? GAME_CONFIG.SPEED_FAST + Math.random() * GAME_CONFIG.SPEED_FAST_RANGE
         : GAME_CONFIG.SPEED_DEFAULT + Math.random() * GAME_CONFIG.SPEED_RANGE;
-    
+
     // Áp dụng speed multiplier
     var speed = baseSpeed * CAMPAIGN_SETTINGS.speedMultiplier;
 
@@ -1587,88 +1473,195 @@ function spawnPlane() {
     // Nếu là VietJet thì tăng counter
     if (type === 'player') {
         gameState.vietjetSpawned++;
-        updateScore(); // Update UI ngay
+        // updateScore(); // Comment - UI được vẽ trong game loop
     }
 
     // Spawn next plane after delay (spawn liên tục cho đến khi game kết thúc)
     setTimeout(spawnPlane, GAME_CONFIG.SPAWN_DELAY_MIN + Math.random() * GAME_CONFIG.SPAWN_DELAY_RANGE);
 }
 
-function gameLoop() {
+// Performance optimization: Cross-browser requestAnimationFrame với fallback 30fps
+window.requestAnimFrame = (function () {
+    return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function (callback) {
+            return window.setTimeout(callback, 1000 / 30); // fallback 30fps cho thiết bị yếu
+        };
+})();
+
+// Performance detection cho thiết bị yếu
+function detectLowEndDevice() {
+    // Kiểm tra các dấu hiệu thiết bị yếu
+    var isLowEnd = false;
+
+    // 1. Kiểm tra user agent cho Android cũ
+    var userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes('android 6') || userAgent.includes('android 5')) {
+        isLowEnd = true;
+    }
+
+    // 2. Kiểm tra viewport size nhỏ
+    if (window.innerWidth < 800 || window.innerHeight < 600) {
+        isLowEnd = true;
+    }
+
+    // 3. Kiểm tra RAM (nếu có)
+    if (navigator.deviceMemory && navigator.deviceMemory <= 2) {
+        isLowEnd = true;
+    }
+
+    // 4. Kiểm tra hardware concurrency (CPU cores)
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
+        isLowEnd = true;
+    }
+
+    return isLowEnd;
+}
+
+// Áp dụng settings cho thiết bị yếu
+var isLowEndDevice = detectLowEndDevice();
+if (isLowEndDevice) {
+    console.log('Low-end device detected. Using optimized game loop.');
+}
+
+function update(deltaSeconds) {
+    if (!gameState.isGameRunning || isGamePaused) return;
+
+    // Default deltaSeconds nếu không truyền vào (backward compatibility)
+    if (!deltaSeconds) deltaSeconds = 1 / 60; // Fallback 60 FPS
+
+    // Kiểm tra và tự động xóa object cũ nhất nếu vượt quá giới hạn
+    // (Biện pháp an toàn cho thiết bị yếu)
+    if (gameState.planes.length > GAME_CONFIG.MAX_OBJECTS_ON_SCREEN) {
+        // Xóa object cũ nhất (index 0)
+        var oldPlane = gameState.planes.shift();
+        console.log('Auto-removed old plane due to object limit:', oldPlane.type);
+    }
+
+    // Update planes với delta time - TỐC ĐỘ ĐỘC LẬP VỚI FPS
+    for (var i = gameState.planes.length - 1; i >= 0; i--) {
+        var plane = gameState.planes[i];
+
+        // Update position - NHÂN VỚI deltaSeconds (60 FPS baseline)
+        // Velocity đã được scale cho 60 FPS, nên cần normalize
+        var speedFactor = deltaSeconds * 60; // 60 FPS làm baseline
+        plane.x += plane.vx * speedFactor;
+        plane.y += plane.vy * speedFactor;
+
+        // Update rotation cho player planes
+        if (plane.type === 'player' || plane.type === 'horizontal' || plane.type === 'vertical') {
+            plane.rotationTime += plane.rotationSpeed * speedFactor;
+            // Dao động từ -0.15 đến +0.15 radian (~-8° đến +8°)
+            plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
+        }
+
+        // Remove if out of bounds
+        var margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
+        if (plane.x < -margin || plane.x > gameState.virtualWidth + margin ||
+            plane.y < -margin || plane.y > gameState.virtualHeight + margin) {
+
+            // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
+            if (plane.isLastVietjet) {
+                gameState.planes.splice(i, 1);
+                endGame(false); // Thua do để máy bay VietJet thứ 10 bay mất
+                return;
+            }
+
+            gameState.planes.splice(i, 1);
+
+            // Kiểm tra điều kiện kết thúc sau khi xóa máy bay
+            checkGameEnd();
+
+            continue;
+        }
+    }
+}
+
+function draw() {
     if (!gameState.isGameRunning) return;
-    
-    // Vẫn vẽ game khi pause, nhưng không cập nhật logic
 
     // Clear canvas - dùng VIRTUAL dimensions
     gameState.ctx.clearRect(0, 0, gameState.virtualWidth, gameState.virtualHeight);
 
     // Draw map background - dùng VIRTUAL dimensions
-    if (gameState.mapBackground && gameState.mapBackground.complete) {
-        gameState.ctx.save();
+    // if (gameState.mapBackground && gameState.mapBackground.complete) {
+    //     gameState.ctx.save();
 
-        // Cải thiện chất lượng ảnh background
-        gameState.ctx.imageSmoothingEnabled = true;
-        // imageSmoothingQuality không được hỗ trợ trên Android 6, kiểm tra trước khi dùng
-        if (gameState.ctx.imageSmoothingQuality) {
-            gameState.ctx.imageSmoothingQuality = 'high';
-        }
+    //     // Cải thiện chất lượng ảnh background cho thiết bị yếu
+    //     gameState.ctx.imageSmoothingEnabled = !isLowEndDevice; // Tắt smoothing cho thiết bị yếu
+    //     if (gameState.ctx.imageSmoothingQuality) {
+    //         gameState.ctx.imageSmoothingQuality = isLowEndDevice ? 'low' : 'high';
+    //     }
 
-        gameState.ctx.drawImage(
-            gameState.mapBackground,
-            0, 0,
-            gameState.virtualWidth,
-            gameState.virtualHeight
-        );
-        gameState.ctx.restore();
-    }
+    //     gameState.ctx.drawImage(
+    //         gameState.mapBackground,
+    //         0, 0,
+    //         gameState.virtualWidth,
+    //         gameState.virtualHeight
+    //     );
+    //     gameState.ctx.restore();
+    // }
 
     // Draw clouds
-    drawClouds();
+    //lag quá k vẽ mây đâu
+    // drawClouds();
 
-    // Update and draw planes
-    for (var i = gameState.planes.length - 1; i >= 0; i--) {
-        var plane = gameState.planes[i];
-
-        // Update position (chỉ khi không pause)
-        if (!isGamePaused) {
-            plane.x += plane.vx;
-            plane.y += plane.vy;
-        }
-
-        // Update rotation cho player planes (chỉ khi không pause)
-        if (!isGamePaused && (plane.type === 'player' || plane.type === 'horizontal' || plane.type === 'vertical')) {
-            plane.rotationTime += plane.rotationSpeed;
-            // Dao động từ -0.15 đến +0.15 radian (~-8° đến +8°)
-            plane.rotationOffset = Math.sin(plane.rotationTime) * 0.15;
-        }
-
-        // Remove if out of bounds (chỉ khi không pause)
-        if (!isGamePaused) {
-            var margin = 100; // Buffer để planes bay hoàn toàn ra ngoài trước khi xóa
-            if (plane.x < -margin || plane.x > gameState.virtualWidth + margin ||
-                plane.y < -margin || plane.y > gameState.virtualHeight + margin) {
-
-                // Nếu là máy bay VietJet thứ 10 bay mất thì thua ngay
-                if (plane.isLastVietjet) {
-                    gameState.planes.splice(i, 1);
-                    endGame(false); // Thua do để máy bay VietJet thứ 10 bay mất
-                    return;
-                }
-
-                gameState.planes.splice(i, 1);
-
-                // Kiểm tra điều kiện kết thúc sau khi xóa máy bay
-                checkGameEnd();
-
-                continue;
-            }
-        }
-
-        // Draw plane
-        drawPlane(plane);
+    // Draw planes
+    for (var i = 0; i < gameState.planes.length; i++) {
+        drawPlane(gameState.planes[i]);
     }
 
-    gameState.animationFrame = requestAnimationFrame(gameLoop);
+    // Draw Canvas UI (thay thế DOM)
+    drawCanvasUI();
+}
+
+/*
+ * ==============================================
+ * DELTA TIME SYSTEM - TỐC ĐỘ ĐỘC LẬP VỚI FPS
+ * ==============================================
+ * 
+ * Hệ thống này đảm bảo tốc độ di chuyển của object KHÔNG PHỤ THUỘC vào FPS:
+ * - FPS = 24: update 24 lần/giây → mỗi frame di chuyển nhiều hơn
+ * - FPS = 240: update 240 lần/giây → mỗi frame di chuyển ít hơn
+ * 
+ * Công thức: position += velocity * deltaTime * 60
+ * - deltaTime = thời gian giữa 2 frame (giây)
+ * - *60 = baseline 60 FPS (velocity đã được tune cho 60 FPS)
+ * 
+ * Kết quả: Tốc độ di chuyển LUÔN GIỐNG NHAU dù FPS là bao nhiêu!
+ */
+
+// FPS Limiter - Lock FPS để tối ưu hiệu suất
+var lastFrameTime = 0;
+var targetFPS = GAME_CONFIG.TARGET_FPS;
+var frameInterval = 1000 / targetFPS; // ms per frame
+var deltaTime = 0; // Delta time cho game logic (global để update() dùng)
+
+function gameLoop(currentTime) {
+    if (!gameState.isGameRunning) return;
+
+    // Tính delta time
+    if (!currentTime) currentTime = performance.now();
+    if (!lastFrameTime) lastFrameTime = currentTime;
+
+    deltaTime = currentTime - lastFrameTime;
+
+    // Chỉ render khi đủ thời gian
+    if (deltaTime >= frameInterval) {
+        // Normalize delta time thành giây (để dùng trong physics)
+        var deltaSeconds = deltaTime / 1000;
+
+        // Lưu timestamp, điều chỉnh cho frame drift
+        lastFrameTime = currentTime - (deltaTime % frameInterval);
+
+        update(deltaSeconds);
+        draw();
+    }
+
+    gameState.animationFrame = window.requestAnimFrame(gameLoop);
 }
 
 var clouds = [];
@@ -1695,10 +1688,10 @@ function drawClouds() {
         if (imagesLoaded && loadedImages.cloud && loadedImages.cloud[cloud.imageIndex]) {
             gameState.ctx.save();
 
-            // Cải thiện chất lượng ảnh mây
-            gameState.ctx.imageSmoothingEnabled = true;
+            // Cải thiện chất lượng ảnh mây (tối ưu cho thiết bị yếu)
+            gameState.ctx.imageSmoothingEnabled = !isLowEndDevice; // Tắt smoothing cho thiết bị yếu
             if (gameState.ctx.imageSmoothingQuality) {
-                gameState.ctx.imageSmoothingQuality = 'high';
+                gameState.ctx.imageSmoothingQuality = isLowEndDevice ? 'low' : 'high';
             }
 
             gameState.ctx.globalAlpha = cloud.opacity;
@@ -1711,8 +1704,9 @@ function drawClouds() {
             gameState.ctx.restore();
         }
 
-        // Di chuyển mây
-        cloud.x += cloud.speed;
+        // Di chuyển mây - SỬ DỤNG delta time để tốc độ độc lập với FPS
+        var cloudSpeedFactor = (deltaTime / 1000) * 60; // 60 FPS baseline
+        cloud.x += cloud.speed * cloudSpeedFactor;
         // Reset từ biên trái khi ra khỏi biên phải - dùng VIRTUAL dimensions
         if (cloud.x > gameState.virtualWidth) {
             cloud.x = 0; // Spawn từ biên trái
@@ -1722,29 +1716,6 @@ function drawClouds() {
 }
 
 function drawPlane(plane) {
-    // Chỉ vẽ các hiệu ứng khi SHOW_HITBOX = true
-    if (GAME_CONFIG.SHOW_HITBOX) {
-        // Vẽ hiệu ứng đặc biệt cho máy bay VietJet thứ 10 (QUAN TRỌNG!)
-        if (plane.isLastVietjet) {
-            gameState.ctx.save();
-            gameState.ctx.strokeStyle = '#FFD700'; // Màu vàng kim
-            gameState.ctx.lineWidth = 5;
-            gameState.ctx.globalAlpha = 0.7 + Math.sin(Date.now() / 150) * 0.3; // Nhấp nháy nhanh
-            gameState.ctx.beginPath();
-            gameState.ctx.arc(plane.x, plane.y, plane.size / 2 + 10, 0, Math.PI * 2);
-            gameState.ctx.stroke();
-
-            // Vẽ vòng thứ 2 để nổi bật hơn
-            gameState.ctx.strokeStyle = '#FFA500';
-            gameState.ctx.lineWidth = 3;
-            gameState.ctx.beginPath();
-            gameState.ctx.arc(plane.x, plane.y, plane.size / 2 + 15, 0, Math.PI * 2);
-            gameState.ctx.stroke();
-            gameState.ctx.restore();
-        }
-        // Máy bay siêu nhanh không có hiệu ứng đặc biệt - chỉ dùng hitbox bình thường
-    }
-
     // Vẽ vòng tròn debug để thấy phạm vi click (chỉ khi SHOW_HITBOX = true)
     if (GAME_CONFIG.SHOW_HITBOX) {
         gameState.ctx.save();
@@ -1776,10 +1747,10 @@ function drawPlane(plane) {
     // Vẽ ảnh máy bay
     gameState.ctx.save();
 
-    // Cải thiện chất lượng ảnh khi scale
-    gameState.ctx.imageSmoothingEnabled = true;
+    // Cải thiện chất lượng ảnh khi scale (tối ưu cho thiết bị yếu)
+    gameState.ctx.imageSmoothingEnabled = !isLowEndDevice; // Tắt smoothing cho thiết bị yếu
     if (gameState.ctx.imageSmoothingQuality) {
-        gameState.ctx.imageSmoothingQuality = 'high';
+        gameState.ctx.imageSmoothingQuality = isLowEndDevice ? 'low' : 'high';
     }
     gameState.ctx.translate(plane.x, plane.y);
 
@@ -1823,10 +1794,10 @@ var selectedRating = 0;
 
 function rateStar(value) {
     selectedRating = value;
-    
+
     // Phát âm thanh rating
     playSoundSafe(sounds.rating);
-    
+
     var stars = document.querySelectorAll('.star');
 
     // Chrome 44: Dùng for loop thay vì forEach
@@ -1862,15 +1833,15 @@ function showRating() {
     document.getElementById('rating-emoji').textContent = '🤔';
     document.getElementById('rating-value').textContent = '';
     var stars = document.querySelectorAll('.star');
-    
+
     // Chrome 44: Dùng for loop thay vì forEach
     for (var i = 0; i < stars.length; i++) {
         stars[i].classList.remove('active');
         stars[i].textContent = '☆';
     }
-    
+
     document.getElementById('rating-value').textContent = '';
-    
+
     // Reset feedback input
     var feedbackInput = document.getElementById('feedback-input');
     if (feedbackInput) {
@@ -1882,7 +1853,7 @@ function showRating() {
 function saveFeedbackData() {
     var feedbackInput = document.getElementById('feedback-input');
     var feedbackText = feedbackInput ? feedbackInput.value.trim() : '';
-    
+
     var feedbackData = {
         rating: selectedRating,
         feedback: feedbackText,
@@ -1893,20 +1864,20 @@ function saveFeedbackData() {
             vietjetSpawned: gameState.vietjetSpawned
         }
     };
-    
+
     try {
         // Lấy dữ liệu cũ từ localStorage
         var existingData = localStorage.getItem('vj_feedback_data');
         var feedbackHistory = existingData ? JSON.parse(existingData) : [];
-        
+
         // Thêm dữ liệu mới
         feedbackHistory.push(feedbackData);
-        
+
         // Lưu lại vào localStorage (giới hạn 50 feedback gần nhất)
         if (feedbackHistory.length > 50) {
             feedbackHistory = feedbackHistory.slice(-50);
         }
-        
+
         localStorage.setItem('vj_feedback_data', JSON.stringify(feedbackHistory));
         console.log('Feedback saved:', feedbackData);
     } catch (e) {
@@ -1925,19 +1896,43 @@ function handleSendFeedback() {
         }
         return;
     }
-    
+
     // Lưu dữ liệu feedback
     saveFeedbackData();
-    
+
     // Phát âm thanh
     playSoundSafe(sounds.tap);
-    
+
     // Chuyển sang màn hình cảm ơn
     showThankYou();
 }
 
 function showThankYou() {
     showScreen('thank-screen');
+}
+
+function showWelcome() {
+    showScreen('welcome-screen');
+    // Phát lại nhạc menu theme nếu không mute nhạc
+    playSoundSafe(sounds.menuTheme);
+}
+
+// Show instruction screen với 2 mode: normal (có nút start) và FAQ (có nút đóng)
+function showInstructionScreen(mode) {
+    showScreen('instruction-screen');
+
+    var startGameBtn = document.getElementById('start-game-btn');
+    var closeBtn = document.getElementById('instruction-close-btn');
+
+    if (mode === 'faq') {
+        // FAQ mode: ẩn nút start, hiện nút đóng
+        if (startGameBtn) startGameBtn.style.display = 'none';
+        if (closeBtn) closeBtn.style.display = 'block';
+    } else {
+        // Normal mode: hiện nút start, ẩn nút đóng
+        if (startGameBtn) startGameBtn.style.display = 'flex';
+        if (closeBtn) closeBtn.style.display = 'none';
+    }
 }
 
 function restartGame() {
@@ -1958,7 +1953,7 @@ function restartGame() {
 
     // Reset survey
     var radios = document.querySelectorAll('input[type="radio"]');
-    
+
     // Chrome 44: Dùng for loop thay vì forEach
     for (var i = 0; i < radios.length; i++) {
         radios[i].checked = false;
@@ -2022,38 +2017,38 @@ function hidePausePopup() {
 
 function pauseGame() {
     isGamePaused = true;
-    
+
     // Dừng timer
     stopTimer();
-    
+
     // Dừng tất cả âm thanh
-    Object.keys(sounds).forEach(function(key) {
+    Object.keys(sounds).forEach(function (key) {
         if (sounds[key] && typeof sounds[key].pause === 'function') {
             sounds[key].pause();
         }
     });
-    
+
     // Dừng spawn planes nhưng vẫn giữ game loop chạy để vẽ game
     // gameState.isGameRunning vẫn true để game loop tiếp tục
-    
+
     console.log('Game paused');
 }
 
 function resumeGame() {
     isGamePaused = false;
-    
+
     // Tiếp tục game nếu đang trong game
     var gameScreen = document.getElementById('game-screen');
     if (gameScreen && gameScreen.classList.contains('active')) {
         gameState.isGameRunning = true;
         startTimer();
-        
+
         // Phát lại nhạc nền game nếu không mute
         if (!audioSettings.isMusicMuted) {
             playSoundSafe(sounds.bgMusic);
         }
     }
-    
+
     console.log('Game resumed');
 }
 
@@ -2062,8 +2057,8 @@ function setupPausePopupButtons() {
     var pauseSoundBtns = document.querySelectorAll('#pause-popup .sound-btn');
     if (pauseSoundBtns && pauseSoundBtns.length) {
         for (var i = 0; i < pauseSoundBtns.length; i++) {
-            (function(btn){
-                addClickLikeHandler(btn, function(e) {
+            (function (btn) {
+                addClickLikeHandler(btn, function (e) {
                     e.stopPropagation();
                     playSoundSafe(sounds.tap);
                     setSfxMuted(!audioSettings.isSfxMuted);
@@ -2071,13 +2066,13 @@ function setupPausePopupButtons() {
             })(pauseSoundBtns[i]);
         }
     }
-    
+
     // Music buttons trong pause popup
     var pauseMusicBtns = document.querySelectorAll('#pause-popup .music-btn');
     if (pauseMusicBtns && pauseMusicBtns.length) {
         for (var j = 0; j < pauseMusicBtns.length; j++) {
-            (function(btn){
-                addClickLikeHandler(btn, function(e) {
+            (function (btn) {
+                addClickLikeHandler(btn, function (e) {
                     e.stopPropagation();
                     playSoundSafe(sounds.tap);
                     var willMute = !audioSettings.isMusicMuted;
@@ -2094,39 +2089,39 @@ var gameOverTimeout = null;
 function showGameOverPopup() {
     var popup = document.getElementById('game-over-popup');
     var popupScore = document.getElementById('popup-score');
-    
+
     // Cập nhật số máy bay bắt được
     popupScore.textContent = gameState.caughtPlanes;
-    
+
     // Phát âm thanh game over
     playSoundSafe(sounds.gameOver);
-    
+
     // Hiển thị popup
     popup.classList.add('show');
-    
+
     // Function để chuyển màn
     function goToLoseScreen() {
         if (gameOverTimeout) {
             clearTimeout(gameOverTimeout);
             gameOverTimeout = null;
         }
-        
+
         popup.classList.remove('show');
-        
+
         // Đợi fade out xong rồi chuyển màn
-        setTimeout(function() {
+        setTimeout(function () {
             showScreen('lose-screen');
         }, 300);
-        
+
         // Remove event listeners
         popup.removeEventListener('click', goToLoseScreen);
         popup.removeEventListener('touchstart', goToLoseScreen);
     }
-    
+
     // Thêm event listener cho click/touch để skip
     popup.addEventListener('click', goToLoseScreen);
     popup.addEventListener('touchstart', goToLoseScreen);
-    
+
     // Sau 3 giây, tự động chuyển màn
     gameOverTimeout = setTimeout(goToLoseScreen, 5000);
 }
@@ -2135,24 +2130,24 @@ function showGameOverPopup() {
 // Đơn giản hóa cho Android 6 / Chrome 44
 function addClickLikeHandler(el, handler) {
     if (!el) return;
-    
+
     var handled = false;
-    
-    el.addEventListener('touchend', function(e) {
+
+    el.addEventListener('touchend', function (e) {
         e.preventDefault();
         if (!handled) {
             handled = true;
             handler(e);
-            setTimeout(function() { handled = false; }, 500);
+            setTimeout(function () { handled = false; }, 500);
         }
     }, false);
-    
+
     // LUÔN thêm click event (quan trọng cho tất cả thiết bị)
-    el.addEventListener('click', function(e) {
+    el.addEventListener('click', function (e) {
         if (!handled) {
             handled = true;
             handler(e);
-            setTimeout(function() { handled = false; }, 500);
+            setTimeout(function () { handled = false; }, 500);
         }
     }, false);
 }
@@ -2163,29 +2158,43 @@ function unlockAudio() {
     //Check devicePixelRatio || tuyết đối không xoá nhé
     // alert('devicePixelRatio: ' + window.devicePixelRatio);
     console.log('devicePixelRatio: ', window.devicePixelRatio);
-    
+
+    // KIỂM TRA: Chỉ cho phép tiếp tục khi đã load xong 100% tài nguyên (images + audio)
+    if (!imagesLoaded || !allResourcesLoaded) {
+        console.log('Vui lòng đợi tải tài nguyên hoàn tất...');
+        // Thêm hiệu ứng shake để báo hiệu chưa load xong
+        var audioUnlock = document.getElementById('audio-unlock');
+        if (audioUnlock) {
+            audioUnlock.classList.add('shake');
+            setTimeout(function () {
+                audioUnlock.classList.remove('shake');
+            }, 500);
+        }
+        return; // Không cho phép tiếp tục
+    }
+
     // Gọi API GET tới https://jsonplaceholder.typicode.com/todos/1 
     callAPI({
         method: 'GET',
         url: 'https://jsonplaceholder.typicode.com/todos/1',
-        onSuccess: function(response) {
+        onSuccess: function (response) {
             console.log('Kết quả GET:', response);
         },
-        onError: function(error) {
+        onError: function (error) {
             console.log('Lỗi API:', error);
         }
     });
-    
+
     // Tránh gọi nhiều lần
     if (audioUnlocked) {
         return;
     }
-    
+
     audioUnlocked = true;
-    
+
     // Phát nhạc menu theme
     playSoundSafe(sounds.menuTheme);
-    
+
     // Ẩn overlay - QUAN TRỌNG: XÓA HOÀN TOÀN khỏi DOM
     var audioUnlock = document.getElementById('audio-unlock');
     if (audioUnlock) {
@@ -2198,213 +2207,338 @@ function unlockAudio() {
 
 // Setup ALL event handlers (TẤT CẢ handlers được setup ở đây)
 function setupAllEventHandlers() {
-    // 1. Setup Audio Unlock Overlay
+    // ============================================
+    // SPLASH SCREEN BUTTONS
+    // ============================================
+
+    // Audio Unlock Overlay
     var audioUnlock = document.getElementById('audio-unlock');
     if (audioUnlock) {
         addClickLikeHandler(audioUnlock, unlockAudio);
     }
-    
-    // 2. Setup Splash Button (TAP TO START)
+
+    // Splash Button (TAP TO START)
     var splashButton = document.querySelector('.splash-button');
     if (splashButton) {
-        addClickLikeHandler(splashButton, function(e) {
+        addClickLikeHandler(splashButton, function (e) {
             playSoundSafe(sounds.tap);
             showSurvey();
         });
     }
-    
-    // 3. Setup Survey Continue Button (gộp chung)
-    var surveyContinueBtn = document.getElementById('survey-continue-btn');
-    if (surveyContinueBtn) {
-        addClickLikeHandler(surveyContinueBtn, function(e) {
+
+    // Prize Button
+    var prizeBtn = document.getElementById('prize-btn');
+    if (prizeBtn) {
+        addClickLikeHandler(prizeBtn, function (e) {
             playSoundSafe(sounds.tap);
-            nextQuestion();
+            // alert('Pixel ngang: ' + window.innerWidth + '\nPixel dọc: ' + window.innerHeight);
+            showScreen('game-screen');
         });
     }
-    
-    // 4. Setup Help Button
+
+    // FAQ Button
+    var faqBtn = document.getElementById('faq-btn');
+    if (faqBtn) {
+        addClickLikeHandler(faqBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            showInstructionScreen('faq'); // Show với FAQ mode
+        });
+    }
+
+    // ============================================
+    // SURVEY SCREEN BUTTONS
+    // ============================================
+
+    // Survey Continue Button - đã bỏ, thay bằng auto-next
+
+    // Auto-next khi chọn radio button trong survey
+    var q1Radios = document.querySelectorAll('input[name="q1"]');
+    var q2Radios = document.querySelectorAll('input[name="q2"]');
+
+    // Câu hỏi 1 - chuyển sang câu 2 sau khi chọn
+    for (var i = 0; i < q1Radios.length; i++) {
+        addClickLikeHandler(q1Radios[i], function (e) {
+            playSoundSafe(sounds.tap);
+            // Delay 500ms để người dùng thấy đã chọn
+            setTimeout(function () {
+                showQuestion(2);
+            }, 500);
+        });
+    }
+
+    // Câu hỏi 2 - chuyển sang instruction screen sau khi chọn
+    for (var j = 0; j < q2Radios.length; j++) {
+        addClickLikeHandler(q2Radios[j], function (e) {
+            playSoundSafe(sounds.tap);
+            // Delay 500ms để người dùng thấy đã chọn
+            setTimeout(function () {
+                showInstructionScreen('normal');
+            }, 500);
+        });
+    }
+
+    // ============================================
+    // INSTRUCTION SCREEN BUTTONS
+    // ============================================
+
+    // Start Game Button
+    var startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        addClickLikeHandler(startGameBtn, function (e) {
+            // Ngăn click nhiều lần
+            if (startGameBtn.classList.contains('btn-start-animation')) {
+                return;
+            }
+
+            // Phát âm thanh prepare play
+            playSoundSafe(sounds.preparePlay);
+
+            // Thêm class animation để trigger button feedback effect
+            startGameBtn.classList.add('btn-start-animation');
+
+            // Random map nhưng không hiện gacha animation
+            var randomIndex = Math.floor(Math.random() * MAPS_CONFIG.length);
+            var randomMapId = MAPS_CONFIG[randomIndex].id;
+
+            // Lưu map hiện tại để dùng khi restart
+            currentMap = randomMapId;
+
+            // Delay 1.2 giây (theo duration animation) trước khi chuyển màn hình
+            setTimeout(function () {
+                selectMap(randomMapId);
+                // Xóa class animation sau khi xong
+                startGameBtn.classList.remove('btn-start-animation');
+            }, 1200); // 1200ms = 1.2s (duration của animation)
+        });
+    }
+
+    // Help Button
     var helpButton = document.getElementById('help-button');
     if (helpButton) {
-        addClickLikeHandler(helpButton, function(e) {
+        addClickLikeHandler(helpButton, function (e) {
             playSoundSafe(sounds.tap);
             showRulesModal();
         });
     }
-    
-    // 5. Setup Start Game Button
-    var startGameBtn = document.getElementById('start-game-btn');
-    if (startGameBtn) {
-        addClickLikeHandler(startGameBtn, function(e) {
+
+    // Instruction Close Button
+    var instructionCloseBtn = document.getElementById('instruction-close-btn');
+    if (instructionCloseBtn) {
+        addClickLikeHandler(instructionCloseBtn, function (e) {
             playSoundSafe(sounds.tap);
-            // Random map nhưng không hiện gacha animation
-            var randomIndex = Math.floor(Math.random() * MAPS_CONFIG.length);
-            var randomMapId = MAPS_CONFIG[randomIndex].id;
-            
-            // Lưu map hiện tại để dùng khi restart
-            currentMap = randomMapId;
-            
-            selectMap(randomMapId);
+            showWelcome(); // Quay về welcome screen
         });
     }
-    
-    // 6. Setup Settings Toggle Button
+
+    // ============================================
+    // GAME SCREEN BUTTONS
+    // ============================================
+
+    // Pause Button (removed with header)
+    // var btnPause = document.getElementById('btn-pause');
+    // if (btnPause) {
+    //     addClickLikeHandler(btnPause, function (e) {
+    //         playSoundSafe(sounds.tap);
+    //         showPausePopup();
+    //     });
+    // }
+
+    // Settings Toggle Button
     var settingsToggle = document.getElementById('settings-toggle');
     if (settingsToggle) {
-        addClickLikeHandler(settingsToggle, function(e) {
+        addClickLikeHandler(settingsToggle, function (e) {
             playSoundSafe(sounds.tap);
             showSettingsPopup();
         });
     }
-    
-    // 7. Setup Settings Popup Events
-    setupSettingsPopupEvents();
-    
-    // 6. Setup Win Continue Button
+
+    // ============================================
+    // PAUSE POPUP BUTTONS
+    // ============================================
+
+    // Pause Close Button
+    var pauseClose = document.getElementById('pause-close');
+    if (pauseClose) {
+        addClickLikeHandler(pauseClose, function (e) {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+        });
+    }
+
+    // Pause Resume Button
+    var pauseResumeBtn = document.getElementById('pause-resume-btn');
+    if (pauseResumeBtn) {
+        addClickLikeHandler(pauseResumeBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+        });
+    }
+
+    // Pause Home Button
+    var pauseHomeBtn = document.getElementById('pause-home-btn');
+    if (pauseHomeBtn) {
+        addClickLikeHandler(pauseHomeBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+            showWelcome();
+        });
+    }
+
+    // Pause Restart Button
+    var pauseRestartBtn = document.getElementById('pause-restart-btn');
+    if (pauseRestartBtn) {
+        addClickLikeHandler(pauseRestartBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            hidePausePopup();
+            restartGame();
+        });
+    }
+
+    // ============================================
+    // WIN SCREEN BUTTONS
+    // ============================================
+
+    // Win Continue Button
     var winContinueBtn = document.getElementById('win-continue-btn');
     if (winContinueBtn) {
-        addClickLikeHandler(winContinueBtn, function(e) {
+        addClickLikeHandler(winContinueBtn, function (e) {
             playSoundSafe(sounds.tap);
             showRating();
         });
     }
-    
-    // 8. Setup Lose Continue Button
+
+    // ============================================
+    // LOSE SCREEN BUTTONS
+    // ============================================
+
+    // Lose Continue Button
     var loseContinueBtn = document.getElementById('lose-continue-btn');
     if (loseContinueBtn) {
-        addClickLikeHandler(loseContinueBtn, function(e) {
+        addClickLikeHandler(loseContinueBtn, function (e) {
             playSoundSafe(sounds.tap);
             showRating();
         });
     }
-    
-    // 9. Setup Restart Button
-    var restartBtn = document.getElementById('restart-btn');
-    if (restartBtn) {
-        addClickLikeHandler(restartBtn, function(e) {
+
+    // Lose Close Button
+    var loseCloseBtn = document.getElementById('lose-close-btn');
+    if (loseCloseBtn) {
+        addClickLikeHandler(loseCloseBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            showWelcome();
+        });
+    }
+
+    // Lose Restart Button
+    var loseRestartBtn = document.getElementById('lose-restart-btn');
+    if (loseRestartBtn) {
+        addClickLikeHandler(loseRestartBtn, function (e) {
             playSoundSafe(sounds.tap);
             restartGame();
         });
     }
-    
-    // 10. Setup Modal Close Button
-    var modalCloseBtn = document.getElementById('modal-close-btn');
-    if (modalCloseBtn) {
-        addClickLikeHandler(modalCloseBtn, closeRulesModal);
-    }
-    
-    // 11. Setup Modal Overlay
-    var modalOverlay = document.getElementById('modal-overlay');
-    if (modalOverlay) {
-        addClickLikeHandler(modalOverlay, closeRulesModal);
-    }
-    
-    // 12. Setup Modal OK Button
-    var modalOkBtn = document.getElementById('modal-ok-btn');
-    if (modalOkBtn) {
-        addClickLikeHandler(modalOkBtn, function(e) {
+
+    // ============================================
+    // RATING SCREEN BUTTONS
+    // ============================================
+
+    // Rating Close Button
+    var ratingCloseBtn = document.getElementById('rating-close-btn');
+    if (ratingCloseBtn) {
+        addClickLikeHandler(ratingCloseBtn, function (e) {
             playSoundSafe(sounds.tap);
-            closeRulesModal();
+            showWelcome();
         });
     }
-    
-    // NOTE: Đã xóa setup cho map carousel (không dùng nữa - thay bằng gacha)
-    // Gacha animation tự động chạy khi gọi showGachaAnimation()
-    
-    // Setup pause popup buttons
-    setupPausePopupButtons();
-    
-    // Setup rating stars
+
+    // Send Feedback Button
+    var sendFeedbackBtn = document.getElementById('send-feedback-btn');
+    if (sendFeedbackBtn) {
+        addClickLikeHandler(sendFeedbackBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            handleSendFeedback();
+        });
+    }
+
+    // Rating Stars
     var stars = document.querySelectorAll('.star');
-    
-    // Chrome 44: Dùng for loop thay vì forEach
     if (stars.length > 0) {
         for (var i = 0; i < stars.length; i++) {
-            (function(star, index) {
+            (function (star, index) {
                 var value = parseInt(star.getAttribute('data-value'));
-                addClickLikeHandler(star, function(e) {
+                addClickLikeHandler(star, function (e) {
                     playSoundSafe(sounds.tap);
                     rateStar(value);
                 });
             })(stars[i], i);
         }
     }
-    
-    // Setup specific buttons với ID
-    var buttonHandlers = {
-        'help-button': showRulesModal,
-        // 'start-game-btn': đã setup riêng ở trên - không dùng gacha nữa
-        'win-continue-btn': showRating,
-        'lose-continue-btn': showRating,
-        'restart-btn': restartGame,
-        'modal-close-btn': closeRulesModal,
-        'modal-ok-btn': closeRulesModal,
-        'send-feedback-btn': handleSendFeedback,
-        'rating-close-btn': function() {
-            playSoundSafe(sounds.tap);
-            showWelcome();
-        },
-        'btn-pause': function() {
-            playSoundSafe(sounds.tap);
-            showPausePopup();
-        },
-        'pause-close': function() {
-            playSoundSafe(sounds.tap);
-            hidePausePopup();
-        },
-        'pause-resume-btn': function() {
-            playSoundSafe(sounds.tap);
-            hidePausePopup();
-        },
-        'pause-home-btn': function() {
-            playSoundSafe(sounds.tap);
-            hidePausePopup();
-            showWelcome();
-        },
-        'pause-restart-btn': function() {
-            playSoundSafe(sounds.tap);
-            hidePausePopup();
-            restartGame();
-        },
-        'lose-close-btn': function() {
-            playSoundSafe(sounds.tap);
-            showWelcome();
-        },
-        'lose-restart-btn': function() {
-            playSoundSafe(sounds.tap);
-            restartGame();
-        },
-        'lose-continue-btn': function() {
-            playSoundSafe(sounds.tap);
-            showWelcome();
-        }
-    };
-    
-    Object.keys(buttonHandlers).forEach(function(btnId) {
-        var btn = document.getElementById(btnId);
-        if (btn) {
-            addClickLikeHandler(btn, function(e) {
-                playSoundSafe(sounds.tap);
-                buttonHandlers[btnId]();
-            });
-        }
-    });
-    
-    // Cập nhật UI âm thanh/nhạc lúc khởi tạo
-    updateAudioButtonsUI();
 
-    // Setup modal overlay
-    var modalOverlay = document.getElementById('modal-overlay');
-    if (modalOverlay) {
-        addClickLikeHandler(modalOverlay, function(e) {
+    // ============================================
+    // THANK SCREEN BUTTONS
+    // ============================================
+
+    // Home Button (Thank screen)
+    var homeBtn = document.getElementById('home-btn');
+    if (homeBtn) {
+        addClickLikeHandler(homeBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            showWelcome();
+        });
+    }
+
+    // ============================================
+    // MODAL BUTTONS
+    // ============================================
+
+    // Modal Close Button
+    var modalCloseBtn = document.getElementById('modal-close-btn');
+    if (modalCloseBtn) {
+        addClickLikeHandler(modalCloseBtn, function (e) {
+            playSoundSafe(sounds.tap);
             closeRulesModal();
         });
     }
+
+    // Modal OK Button
+    var modalOkBtn = document.getElementById('modal-ok-btn');
+    if (modalOkBtn) {
+        addClickLikeHandler(modalOkBtn, function (e) {
+            playSoundSafe(sounds.tap);
+            closeRulesModal();
+        });
+    }
+
+    // Modal Overlay
+    var modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) {
+        addClickLikeHandler(modalOverlay, function (e) {
+            closeRulesModal();
+        });
+    }
+
+    // ============================================
+    // SETTINGS POPUP
+    // ============================================
+
+    // Setup Settings Popup Events
+    setupSettingsPopupEvents();
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    // Cập nhật UI âm thanh/nhạc lúc khởi tạo
+    updateAudioButtonsUI();
+
+    // Cập nhật UI graphic quality lúc khởi tạo
+    updateGraphicButtonUI();
 }
 
 // Initialize game when page loads
 window.addEventListener('load', function () {
     // Đợi một chút để đảm bảo DOM đã render hoàn toàn (quan trọng cho Android cũ)
-    setTimeout(function() {
+    setTimeout(function () {
         preloadImages();
         showScreen('welcome-screen');
         setupAllEventHandlers();
